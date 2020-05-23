@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 )
 
 const PublicBlogDir = "./public/blog"
@@ -63,9 +63,8 @@ func ParseMdFile(filePath string) {
 		return
 	}
 	blog.Path = filePath
-	raw := text[len(meta):]
 
-	processBlog(blog, raw)
+	processBlog(blog, text)
 }
 
 func processBlog(blog *Blog, raw []byte) {
@@ -74,13 +73,13 @@ func processBlog(blog *Blog, raw []byte) {
 	// 确保输出文件夹
 	err := os.MkdirAll(path.Join(PublicBlogDir, path.Dir(blog.Path)), 0755)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 	// 输出文件
 	err = ioutil.WriteFile(path.Join(PublicBlogDir, blog.Path), raw, 0755)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }
 
@@ -145,7 +144,7 @@ func GenTagIndex(tagMap map[string][]*Blog) {
 				log.Println(err)
 				continue
 			}
-			if err := ioutil.WriteFile(path.Join(tagDir, fmt.Sprint(i)), text, 0755); err != nil {
+			if err := ioutil.WriteFile(path.Join(tagDir, strconv.Itoa(i)), text, 0755); err != nil {
 				log.Println(err)
 			}
 		}
