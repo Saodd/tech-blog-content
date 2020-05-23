@@ -13,3 +13,18 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# IDEs
+.idea/
+.vscode/
+
+# Output for Github-Pages
+/public
+*.tar.gz
+
+# JS/TS
+node_modules/
+dist
+.astro
+*.log
+*.err

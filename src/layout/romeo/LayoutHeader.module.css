@@ -1,0 +1,9 @@
+@font-face {
+  font-family: 'LayoutKaushanScript';
+  src: url('./KaushanScript-subfont.ttf') format('truetype');
+  font-display: swap;
+}
+
+.logo {
+  font-family: 'LayoutKaushanScript', cursive;
+}

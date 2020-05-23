@@ -1,0 +1,34 @@
+@import "./ui.css";
+@plugin "@tailwindcss/typography";
+
+@theme inline {
+  --color-neutral-01: var(--neutral-01);
+  --color-neutral-02: var(--neutral-02);
+  --color-neutral-03: var(--neutral-03);
+  --color-neutral-04: var(--neutral-04);
+  --color-neutral-05: var(--neutral-05);
+  --color-neutral-06: var(--neutral-06);
+}
+
+:root {
+  --neutral-01: oklch(1 0 0);
+  --neutral-02: oklch(0.985 0 0);
+  --neutral-03: oklch(0.97 0 0);
+  --neutral-04: oklch(0.955 0 0);
+  --neutral-05: oklch(0.872 0 0);
+  --neutral-06: oklch(0.78 0 0);
+}
+
+.dark {
+  --neutral-01: oklch(0.145 0 0);
+  --neutral-02: oklch(0.205 0 0);
+  --neutral-03: oklch(0.269 0 0);
+  --neutral-04: oklch(0.325 0 0);
+  --neutral-05: oklch(0.439 0 0);
+  --neutral-06: oklch(0.556 0 0);
+}
+
+body {
+  margin: 0;
+  font-family: 'Microsoft YaHei', '微软雅黑', 'MicrosoftJhengHei', '华文细黑', 'STHeiti', 'MingLiu', sans-serif;
+}

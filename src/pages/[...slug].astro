@@ -1,0 +1,147 @@
+---
+import "../styles/global.css";
+import { getPost, getPosts } from "../lib/posts";
+import { Layout } from "../layout/romeo";
+
+export function getStaticPaths() {
+	return getPosts().map((post) => ({
+		params: { slug: post.slug },
+	}));
+}
+
+const post = getPost(Astro.params.slug ?? "");
+
+if (!post) {
+	return Astro.redirect(import.meta.env.BASE_URL);
+}
+
+const { Content } = post;
+const headings = post.headings.filter(({ depth }) => depth >= 2 && depth <= 6);
+---
+
+<html lang="zh-CN" class="scroll-smooth">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>{post.title}</title>
+		{
+			post.description && (
+				<meta name="description" content={post.description} />
+			)
+		}
+		{post.keywords && <meta name="keywords" content={post.keywords} />}
+	</head>
+	<body class="min-h-screen text-[17px] leading-[1.86] max-[720px]:text-base">
+		<Layout>
+			<div
+				class="relative mx-auto w-[880px] max-w-full px-6 min-[880px]:px-12 pt-10 pb-24 min-[880px]:my-10 min-[1280px]:ml-[max(2rem,calc((100vw-1120px)/2))] min-[1280px]:mr-auto rounded-lg border border-border bg-card text-card-foreground shadow-sm"
+			>
+				<article
+					class="prose max-w-none prose-headings:scroll-mt-18 prose-h2:border-b prose-h2:pt-2 prose-a:underline-offset-[0.18em] prose-pre:rounded-lg prose-pre:border prose-pre:p-6 prose-pre:leading-relaxed prose-pre:before:content-none prose-pre:after:content-none prose-th:border-b prose-td:border-b"
+				>
+					<header
+						class="not-prose mb-4 border-b pb-6 pt-9 text-center max-[720px]:text-left"
+					>
+						<h1
+							class="m-0 text-[clamp(2.5rem,6vw,3rem)] font-extrabold leading-[1.08]"
+						>
+							{post.title}
+						</h1>
+						<div
+							class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm max-[720px]:justify-start"
+							aria-label="文章时间"
+						>
+							<span>
+								发布于{" "}
+								<time datetime={post.pubDate}>
+									{post.pubDate}
+								</time>
+							</span>
+							{
+								post.updateDate && (
+									<span>
+										更新于{" "}
+										<time datetime={post.updateDate}>
+											{post.updateDate}
+										</time>
+									</span>
+								)
+							}
+						</div>
+					</header>
+					{
+						post.description && (
+							<div class="not-prose mb-8 rounded-md bg-muted px-6 py-4 text-center text-sm text-muted-foreground">
+								{post.description}
+							</div>
+						)
+					}
+					<Content />
+				</article>
+				{
+					headings.length > 0 && (
+						<aside
+							class="prose fixed top-28 right-[max(2rem,calc((100vw-1120px)/2))] box-border hidden max-h-[calc(100vh-9rem)] w-[188px] overflow-auto border-l py-1 pl-4 text-[0.8rem]  min-[1280px]:block"
+							aria-label="文章目录"
+						>
+							<div class="mb-[0.7rem] text-[0.78rem] font-bold ">
+								目录
+							</div>
+							<nav class="grid gap-[0.35rem]">
+								{headings.map((heading) => (
+									<a
+										class="toc-link block leading-[1.4] text-inherit no-underline "
+										href={`#${heading.slug}`}
+										style={`--depth:${heading.depth};`}
+									>
+										{heading.text}
+									</a>
+								))}
+							</nav>
+						</aside>
+					)
+				}
+			</div>
+		</Layout>
+	</body>
+	<script>
+		document.body.addEventListener(
+			"click",
+			(e) => {
+				const a = (e.target as Element).closest("article a");
+				const href = a?.getAttribute("href");
+				if (a && href?.startsWith("http")) {
+					a.setAttribute("target", "_blank");
+					a.setAttribute("rel", "noopener noreferrer");
+				}
+			},
+			true,
+		);
+	</script>
+</html>
+
+<style>
+	:global(.prose :not(pre) > code) {
+		border-radius: 0.25rem;
+		border: 1px solid rgba(35, 117, 190, 0.16);
+		background: rgba(35, 117, 190, 0.04);
+		padding: 0.125rem 0.25rem;
+		margin: 0 0.25rem;
+	}
+	:global(.prose :not(pre) > code::before),
+	:global(.prose :not(pre) > code::after) {
+		content: none;
+	}
+
+	:global(.prose pre) {
+		background: rgba(255, 255, 255, 0.82);
+		scrollbar-width: thin;
+	}
+	:global(.prose blockquote) {
+		background-color: var(--neutral-02);
+	}
+
+	.toc-link {
+		padding-left: calc((var(--depth) - 2) * 0.75rem);
+	}
+</style>
