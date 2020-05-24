@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-const PublicBlogDir = "./public/blog"
+const PublicBlogDir = "./public"
 const PublicIndexDir = "./public/index"
 
 func main() {

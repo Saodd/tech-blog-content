@@ -25,6 +25,9 @@ jobs:
     - name: Parse MD Files
       run: go run tool/parse-blog.go
 
+    - name: Prepare html for gh-page
+      run: mv ./tool/index.html ./public/index.html && cp ./public/index.html ./public/404.html && mv ./README.md ./public/README.md
+
     - name: GitHub Pages action
       uses: peaceiris/actions-gh-pages@v3.6.1
       with:
