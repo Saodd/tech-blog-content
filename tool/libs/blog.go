@@ -12,14 +12,15 @@ import (
 )
 
 const PublicBlogDir = "./public"
-const blogExpr = "(?s)^```yaml lw-blog-meta(.*?)```"
+const blogInputExpr = "(?s)^```yaml lw-blog-meta(.*?)```"
+const blogOutputPref = "```json lw-blog-meta\n"
 const blogExprPrefLen = 20
 const blogExprPostLen = 3
 
 var blogPattern *regexp.Regexp
 
 func init() {
-	blogPattern, _ = regexp.Compile(blogExpr)
+	blogPattern, _ = regexp.Compile(blogInputExpr)
 }
 
 type Blog struct {
@@ -40,7 +41,7 @@ func (b *Blog) PublicWrite() error {
 	if err != nil {
 		return err
 	}
-	buf := []byte("```json lw-blog-meta\n")
+	buf := []byte(blogOutputPref)
 	buf = append(buf, j...)
 	buf = append(buf, "\n```\n"...)
 	buf = append(buf, b.Body...)
