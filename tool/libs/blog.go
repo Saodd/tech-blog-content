@@ -23,11 +23,11 @@ func init() {
 }
 
 type Blog struct {
-	Title string   `yaml:"title"`
-	Date  string   `yaml:"date"`
-	Brev  string   `yaml:"brev"`
-	Tags  []string `yaml:"tags"`
-	Path  string   `json:"-"`
+	Title string   `yaml:"title" json:"title"`
+	Date  string   `yaml:"date" json:"date"`
+	Brev  string   `yaml:"brev" json:"brev"`
+	Tags  []string `yaml:"tags" json:"tags"`
+	Path  string   `json:"path"`
 	Body  []byte   `json:"-"`
 }
 
