@@ -1,6 +1,10 @@
-```lw-blog-meta
-{"title": "LeetCode[4]: 寻找两个有序数组的中位数", "date": "2019-07-01", "tags": ["算法与数据结构"], "brev": ""}
+```yaml lw-blog-meta
+title: 'LeetCode[4]: 寻找两个有序数组的中位数'
+date: "2019-07-01"
+brev: ""
+tags: [算法与数据结构]
 ```
+
 
 ## 原题
 

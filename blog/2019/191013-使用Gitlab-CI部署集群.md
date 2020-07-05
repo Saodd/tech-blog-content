@@ -1,6 +1,10 @@
-```lw-blog-meta
-{"title": "实战项目：使用Gitlab-CI部署集群", "date": "2019-10-13", "tags": ["DevOps"], "brev": "前面说了如何对单个项目持续集成，再讨论一下如何将多个项目组合在一起，进行集群部署。"}
+```yaml lw-blog-meta
+title: 实战项目：使用Gitlab-CI部署集群
+date: "2019-10-13"
+brev: 前面说了如何对单个项目持续集成，再讨论一下如何将多个项目组合在一起，进行集群部署。
+tags: [DevOps]
 ```
+
 
 ## 构思
 

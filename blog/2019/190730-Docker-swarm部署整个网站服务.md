@@ -1,6 +1,10 @@
-```lw-blog-meta
-{"title": "使用Docker-swarm部署整个网站服务", "date": "2019-07-30", "tags": ["Docker"], "brev": "Docker真是个令人又爱又恨的东西啊……接触了几个月了，之前一直当作虚拟机来用。最近对Docker的理解深刻了许多，所以换上swarm来整体部署。"}
+```yaml lw-blog-meta
+title: 使用Docker-swarm部署整个网站服务
+date: "2019-07-30"
+brev: Docker真是个令人又爱又恨的东西啊……接触了几个月了，之前一直当作虚拟机来用。最近对Docker的理解深刻了许多，所以换上swarm来整体部署。
+tags: [Docker]
 ```
+
 
 ## “虚拟机”模式
 

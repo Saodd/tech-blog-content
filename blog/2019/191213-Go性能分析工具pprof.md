@@ -1,11 +1,10 @@
-```lw-blog-meta
-{
-"title": "Go性能分析工具: pprof",
-"date":  "2019-12-13",
-"brev":  "遇到Golang内存泄露的问题，以及衍伸出检测工具pprof的问题。内存泄露问题以后再说，先看看这个检测工具怎么用。",
-"tags":  ["Golang"]
-}
+```yaml lw-blog-meta
+title: 'Go性能分析工具: pprof'
+date: "2019-12-13"
+brev: 遇到Golang内存泄露的问题，以及衍伸出检测工具pprof的问题。内存泄露问题以后再说，先看看这个检测工具怎么用。
+tags: [Golang]
 ```
+
 
 ## 1. 官方介绍
 

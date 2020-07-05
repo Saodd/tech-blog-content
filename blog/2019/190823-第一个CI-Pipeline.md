@@ -1,6 +1,10 @@
-```lw-blog-meta
-{"title": "第一个CI-Pipeline", "date": "2019-08-23", "tags": ["DevOps"], "brev": "使用测试机上已经build好的image，来实现一个真正的测试项目。"}
+```yaml lw-blog-meta
+title: 第一个CI-Pipeline
+date: "2019-08-23"
+brev: 使用测试机上已经build好的image，来实现一个真正的测试项目。
+tags: [DevOps]
 ```
+
 
 ## 准备Image
 

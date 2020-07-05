@@ -1,11 +1,10 @@
-```lw-blog-meta
-{
-"title": "Go语法：Range的使用",
-"date":  "2019-12-16",
-"brev":  "Go的语法虽然简洁，但是有些地方也容易掉坑，在我看来range就是其中之一。我们仔细梳理一下。",
-"tags":  ["Golang"]
-}
+```yaml lw-blog-meta
+title: Go语法：Range的使用
+date: "2019-12-16"
+brev: Go的语法虽然简洁，但是有些地方也容易掉坑，在我看来range就是其中之一。我们仔细梳理一下。
+tags: [Golang]
 ```
+
 
 ## 语法定义
 

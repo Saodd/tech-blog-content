@@ -1,6 +1,10 @@
-```lw-blog-meta
-{"title": "LeetCode[5]: 最长回文子串", "date": "2019-07-02", "tags": ["算法与数据结构"], "brev": ""}
+```yaml lw-blog-meta
+title: 'LeetCode[5]: 最长回文子串'
+date: "2019-07-02"
+brev: ""
+tags: [算法与数据结构]
 ```
+
 
 ## 原题
 

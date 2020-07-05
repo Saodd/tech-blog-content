@@ -1,6 +1,10 @@
-```lw-blog-meta
-{"title": "在Ubuntu下安装DockerCE社区版", "date": "2019-06-13", "tags": ["Docker"], "brev": "CentOS 通过 yum 就可以非常方便的安装了，但是在 Ubuntu 上直接安装好像有点问题，所以我们这里下载二进制文件的方式安装。"}
+```yaml lw-blog-meta
+title: 在Ubuntu下安装DockerCE社区版
+date: "2019-06-13"
+brev: CentOS 通过 yum 就可以非常方便的安装了，但是在 Ubuntu 上直接安装好像有点问题，所以我们这里下载二进制文件的方式安装。
+tags: [Docker]
 ```
+
 
 ## 参考 
 
