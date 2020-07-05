@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"Title":"LeetCode[5]: 最长回文子串","Date":"2019-07-02","Brev":"","Tags":["算法与数据结构"]}
+{"title":"LeetCode[5]: 最长回文子串","date":"2019-07-02","brev":"","tags":["算法与数据结构"]}
 ```
 
 

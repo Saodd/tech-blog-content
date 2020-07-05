@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"Title":"LeetCode[4]: 寻找两个有序数组的中位数","Date":"2019-07-01","Brev":"","Tags":["算法与数据结构"]}
+{"title":"LeetCode[4]: 寻找两个有序数组的中位数","date":"2019-07-01","brev":"","tags":["算法与数据结构"]}
 ```
 
 

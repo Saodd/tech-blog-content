@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"Title":"[官方] Migrating to Go Modules","Date":"2019-09-26","Brev":"发布时间2019-08-21，接着上一篇，讲一下如何将现有的项目迁移到GoModules中。","Tags":["Golang"]}
+{"title":"[官方] Migrating to Go Modules","date":"2019-09-26","brev":"发布时间2019-08-21，接着上一篇，讲一下如何将现有的项目迁移到GoModules中。","tags":["Golang"]}
 ```
 
 
