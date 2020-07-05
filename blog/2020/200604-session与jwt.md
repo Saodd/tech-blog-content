@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"认证机制：Session与JWT","date":"2020-06-04","brev":"Web应用中如何对客户端身份进行验证，这是一个非常基础的问题。","tags":["Web"]}
+{"title":"认证机制：Session与JWT","date":"2020-06-04","brev":"Web应用中如何对客户端身份进行验证，这是一个非常基础的问题。","tags":["Web"],"path":"blog/2020/200604-session与jwt.md"}
 ```
 
 

@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"基于Redis的Markdown渲染缓存","date":"2019-07-18","brev":"为了适应国内的形势，我得把博客在我的个人网站(www.lewinblog.com)上也实现一份。","tags":["Python"]}
+{"title":"基于Redis的Markdown渲染缓存","date":"2019-07-18","brev":"为了适应国内的形势，我得把博客在我的个人网站(www.lewinblog.com)上也实现一份。","tags":["Python"],"path":"blog/2019/190718-基于Redis的Markdown渲染缓存.md"}
 ```
 
 

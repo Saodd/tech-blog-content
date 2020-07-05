@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"[转载]CodeReview正确的姿势","date":"2020-04-06","brev":"来自知乎的问答《CodeReview正确的姿势是什么？》。虽然平时自己都有思考，但是这篇回答还是很好的做了一番总结。","tags":["杂谈"]}
+{"title":"[转载]CodeReview正确的姿势","date":"2020-04-06","brev":"来自知乎的问答《CodeReview正确的姿势是什么？》。虽然平时自己都有思考，但是这篇回答还是很好的做了一番总结。","tags":["杂谈"],"path":"blog/2020/200406-CodeReview的正确姿势.md"}
 ```
 
 

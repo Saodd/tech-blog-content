@@ -1,1 +1,1 @@
-{"blogs":[{"title":"Celery练习：在多主机环境下的消息传递","date":"2019-06-28","brev":"用docker来模拟一个分布式系统的环境来学习Celery框架。","tags":["Docker","消息队列"]}],"total":1}
+{"blogs":[{"title":"Celery练习：在多主机环境下的消息传递","date":"2019-06-28","brev":"用docker来模拟一个分布式系统的环境来学习Celery框架。","tags":["Docker","消息队列"],"path":"blog/2019/190628-Celery在分布式系统中的实现.md"}],"total":1}

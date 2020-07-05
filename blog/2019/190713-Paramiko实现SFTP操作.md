@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"Paramiko实现SFTP操作","date":"2019-07-13","brev":"Paramiko(http://www.paramiko.org/)是python环境下实现SFTP的常用第三方库。支持SSHv2，底层使用C语言拓展，但是编写的时候是完全的python接口。","tags":["Python"]}
+{"title":"Paramiko实现SFTP操作","date":"2019-07-13","brev":"Paramiko(http://www.paramiko.org/)是python环境下实现SFTP的常用第三方库。支持SSHv2，底层使用C语言拓展，但是编写的时候是完全的python接口。","tags":["Python"],"path":"blog/2019/190713-Paramiko实现SFTP操作.md"}
 ```
 
 

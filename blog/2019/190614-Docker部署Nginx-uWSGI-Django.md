@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"使用Docker部署Nginx uWSGI Django","date":"2019-06-14","brev":"学习Django很久了，但是一直都是在其自带的测试服务器 manage.py runserver 上运行，今天来看看生产环境的部署。生产环境当然是首推Nginx了。","tags":["Docker","Web"]}
+{"title":"使用Docker部署Nginx uWSGI Django","date":"2019-06-14","brev":"学习Django很久了，但是一直都是在其自带的测试服务器 manage.py runserver 上运行，今天来看看生产环境的部署。生产环境当然是首推Nginx了。","tags":["Docker","Web"],"path":"blog/2019/190614-Docker部署Nginx-uWSGI-Django.md"}
 ```
 
 

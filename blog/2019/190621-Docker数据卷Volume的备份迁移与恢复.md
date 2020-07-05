@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"Docker数据卷Volume的备份，迁移，恢复","date":"2019-06-21","brev":"之前仗着 Docker 强大的特性，直接就在自己的桌面电脑上起了很多服务。但是为了公司长远考虑，还是要把这些容器迁移到服务器中。","tags":["Docker"]}
+{"title":"Docker数据卷Volume的备份，迁移，恢复","date":"2019-06-21","brev":"之前仗着 Docker 强大的特性，直接就在自己的桌面电脑上起了很多服务。但是为了公司长远考虑，还是要把这些容器迁移到服务器中。","tags":["Docker"],"path":"blog/2019/190621-Docker数据卷Volume的备份迁移与恢复.md"}
 ```
 
 

@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"实战项目：使用Gitlab-CI部署Go项目","date":"2019-09-27","brev":"之前部署了C++项目，但是由于我对C++工具链不太熟，而且没有项目管理权限，因此做的很保守。现在自己创立一个Go项目，再来看一下Gitlab-CI的用法。","tags":["DevOps","Golang"]}
+{"title":"实战项目：使用Gitlab-CI部署Go项目","date":"2019-09-27","brev":"之前部署了C++项目，但是由于我对C++工具链不太熟，而且没有项目管理权限，因此做的很保守。现在自己创立一个Go项目，再来看一下Gitlab-CI的用法。","tags":["DevOps","Golang"],"path":"blog/2019/190927-使用Gitlab-CI部署Go项目.md"}
 ```
 
 

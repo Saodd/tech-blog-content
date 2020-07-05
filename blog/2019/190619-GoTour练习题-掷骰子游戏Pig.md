@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"GoTour后续练习题之 掷骰子游戏 Pig","date":"2019-06-19","brev":"在Gotour的后续页面中，我们进入的是《Codewalk: Go中的一等函数（First Class Functions in Go）》。简单查看代码之后，发现这个游戏纯粹是电脑左右跟右手玩，我们人类玩家只是看个结果而已。凭什么呀！我也想玩！","tags":["Golang"]}
+{"title":"GoTour后续练习题之 掷骰子游戏 Pig","date":"2019-06-19","brev":"在Gotour的后续页面中，我们进入的是《Codewalk: Go中的一等函数（First Class Functions in Go）》。简单查看代码之后，发现这个游戏纯粹是电脑左右跟右手玩，我们人类玩家只是看个结果而已。凭什么呀！我也想玩！","tags":["Golang"],"path":"blog/2019/190619-GoTour练习题-掷骰子游戏Pig.md"}
 ```
 
 

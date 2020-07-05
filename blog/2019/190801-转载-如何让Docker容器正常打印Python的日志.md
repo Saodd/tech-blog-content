@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"[转载]如何让Docker容器正常打印Python的日志","date":"2019-08-01","brev":"在本地通过Swarm进行完整的容器部署调试。但是非常诡异的事情出现了，Django中的print就是打印不出来。","tags":["Docker"]}
+{"title":"[转载]如何让Docker容器正常打印Python的日志","date":"2019-08-01","brev":"在本地通过Swarm进行完整的容器部署调试。但是非常诡异的事情出现了，Django中的print就是打印不出来。","tags":["Docker"],"path":"blog/2019/190801-转载-如何让Docker容器正常打印Python的日志.md"}
 ```
 
 

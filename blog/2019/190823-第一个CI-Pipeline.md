@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"第一个CI-Pipeline","date":"2019-08-23","brev":"使用测试机上已经build好的image，来实现一个真正的测试项目。","tags":["DevOps"]}
+{"title":"第一个CI-Pipeline","date":"2019-08-23","brev":"使用测试机上已经build好的image，来实现一个真正的测试项目。","tags":["DevOps"],"path":"blog/2019/190823-第一个CI-Pipeline.md"}
 ```
 
 

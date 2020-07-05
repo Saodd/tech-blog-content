@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"Golang之Redis库选择","date":"2020-03-08","brev":"之前自己一直用的是 go-redis，用的挺好。但是看到公司项目用的是 redigo，感觉不好用，一方面对连接池的支持好像有问题，另一方面语法规则也很奇怪。所以决定把两个库的源代码都看一下做个对比。","tags":["Golang","Redis","源码"]}
+{"title":"Golang之Redis库选择","date":"2020-03-08","brev":"之前自己一直用的是 go-redis，用的挺好。但是看到公司项目用的是 redigo，感觉不好用，一方面对连接池的支持好像有问题，另一方面语法规则也很奇怪。所以决定把两个库的源代码都看一下做个对比。","tags":["Golang","Redis","源码"],"path":"blog/2020/200308-Golang之Redis库选择.md"}
 ```
 
 
