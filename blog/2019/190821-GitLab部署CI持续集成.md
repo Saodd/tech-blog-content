@@ -1,6 +1,8 @@
-```lw-blog-meta
-{"title": "GitLab配置CI环境", "date": "2019-08-21", "tags": ["DevOps"], "brev": "CI/CD应该是DevOps的关键内容之一吧。本文以Python项目为例，简述GitLab-CI的安装和运行。"}
+```json lw-blog-meta
+{"Title":"GitLab配置CI环境","Date":"2019-08-21","Brev":"CI/CD应该是DevOps的关键内容之一吧。本文以Python项目为例，简述GitLab-CI的安装和运行。","Tags":["DevOps"]}
 ```
+
+
 
 ## 什么是CI
 

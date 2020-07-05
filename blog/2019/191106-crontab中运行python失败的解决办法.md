@@ -1,6 +1,8 @@
-```lw-blog-meta
-{"title": "crontab中运行python失败的解决办法", "date": "2019-11-06", "tags": ["OS"], "brev": "最近在将公司项目打包进Docker中，除了python依赖环境，crontab也是重要的部分。但是在转移crontab的时候遇到很奇怪的问题，python不能正常执行。"}
+```json lw-blog-meta
+{"Title":"crontab中运行python失败的解决办法","Date":"2019-11-06","Brev":"最近在将公司项目打包进Docker中，除了python依赖环境，crontab也是重要的部分。但是在转移crontab的时候遇到很奇怪的问题，python不能正常执行。","Tags":["OS"]}
 ```
+
+
 
 ## 首先cron是正常的
 

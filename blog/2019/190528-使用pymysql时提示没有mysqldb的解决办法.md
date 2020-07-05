@@ -1,6 +1,8 @@
-```lw-blog-meta
-{"title": "使用pymysql时提示没有mysqldb的解决办法", "date": "2019-05-28", "tags": ["DB"], "brev": "在我的windows上运行sqlalchemy一切正常，但是进入到 python容器(linux环境)中运行就报错。"}
+```json lw-blog-meta
+{"Title":"使用pymysql时提示没有mysqldb的解决办法","Date":"2019-05-28","Brev":"在我的windows上运行sqlalchemy一切正常，但是进入到 python容器(linux环境)中运行就报错。","Tags":["DB"]}
 ```
+
+
 
 ## 报错情况
 

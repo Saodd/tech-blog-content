@@ -1,11 +1,8 @@
-```lw-blog-meta
-{
-"title": "Go源码：context标准库",
-"date": "2019-11-26",
-"brev": "在读 net/http 包之前，先来看一下 context 这个包。它主要是针对请求来进行资源管理，提供了跨Go程的资源组织功能。希望通过学习这个包，深入了解一下 chan 的使用。",
-"tags": ["Golang","源码"]
-}
+```json lw-blog-meta
+{"Title":"Go源码：context标准库","Date":"2019-11-26","Brev":"在读 net/http 包之前，先来看一下 context 这个包。它主要是针对请求来进行资源管理，提供了跨Go程的资源组织功能。希望通过学习这个包，深入了解一下 chan 的使用。","Tags":["Golang","源码"]}
 ```
+
+
 
 ## context包 简介
 

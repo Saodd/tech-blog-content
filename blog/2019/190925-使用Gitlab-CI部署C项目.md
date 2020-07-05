@@ -1,6 +1,8 @@
-```lw-blog-meta
-{"title": "实战项目：使用Gitlab-CI部署C++项目", "date": "2019-09-25", "tags": ["DevOps", "C"], "brev": "终于来了个令人兴奋的项目——用Gitlab-CI武装我们现有的C++项目。当真正部署上线之后，你会发现CI比你想象的还要方便。"}
+```json lw-blog-meta
+{"Title":"实战项目：使用Gitlab-CI部署C++项目","Date":"2019-09-25","Brev":"终于来了个令人兴奋的项目——用Gitlab-CI武装我们现有的C++项目。当真正部署上线之后，你会发现CI比你想象的还要方便。","Tags":["DevOps","C"]}
 ```
+
+
 
 ## 项目需求
 

@@ -1,6 +1,8 @@
-```lw-blog-meta
-{"title": "使用Http的POST方法向Django应用中推送数据", "date": "2019-05-25", "tags": ["Python"], "brev": "使用POST方法推送数据，利用Django强大的Admin系统对数据进行查看和管理。"}
+```json lw-blog-meta
+{"Title":"使用Http的POST方法向Django应用中推送数据","Date":"2019-05-25","Brev":"使用POST方法推送数据，利用Django强大的Admin系统对数据进行查看和管理。","Tags":["Python"]}
 ```
+
+
 
 ## 项目需求
 

@@ -1,6 +1,8 @@
-```lw-blog-meta
-{"title": "Python异步IO", "date": "2019-08-06", "tags": ["Python"], "brev": "面试的时候被问到过Python异步模型的问题，但是当时居然满脑子的go，答得不好。时隔数日回首，如果再给我一次机会，我一定要反问回去：“用Python实现高并发不累吗？？为什么不用go？？” 好吧，今天来好好看一下Python的异步IO用法。"}
+```json lw-blog-meta
+{"Title":"Python异步IO","Date":"2019-08-06","Brev":"面试的时候被问到过Python异步模型的问题，但是当时居然满脑子的go，答得不好。时隔数日回首，如果再给我一次机会，我一定要反问回去：“用Python实现高并发不累吗？？为什么不用go？？” 好吧，今天来好好看一下Python的异步IO用法。","Tags":["Python"]}
 ```
+
+
 
 ## 前言
 

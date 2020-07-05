@@ -1,6 +1,8 @@
-```lw-blog-meta
-{"title": "[转载]centos7升级dockerCE最新版", "date": "2019-07-30", "tags": ["Docker"], "brev": "因为腾讯云默认提供的centos系统上的docker非常老(1.13.1)，部署的时候发现 docker service logs 是只有新版本才有的功能。所以必须重装一个新版的docker。"}
+```json lw-blog-meta
+{"Title":"[转载]centos7升级dockerCE最新版","Date":"2019-07-30","Brev":"因为腾讯云默认提供的centos系统上的docker非常老(1.13.1)，部署的时候发现 docker service logs 是只有新版本才有的功能。所以必须重装一个新版的docker。","Tags":["Docker"]}
 ```
+
+
 
 ## 原文地址
 
