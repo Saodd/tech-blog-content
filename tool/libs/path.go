@@ -7,14 +7,16 @@ import (
 	"path"
 )
 
+const ProjectDirname = "tech-blog-content"
+
 // CheckWorkDir 检查当前工作目录是否是项目根目录，不是的话就退出
 func CheckWorkDir() {
 	workDir, err := os.Getwd()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if path.Base(workDir) != "tech-blog-content" {
-		log.Fatalln("当前路径不是项目根目录(tech-blog-content)！")
+	if path.Base(workDir) != ProjectDirname {
+		log.Fatalf("当前路径不是项目根目录(%s)！\n", ProjectDirname)
 	}
 }
 
