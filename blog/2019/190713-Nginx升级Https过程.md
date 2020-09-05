@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"Nginx升级Https过程","date":"2019-07-13","brev":"今天开始折腾证书的配置问题吧。不过还好，在tx云上很方便的就申请了证书下来，直接配置到服务器就可以了。","tags":["Web"],"path":"blog/2019/190713-Nginx升级Https过程.md"}
+{"title":"Nginx升级Https过程","date":"2019-07-13","brev":"今天开始折腾证书的配置问题吧。不过还好，在tx云上很方便的就申请了证书下来，直接配置到服务器就可以了。","tags":["中间件"],"path":"blog/2019/190713-Nginx升级Https过程.md"}
 ```
 
 
