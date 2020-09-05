@@ -2,7 +2,7 @@
 title: Headless 服务端模拟浏览器
 date: "2020-08-11"
 brev: 做爬虫的人肯定知道selenium这个框架，但是我们今天要介绍的来自于chrome家族的Headless工具比它更加强大。
-tags: [Golang, Web]
+tags: [Golang, 中间件]
 ```
 
 ## 基本原理

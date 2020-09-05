@@ -2,7 +2,7 @@
 title: 认证机制：Session与JWT
 date: "2020-06-04"
 brev: Web应用中如何对客户端身份进行验证，这是一个非常基础的问题。
-tags: [Web]
+tags: [前端]
 ```
 
 

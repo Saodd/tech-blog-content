@@ -2,7 +2,7 @@
 title: 'Golang: Chan 性能初探'
 date: "2020-02-27"
 brev: Golang语言的灵魂是协程，而协程的灵魂是chan。作为我们最常用的数据结构之一，chan的性能问题到底如何呢。
-tags: [Golang, 坑]
+tags: [Golang, TODO]
 ```
 
 
