@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"Headless 服务端模拟浏览器","date":"2020-08-11","brev":"做爬虫的人肯定知道selenium这个框架，但是我们今天要介绍的来自于chrome家族的Headless工具比它更加强大。","tags":["Golang","中间件"],"path":"blog/2020/200811-Headless模拟浏览器.md"}
+{"title":"Headless 服务端模拟浏览器","date":"2020-08-11","brev":"做爬虫的人肯定熟悉模拟浏览器，我们今天介绍来自于chrome家族的Headless工具。","tags":["Golang","中间件"],"path":"blog/2020/200811-Headless模拟浏览器.md"}
 ```
 
 
