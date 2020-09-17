@@ -11,6 +11,8 @@
 - 4.搭建一个自建博客——Github Packages
 - 5.其他有趣的操作
 
+> 本文所用到的代码托管在 https://github.com/Saodd/learn-gh-actions
+
 ## 1. 简介
 
 ### 1.1 历史背景
@@ -33,8 +35,9 @@ Github 做的比较晚（2020年初左右正式上线？），背靠微软，有
 
 下载、上传、计算、构建，至少主流应用场景是没问题的。
 
-> 所以问题来了，当你拥有一台云服务器时，你会想做什么？  
-> ——接下来以搭建博客作为例子，讲一些主要的使用方法。
+所以问题来了，当你拥有一台云服务器时，你会想做什么？
+
+——接下来以搭建博客作为例子，讲一些主要的使用方法。
 
 ## 2. 搭建一个静态博客——Github Pages
 
@@ -82,13 +85,13 @@ Jekyll 可以算是 Github Actions 的前身，它也提供了从模板语言到
 
 ## 3. 搭建一个前后分离的博客——Github Actions
 
-静态博客有个很明显的缺点——内容与样式耦合在一个项目里，不便于管理。如何不便了？举个例子，当想要更换模板的时候，当要迁移项目托管平台的时候，当更换本地电脑的时候，臃肿的项目代码总是会造成各种各样的小麻烦。
+静态博客有个很明显的缺点——内容与样式耦合在一个项目里，不便于管理。如何不便了？举个例子，当想要更换主题模板的时候，当要迁移项目托管平台的时候，当更换本地电脑的时候，臃肿的项目代码总是会造成各种各样的小麻烦。
 
-另外，模板语言真的很烦啊 ：）
+另外，最重要的是，模板语言真的很烦啊 ：）
 
-就像我们的Web技术从后端模板渲染，发展到MVC、MVVM等模式一样，我也希望用这种思路，将博客的各个组成成分分离开——分成前端、后端、内容三个部分。
+就像我们的Web技术从后端模板渲染发展到MVVM等模式一样，我也希望用这种思路，将博客的各个组成成分分离开——分成前端、后端、内容三个部分。
 
-那么问题来了，Github Actions 只是提供一个临时服务器用于运行简单的脚本，我们要如何在 Github 上运行一个后端？——或者说详细一点，如何运行一个提供内容服务的后端？
+那么问题来了，Github Actions 只是提供一个临时服务器用于运行简单的脚本，我们要如何在 Github 上运行一个后端？——或者说详细一点，如何运行一个只提供内容服务的后端？
 
 ### 3.1 路径的奥妙
 
@@ -251,7 +254,7 @@ jobs:
 
 > 本文只讨论使用 Docker 来构建和管理服务的方法。
 
-有时我们可能希望我们的博客后端去做更多的事情，而不仅仅是提供 GET 接口而已。这时候我们就要想办法把 Github 和自己的云服务器关联起来，让 Github Actions 的运行结果可以反馈到自己的云服务器上。
+毕竟 Pages 只提供静态服务。但是有时我们可能希望我们的博客后端去做更多的事情，而不仅仅是提供 GET 接口而已。这时候我们就要想办法把 Github 和自己的云服务器关联起来，让 Github Actions 的运行结果可以反馈到自己的云服务器上。
 
 主要思路：因为 Actions 提供的是临时服务器，因此只能由 Actions 去登录我们固定的服务器接口。
 
@@ -388,27 +391,49 @@ docker pull xxx && docker stack deploy xxxxx
 
 ### 5.1 单元测试及报告
 
-大家肯定对这种 Badge 并不陌生： ![Github-Actions](https://github.com/Saodd/leetcode-algo/workflows/Go/badge.svg?branch=master)
+大家肯定对这种 Badge 并不陌生： 
 
-它往往被设置在开源项目代码的 `Readme.md` 文件中，并且设置得越多就好像越是炫酷 ：）
+![Github-Actions](https://github.com/Saodd/leetcode-algo/workflows/Go/badge.svg?branch=master)
+
+![Gitlab-CI](https://github.com/Saodd/Saodd.github.io.backup-Jun2020/raw/master/static/blog/2019-09-27-apmogo.png)
+
+它往往被设置在开源项目代码的 Readme.md 文件中，并且设置得越多就好像越是炫酷 ：）
 
 Github Actions 对于 Badges 的支持并不多，它只支持一些默认的事件。
 
-比如上面这个就代表着某个分支的某个 workflow 最近一次运行是否正常。单元测试框架如果异常退出的话，往往会返回非0值，这个值会被 Actions 捕获到，从而将此次运行标记为失败。
+比如上面这个就代表着某个分支的某个 workflow 最近一次运行是否正常。如果脚本命令异常退出的话，往往会返回非0值，这个值会被 Actions 捕获到，从而将此次运行标记为失败。
 
 更多事件请自行摸索。[官方文档](https://docs.github.com/en/actions/configuring-and-managing-workflows/configuring-a-workflow#adding-a-workflow-status-badge-to-your-repository)
 
-> Gitlab-CI 对于单元测试有着更好的支持。它可以从日志输出中，用正则表达式去寻找单元覆盖度等指标并记录下来，然后生成带覆盖度的 Badge  
-> Github Actions 并不支持直接生成覆盖度 Badge, 如果要自己做的话，一个可参考的方案是，参照水印作图服务实现一个自己的Badge作图服务，然后每次 Actions 运行时访问自己的这个服务去生成图标，然后挂载在 Pages 上。
+> Gitlab-CI 对于单元测试有着更好的支持。它可以从日志输出中，用正则表达式去寻找单元覆盖度等指标并记录下来，然后生成带覆盖度的 Badge 。  
+> Github Actions 并不支持直接生成覆盖度 Badge, 如果要自己做的话，其实也就是每次生成的html/css，然后挂载在 Pages 上。
 
 > 覆盖度报告一般都可以生成html格式的，因此可以挂载在 Github Pages 上。甚至可以让 Badge 链接到这个覆盖度报告。（这样逼格又更高了呢）（例如： https://github.com/Saodd/leetcode-algo ）
 
 ### 5.2 手动触发
 
+#### 思路一：用来开门？
+
+如果 door.i.***.net 可以被外部访问（通过证书等认证方式）
+
+那么可以做一个 Actions 专门用来开门。
+
+权限控制就用 Github 的 Organization 功能，只要在团队内的用户，都可以触发这个 Actions 。
+
+#### 思路二：作为临时服务器，处理高峰期业务？
+
+**技术上**完全可行。只要上传业务代码，然后通过 Secrets 保存数据库密码等信息。只要没有IP限制等问题，理论上可以处理任何业务。
+
 ### 5.3 定时触发
+
+周期性地爬取一个数据（例如天气、温度、股价等），然后追加写入到 Pages 中。
+
+甚至与 `Prometheus` 配合起来。
 
 ### 5.4 issue 与 comment
 
-### 5.5 GopherBot
+`GopherBot` 是 Golang 团队做的一个很有意思的机器人。主要功能是，根据 issue 和 comment 内容的一些特征，做出相应的处理。
 
-https://github.com/gopherbot
+https://github.com/golang/go/issues/41289#issuecomment-689658394
+
+它比 Github Actions 出现得更早，应该是读取了用户通知消息来实现的。
