@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"Github Actions 入门","date":"2020-09-13","brev":"以搭建博客为例，简单讲一下GH-Actions的主要用途。","tags":["DevOps","TODO"],"path":"blog/2020/200913-GithubActions入门.md"}
+{"title":"Github Actions 入门","date":"2020-09-13","brev":"以搭建博客为例，简单讲一下GH-Actions的主要用途。","tags":["DevOps"],"path":"blog/2020/200913-GithubActions入门.md"}
 ```
 
 
