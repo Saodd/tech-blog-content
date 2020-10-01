@@ -2,7 +2,7 @@
 title: "Github Actions 入门"
 date: "2020-09-13"
 brev: 以搭建博客为例，简单讲一下GH-Actions的主要用途。
-tags: [DevOps, TODO]
+tags: [DevOps]
 ```
 
 ## 目录 
