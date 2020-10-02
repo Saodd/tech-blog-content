@@ -1,5 +1,5 @@
 ```json lw-blog-meta
-{"title":"Protocol Buffers 3 入门教程","date":"2020-09-19","brev":"【弃坑】又是一个没有中文官方教程的技术。","tags":["TODO"],"path":"blog/2020/200919-Protobuf3入门.md"}
+{"title":"Protocol Buffers 3 入门教程","date":"2020-09-19","brev":"【弃坑】Protobuf 是一种高效的数据序列化技术。","tags":["TODO"],"path":"blog/2020/200919-Protobuf3入门.md"}
 ```
 
 
@@ -7,7 +7,7 @@
 
 Protobuf 居然对 Golang 的支持都不甚友好，这东西真的能有前途吗？
 
-还是老老实实用json吧……
+还是先暂时老老实实用json吧……
 
 ## 前言
 
