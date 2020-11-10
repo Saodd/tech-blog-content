@@ -2,7 +2,7 @@
 title: "FastAPI 入坑体验"
 date: "2020-10-03"
 brev: "FastAPI 是 Python 世界中的一个年轻的web框架。基于 Pydantic，在类型方面做了很大的努力。"
-tags: [Python， TODO]
+tags: [Python, TODO]
 ```
 
 ## 前言
