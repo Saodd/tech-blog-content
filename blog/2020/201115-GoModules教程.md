@@ -1,5 +1,5 @@
 ```yaml lw-blog-meta
-title: "Go Modules 快速入门（第三方库编写者）"
+title: "Go Modules 快速入门"
 date: "2020-11-15"
 brev: "已经很熟悉作为最下游的调包侠如何使用 Go Modules ，今天来研究一下作为上游的第三方库的编写者应该如何使用这套体系来创建规范的库供他人使用。"
 tags: [Golang]
@@ -9,7 +9,7 @@ tags: [Golang]
 
 - `Modules`: 指的是一整个第三方库，比如`github.com/gin-gonic/gin`，一个库中可以包含多个Package
 - `Package`: 指的是一个 Go 文件夹目录，其中每个`.go`文件都要以`package xxx`开头，是我们项目代码的基本组织结构，不同的Package中调用其他Package的函数使用`xxx.SomeFunction()`这样
-- 版本号：[参考官博3](https://blog.golang.org/publishing-go-modules) 三级版本编号，大版本-小版本-补丁版本。
+- 版本号：三级版本编号，大版本-小版本-补丁版本。 [参考官博3](https://blog.golang.org/publishing-go-modules) 
     + 同一个大版本中，后面的小版本必须兼容前面的小版本，不允许braking changes
     + 一般有新功能增加则使用小版本，只是修复则使用补丁版本。
     + 如果要废弃或者修改小版本中的接口，则考虑先将原接口标记为`deprecated`，然后把修改后的接口用一个新命名。在下一个大版本中再移除旧的接口。 [参考官博5](https://blog.golang.org/module-compatibility)
