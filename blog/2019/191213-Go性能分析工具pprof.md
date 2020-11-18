@@ -232,7 +232,7 @@ Showing nodes accounting for 9.25MB, 100% of 9.25MB total
 
 我们还可以将上述profile数据做可视化处理，我们在交互界面输入`svg`或者`png`命令，就会在当前目录下输出相应的图片资源。（注1，可视化的功能依赖[graphviz](https://graphviz.gitlab.io/download/)，要提前安装）（注2，这里有个小坑，windows不支持`go tool pprof -png http... >out.png`这样的命令，输出的文件无法打开；要交互界面下输出的文件才能打开。）
 
-![Go-pprof-png](/static/blog/2019-12-13-Go-pprof-png.png)
+![Go-pprof-png](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-12-13-Go-pprof-png.png)
 
 ### 2.2 基本使用：线下应用
 

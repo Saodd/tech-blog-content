@@ -22,7 +22,7 @@ tags: [DevOps, C]
 
 `CI`的概念我就不说了，网络上太多文章了。全程都是跟着Gitlab的英文文档走的，写得很详细，虽然没有全文检索功能，经常忘记自己之前看的东西放在哪里了……
 
-![CI](/static/blog/2019-09-25-CI.png)
+![CI](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-09-25-CI.png)
 
 它实际上就是一系列事先定义的脚本，当有特定条件时（比如push到代码库）就触发相应的脚本。
 
