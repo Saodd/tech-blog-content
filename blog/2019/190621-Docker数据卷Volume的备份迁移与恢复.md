@@ -18,7 +18,7 @@ tags: [Docker]
 
 首先看一下`mongo`容器的状态（并没有什么意义，只是关心一下而已 @_< ）:
 
-```shell
+```shell-session
 PS > C:/Users/lewin> docker ps
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                      NAMES
 c4fe2af92a81        mongo               "docker-entrypoint.s…"   3 weeks ago         Up 6 days           0.0.0.0:20012->27017/tcp   apmos_mongo_1
@@ -46,7 +46,7 @@ volumes:
 
 注意了，这个`volume`是我手动建立的。那么我们按照官方的做法：
 
-```shell
+```shell-session
 PS > docker run --rm --volumes-from apmos_mongo_1 -v 宿主机目录:/backup alpine tar cvf /backup/mongo.tar /data/db
 #                  ↑ 加载需要备份的卷  ↑                                                               ↑卷中的目录
 
@@ -64,7 +64,7 @@ PS > docker run --rm --volumes-from apmos_mongo_1 -v 宿主机目录:/backup alp
 
 先创建一个`volume`，因为是数据库的卷，所以我们慎重一点，给它命名，这样更不容易被误删。
 
-```shell
+```shell-session
 lewin@某服务器:~$ docker volume create mongo
 mongo
 
@@ -72,7 +72,7 @@ mongo
 
 然后把备份包解压到这个`volume`里面：
 
-```shell
+```shell-session
 lewin@某服务器:~$ docker run --rm -v mongo:/data/db -v /home/users/lewin/docker/:/backup alpine sh -c "cd /data/db && tar xvf /backup/mongo.tar --strip 1"
 
 ```

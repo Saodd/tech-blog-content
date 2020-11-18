@@ -21,13 +21,13 @@ tags: [Golang, 中间件]
 
 因为是服务端应用，我这里选择更轻量、并发性更好的go语言来实现，框架是[`chromedp`](https://github.com/chromedp/chromedp)，它有5.1k star，而且在易用性上我觉得它是做的比较好的，很快就上手了。
 
-```shell
+```shell-session
 $ go get -u github.com/chromedp/chromedp
 ```
 
 然后chrome进程我选择用docker环境，镜像地址在[headless-shell](https://hub.docker.com/r/chromedp/headless-shell/)。运行容器后，默认通过9222端口来通信。
 
-```shell
+```shell-session
 # 容器启动命令
 $ docker run -d -p 9222:9222 --rm --name headless-shell chromedp/headless-shell
 ```

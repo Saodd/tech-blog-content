@@ -26,7 +26,7 @@ tags: [Golang]
 
 首先，给自己这个库命名，并初始化。注意，这个名称最好是你实际的Git项目网址：
 
-```shell script
+```shell-session
 $ go mod init github.com/Saodd/learn-go-modules-dep 
 ```
 
@@ -34,7 +34,7 @@ $ go mod init github.com/Saodd/learn-go-modules-dep
 
 至于版本号，则是通过 Git 来天然实现的，与Golang 无关：
 
-```shell script
+```shell-session
 $ git add .
 $ git commit -m "......"
 
@@ -48,13 +48,13 @@ $ git push origin v1.0.0
 
 我们创建一个 Golang 项目文件夹，第一件事是初始化（并且记得在你的IDE中开启GoModules支持）：
 
-```shell script
+```shell-session
 $ go mod init xxxxxxx
 ```
 
 然后引入我们前面刚刚上传的"库"，注意我们可以手动指定版本号：
 
-```shell script
+```shell-session
 $ go get -u github.com/Saodd/learn-go-modules-dep@v1.0.0
 ```
 
@@ -66,7 +66,7 @@ $ go get -u github.com/Saodd/learn-go-modules-dep@v1.0.0
 
 我们先给前面所写的"库"增加一个函数，然后打上新的标签，上传：
 
-```shell script
+```shell-session
 $ git add . && git commit -m "......"
 $ git tag v1.1.0
 $ git push origin v1.1.0
@@ -74,13 +74,13 @@ $ git push origin v1.1.0
 
 在调用这个库的项目中，我们可以选择直接编辑`go.mod`文件，修改版本号（修改之后IDE应该会自动识别版本并给你的代码做出相应的提示）；我们也可以重新get一下：
 
-```shell script
+```shell-session
 $ go get -u github.com/Saodd/learn-go-modules-dep@v1.1.0
 ```
 
 如果我们不指定版本号，则会自动更新到最新的一个小版本上：
 
-```shell script
+```shell-session
 $ go get -u github.com/Saodd/learn-go-modules-dep@v1.0.0  # 恢复到v1.0.0版本
 $ go get -u github.com/Saodd/learn-go-modules-dep  # 更新到最新的小版本号上，即v1.1.0版本
 ```
@@ -91,7 +91,7 @@ $ go get -u github.com/Saodd/learn-go-modules-dep  # 更新到最新的小版本
 
 新文件夹中也要包括一个新的`go.mod`文件，其第一行应该标注出这个版本的新引用路径`module github.com/Saodd/learn-go-modules-dep/v2`
 
-```shell script
+```shell-session
 $ mkdir v2 && cp *.go v2/ && 写代码
 $ cp go.mod v2/go.mod && go mod edit -module module github.com/Saodd/learn-go-modules-dep/v2 v2/go.mod
 $ git add . && git commit -m "......"
@@ -102,7 +102,7 @@ $ git push origin v2.0.0
 
 在调用这个库的项目中，我们更新依赖时需要同时指定新的引用路径和新的版本号：
 
-```shell script
+```shell-session
 $ go get -u github.com/Saodd/learn-go-modules-dep/v2@v2.0.0
 ```
 
@@ -138,7 +138,7 @@ $ go get -u github.com/Saodd/learn-go-modules-dep/v2@v2.0.0
 
 然后在指定环境变量的情况下执行 go get :
 
-```shell script
+```shell-session
 $ GOPRIVATE=git.meideng.net go get -u git.meideng.net/somebody/learn-go-modules-private
 go: git.meideng.net/somebody/learn-go-modules-private upgrade => v1.0.0
 ```

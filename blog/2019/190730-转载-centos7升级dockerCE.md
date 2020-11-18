@@ -15,13 +15,13 @@ tags: [Docker]
 
 停止docker服务：
 
-```shell
+```shell-session
 systemctl stop docker
 ```
 
 卸载旧版docker软件包：
 
-```shell
+```shell-session
 yum erase docker \
     docker-client \
     docker-client-latest \
@@ -37,7 +37,7 @@ yum erase docker \
 
 删除相关配置文件：
 
-```shell
+```shell-session
 find /etc/systemd -name '*docker*' -exec rm -f {} \;
 find /etc/systemd -name '*docker*' -exec rm -f {} \;
 find /lib/systemd -name '*docker*' -exec rm -f {} \;
@@ -49,13 +49,13 @@ rm -rf /var/run/docker
 
 软件包安装 (注：这个应该是基础的开发包，我没有装):
 
-```shell
+```shell-session
 yum install -y yum-utils  device-mapper-persistent-data lvm2
 ```
 
 添加yum源:
 
-```shell
+```shell-session
 yum-config-manager \
 --add-repo \
     https://download.docker.com/linux/centos/docker-ce.repo
@@ -63,26 +63,26 @@ yum-config-manager \
 
 查看可安装的版本:
 
-```shell
+```shell-session
 yum list docker-ce --showduplicates | sort -r
 ```
 
 安装最新版本:
 
-```shell
+```shell-session
 yum install docker-ce -y
 ```
 
 启动并开机自启:
 
-```shell
+```shell-session
 systemctl start docker
 systemctl enable docker
 ```
 
 查看docker版本:
 
-```shell
+```shell-session
 docker version 
 
 

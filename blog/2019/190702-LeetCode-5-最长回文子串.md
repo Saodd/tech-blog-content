@@ -35,7 +35,7 @@ tags: [算法与数据结构]
 
 贴上代码：
 
-```golang
+```go
 func longestPalindrome_end(s string) string {
     sb := []byte(s)
     longest := []byte{}
@@ -83,7 +83,7 @@ s[i-1-x] == s[i+x]
 2. 以每个取出的字符位置`i`为**中心**，（分奇数/偶数两种情况）向外拓展；
 如果满足回文条件，则尝试更新`最长回文子串`；如果不满足条件，那就break。
 
-```golang
+```go
 func longestPalindrome_mid(s string) string {
     sb := []byte(s)
     lengthTol := len(s)
@@ -151,7 +151,7 @@ abba ———>  #a#b#b#a#
 
 ```
 
-```golang
+```go
 {
     const null = byte('#')
     sb := make([]byte, lengthRL)
@@ -265,7 +265,7 @@ s.index:  .....↑.......↑.......↑......↑.........
 
 ### Manacher算法代码
 
-```golang
+```go
 func longestPalindrome(s string) string {
     lengthTol := len(s)
     lengthRL := lengthTol*2 + 1
@@ -317,7 +317,7 @@ func longestPalindrome(s string) string {
 
 测试用例：
 
-```golang
+```go
 func Main0005() {
     var input string
     var output []string

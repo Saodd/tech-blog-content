@@ -50,13 +50,13 @@ tags: [DevOps]
 
 先pull镜像：
 
-```shell
+```shell-session
 docker pull gitlab/gitlab-runner:latest 
 ```
 
 启动，这里要注意，一定要把Docker守护进程的sock套接字给挂载进去，这样runner这个容器才能跟Docker守护进程通信。
 
-```shell
+```shell-session
 docker run -d --name gitlab-runner --restart always \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -it gitlab/gitlab-runner:latest 
@@ -65,7 +65,7 @@ docker run -d --name gitlab-runner --restart always \
 将当前容器注册到GitLab的项目中去。我们在刚才的网页中会看到一个`url`和`token`，把他们输入进去。
 （注意，这里官方的Doc有点乱，说什么用一个容器来保存配置然后`volumefrom`云云，扯淡吧，我折腾了好久，还是通过`exec`在已经运行的容器内部注册比较靠谱）
 
-```shell
+```shell-session
 docker exec -it gitlab-runner gitlab-runner register
 # 有交互，按照提示输入相关信息。成功后会告诉你success
 ```

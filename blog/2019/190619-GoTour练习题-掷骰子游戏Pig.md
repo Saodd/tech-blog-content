@@ -8,7 +8,7 @@ tags: [Golang]
 
 ## 原代码
 
-```golang
+```go
 // Copyright 2011 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -185,7 +185,7 @@ func main() {
 我们人类玩家也应当是策略的一种，所以必须满足类型条件`type strategy func(score) action`，
 在此条件上实现与控制台输入的互动（我把这也理解为一种接口）。
 
-```golang
+```go
 func playerHuman() strategy {
     return func(s score) action {
         fmt.Printf("你的分数：%d，对手的分数：%d，本轮得分：%d     ", s.player, s.opponent, s.thisTurn)
@@ -213,7 +213,7 @@ func playerHuman() strategy {
 只需要看《人类 VS AI》这一场比赛就可以了。
 我这里偷懒，没有留下自定义AI策略的功能（其实也就是输入一个int），所以很简单：
 
-```golang
+```go
 func roundHumanVSComputer() {
     if winner := playHumanVSComputer(playerHuman(), stayAtK(1)); winner == 0 {
         println("you WIN !!!!")
@@ -226,7 +226,7 @@ func roundHumanVSComputer() {
 另外，为了更好的体验，我们在比赛中间提示一下“交换选手”；
 否则的话AI玩家运行速度很快，马上又让你进行下一轮的感觉会很奇怪：
 
-```golang
+```go
 func playHumanVSComputer(strategy0, strategy1 strategy) int {
     strategies := []strategy{strategy0, strategy1}
     var s score
@@ -246,12 +246,12 @@ func playHumanVSComputer(strategy0, strategy1 strategy) int {
 
 然后重新定义一下`main()`，这里用了大写因为我把真正的`main()`放在另一个package里了。
 
-```golang
+```go
 func Main0014() {
     roundHumanVSComputer()
 }
 ```
-```golang
+```go
 package main
 
 import "learnTour"

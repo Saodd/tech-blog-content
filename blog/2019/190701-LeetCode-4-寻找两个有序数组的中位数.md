@@ -123,7 +123,7 @@ nums2 = [3, 4]
 
 ### 3. 复习一下`二分法`的核心思路
 
-```golang
+```go
     var p int
     for lo <= hi {
 
@@ -157,7 +157,7 @@ nums2 = [3, 4]
 
 首先要坚持`测试驱动开发`的理念，先从测试用例开始：（因为测试用例不多，所以没用`testing`框架）
 
-```golang
+```go
 func Main0004() {
     var k [2][]int
     var v float64
@@ -178,7 +178,7 @@ func findMedianSortedArrays(nums1 []int, nums2 []int) float64 {
 
 ### 2. 初步实现
 
-```golang
+```go
 func findMedianSortedArrays(nums1 []int, nums2 []int) float64 {
     len1, len2 := len(nums1), len(nums2)
     if len1 > len2 {  // 确保在更小的数组上进行二分法
@@ -227,7 +227,7 @@ func mymin(x, y int) int {
 
 ### 3. 完整实现
 
-```golang
+```go
 func findMedianSortedArrays(nums1 []int, nums2 []int) float64 {
     len1, len2 := len(nums1), len(nums2)
     if len1 > len2 {

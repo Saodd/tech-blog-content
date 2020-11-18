@@ -10,7 +10,7 @@ tags: [Golang, Python]
 
 今天简单地写了个基本的排序算法，试一试他们之间差距到底有多大。
 
-```golang
+```go
 func sort_Select(li []int) {
     minindex := 0 // 健壮性先不考虑
     length := len(li)

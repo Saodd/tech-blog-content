@@ -8,7 +8,7 @@ tags: [OS]
 
 ## 使用mount
 
-```shell
+```shell-session
 sudo mount  \
     --verbose  # 打印日志
     -o --options  # 设置
@@ -34,14 +34,14 @@ for several filesystems (e.g. nfs, cifs) you might need a /sbin/mount.<type>  he
 
 意思是你需要一个`/sbin/mount.<type>`文件，那么这个怎么来呢，我们相应地安装就好了：
 
-```shell
+```shell-session
 sudo apt install cifs-utils
 # nfs装这个 sudo apt install nfs-common
 ```
 
 使用命令检查一下是否正确安装：
 
-```shell
+```shell-session
 lewin@aphkapmosprod02:~$ ls /sbin/mount.cifs
 /sbin/mount.cifs
 ```
@@ -59,13 +59,13 @@ lewin@aphkapmosprod02:~$ ls /sbin/mount.cifs
 那么我们显式地指定另一个协议`smb2`（或者`smb3`）。
 完整命令如下：
 
-```shell
+```shell-session
 sudo mount --verbose -t cifs -o username=lewin,password=123 //192.168.1.213/c ./windows/ -o vers=2.0
 ```
 
 挂载成功！检查一下挂载的状态：
 
-```shell
+```shell-session
 lewin@aphkapmosprod02:~$ df -h
 //192.168.1.213/c                     931G  107G  824G  12% /home/users/lewin/windows
 
@@ -99,7 +99,7 @@ lewin@aphkapmosprod02:~$ ls ./windows/
 
 示例用法：
 
-```shell
+```shell-session
 docker run \
     -v /host/upload:/home/foo/upload \
     -p 2222:22 -d atmoz/sftp \

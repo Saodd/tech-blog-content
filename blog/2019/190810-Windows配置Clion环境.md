@@ -27,7 +27,7 @@ tags: [C]
 下载回来需要解压。由于我厌倦了什么360压缩什么2345压缩那些烦人的广告，所以选择在Linux环境下解压。
 方法很简单，跑一个`Ubuntu容器`就可以了：
 
-```shell
+```shell-session
 docker run --rm -v C:/Users/lewin/mydata:/data -it ubuntu bash
 apt update
 apt install p7zip-full
@@ -76,7 +76,7 @@ cmake project is not loaded
 
 如果你只是想要一个**编译器**，你不需要IDE的帮助（比如Notepad流甚至vim流），那么我觉得一个Docker容器就够了。
 
-```shell
+```shell-session
 docker pull gcc
 docker run --rm -v C:/host/path:/container/path -w /container/path -it gcc bash
 

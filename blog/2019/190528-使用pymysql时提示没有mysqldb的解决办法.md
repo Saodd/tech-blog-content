@@ -10,7 +10,7 @@ tags: [DB]
 
 运行`sqlalchemy`时报错：
 
-```shell
+```shell-session
 root@2492dd2ac42b:/scripts/APMOS# python somepython.py
 Traceback (most recent call last):
   ...
@@ -29,7 +29,7 @@ ModuleNotFoundError: No module named 'MySQLdb'
 
 按理说我这个官方的python镜像应当非常健康才对，检查python环境：
 
-```shell
+```shell-session
 root@2492dd2ac42b:/scripts/APMOS/apmos2_etls/DBtools# pip list
 Package         Version
 --------------- ---------
@@ -60,7 +60,7 @@ XlsxWriter      1.1.8
 
 尝试安装`mysqldb`：
 
-```shell
+```shell-session
 root@2492dd2ac42b:/scripts/APMOS# pip install mysqldb
 Collecting mysqldb
   ERROR: Could not find a version that satisfies the requirement mysqldb (from versions: none)
@@ -76,7 +76,7 @@ If you're using a virtualenv with Python 3, you can install it like this:
 
 对于python3正确解决办法是：
 
-```shell
+```shell-session
 pip install mysqlclient
 ```
 

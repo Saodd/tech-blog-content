@@ -33,7 +33,7 @@ CMD bash
 
 然后构建（注意命令最后的点）：
 
-```shell
+```shell-session
 docker build -f Dockerfile0001 -t appython:0001 .
 ```
 
@@ -84,7 +84,7 @@ check_interval = 0
 
 然后我们要关掉这个容器，重新启动一个并挂载这个配置文件进去：
 
-```shell
+```shell-session
 docker run -d --name gitlab-runner --restart always \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -v /home/users/lewin/docker/config.toml:/etc/gitlab-runner/config.toml  \

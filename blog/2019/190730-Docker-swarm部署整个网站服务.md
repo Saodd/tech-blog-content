@@ -10,7 +10,7 @@ tags: [Docker]
 
 之前一直把docker当作虚拟机来使用，在`docker run`的后面附加大量的参数，像这样：
 
-```shell
+```shell-session
 docker run --name nginx -v /xx/:/xx/   \
 -v /xx/:/xx/xx/   \
 -v /xx:/xx/xx/  \
@@ -18,7 +18,7 @@ docker run --name nginx -v /xx/:/xx/   \
 -dit nginx
 ```
 
-```shell
+```shell-session
 docker run --name blogdj -v /xx/:/xx/ -v /xx/:/xx/xx/ \
         --net=xxnet -dit mypython:1.01 \
         uwsgi /xx/uwsgi.ini
@@ -28,7 +28,7 @@ docker run --name blogdj -v /xx/:/xx/ -v /xx/:/xx/xx/ \
 
 虽然看起来有点麻烦，不过我觉得在实际应用中**非常实用**，只需要两行代码就可以完成应用单元的升级：
 
-```shell
+```shell-session
 git pull 
 docker restart xxx
 ```
@@ -79,13 +79,13 @@ CMD ["nginx", "-g", "daemon off;"]
 
 每次有更新的话，都build一次（tag自己看着办）：
 
-```shell
+```shell-session
 docker build -t mynginx:latest C:/path/to/DockerfileDirectory
 ```
 
 然后提交到云端，这里因为我的服务器是腾讯云，所以容器服务也选在腾讯云：
 
-```shell
+```shell-session
 docker tag mynginx:latest ccr.ccs.tencentyun.com/yourname/mynginx:latest
 
 docker push ccr.ccs.tencentyun.com/yourname/mynginx:latest
@@ -176,7 +176,7 @@ location / {
 
 直接拿出刚才写的`docker-compose.yml`文件就可以部署啦：
 
-```shell
+```shell-session
 docker stack deploy -c /xxxx/docker-compose.yml myblog
 ```
 
@@ -184,7 +184,7 @@ docker stack deploy -c /xxxx/docker-compose.yml myblog
 
 使用以下命令确认各项服务的状态：
 
-```shell
+```shell-session
 docker service ls
 ```
 
@@ -192,15 +192,15 @@ docker service ls
 
  - 如果是第一次部署，可能会需要一些初始化的操作，我们使用以下命令：
 
-    ```shell
-    docker ps        # 查询服务栈中容器的具体名称
+    ```shell-session
+docker ps        # 查询服务栈中容器的具体名称
     docker exec -it xxx bash     # 进入容器中执行命令
     ```
 
   - 如果是已经部署的服务栈需要更新，我们使用以下命令：
 
-    ```shell
-    docker pull xxxxxxxx       # 把最新的Image拉下来
+    ```shell-session
+docker pull xxxxxxxx       # 把最新的Image拉下来
     docker service update --force xxx_xx      # 强制重启某个service
     docker stack deploy -c xx xx     # 如果yaml文件有更新，直接用这个
     ```
@@ -267,14 +267,14 @@ C:\Windows\System32\drivers\etc
 
     为了写一句：
 
-    ```shell
-    docker-compose -f xxx.yml -p xxx up
+    ```shell-session
+docker-compose -f xxx.yml -p xxx up
     ```
 
     就这么简单一个语句，我没注意，总是把up放在前面，写成这样：
 
-    ```shell
-    docker-compose up -f xxx.yml -p xxx
+    ```shell-session
+docker-compose up -f xxx.yml -p xxx
     ```
 
     然后一直报错，而且一直没有出现任何有价值的提示。官网上、搜索里都只说`docker-compose up`，却极少有实际应用的经验博客供参考，导致这个小问题就折腾了我一个小时……太痛苦了
