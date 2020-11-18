@@ -35,7 +35,7 @@ Browser -->  |  Nginx  |
 所幸，Gitlab为所有的**开源项目**提供免费的持续集成以及`Shared-Runner`服务。
 只需点几下鼠标，这个项目在Gitlab上就镜像了一份。
 
-![saodd-mirror](/static/blog/2019-10-13-saodd-mirror.png)
+![saodd-mirror](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-10-13-saodd-mirror.png)
 
 然后就是写配置文件啦。首先写了个Golang程序，负责在容器启动时向Mongo数据库中注册一些信息，以保证api提供的数据是最新的。
 
@@ -45,7 +45,7 @@ Browser -->  |  Nginx  |
 
 这样，我就得到了一个每次自动更新的docker-image，放在`gitlab-registry`里：
 
-![gitlab-registry](/static/blog/2019-10-13-gitlab-registry.png)
+![gitlab-registry](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-10-13-gitlab-registry.png)
 
 ### API项目
 
@@ -86,7 +86,7 @@ $ go build -tags netgo
 
 我目前只能用Dashboard看看各个项目的pipeline执行情况了，聊胜于无吧：
 
-![DashBoard](/static/blog/2019-10-13-DashBoard.png)
+![DashBoard](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-10-13-DashBoard.png)
 
 ## 问题：为什么要用集群
 

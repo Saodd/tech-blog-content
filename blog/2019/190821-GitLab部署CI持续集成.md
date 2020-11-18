@@ -42,7 +42,7 @@
 
 不过先不要太担心依赖的问题，我们设置好runner就知道它很简单了。
 
-![settings](/static/blog/2019-08-21-CI-settings.png)
+![settings](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-08-21-CI-settings.png)
 
 在设置页面，我们可以展开Runners面板，下面会显示出所有当前可用的runner。刚开始如果别人没有设置的话，是肯定没有runner的，我们要从头开始。
 
@@ -68,7 +68,7 @@ docker exec -it gitlab-runner gitlab-runner register
 # 有交互，按照提示输入相关信息。成功后会告诉你success
 ```
 
-![settings](/static/blog/2019-08-21-CI-success.png)
+![settings](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-08-21-CI-success.png)
 
 当runner前面有一个绿灯的时候，就说明这个runner运行正常了。
 
@@ -94,12 +94,12 @@ simple-test:
 
 git add, git status, git commit, git push一气呵成：
 
-![settings](/static/blog/2019-08-21-CI-pass.png)
+![settings](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-08-21-CI-pass.png)
 
 此前如果没有配置runner，每次commit都会显示测试失败的图标。现在显示一个绿色的小勾，强迫症一本满足了。
 
 我们点击小勾，可以看到具体的执行情况：
 
-![settings](/static/blog/2019-08-21-CI-log.png)
+![settings](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-08-21-CI-log.png)
 
 能看到日志是非常棒的，可以放心地安排更多更复杂的测试了。
