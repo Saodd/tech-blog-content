@@ -77,7 +77,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiemhhbmdzYW4ifQ.ec7IVPU-ePtb
 
 看起来杂乱无章，但这实际上只是base64处理过的字符串而已。我们可以借助Linux下的`echo "" |base64 -d`命令，来对各个部分进行解密：
 
-```shell
+```shell-session
 $ echo "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"|base64 -d
 {"alg":"HS256","typ":"JWT"}%
 
@@ -187,7 +187,7 @@ Content-Length: 237
 
 尝试对载荷部分进行解码，我们可以看到我们在上面的代码中自定义的认证信息：
 
-```shell
+```shell-session
 $ echo "eyJleHAiOjE1OTE5ODE1MTgsImlkLWhhaGEiOjAsIm9yaWdfaWF0IjoxNTkxOTc3OTE4LCJ1c2VyLWhhaGEiOiJsZXdpbiJ9"|base64 -d
 {"exp":1591981518,"id-haha":0,"orig_iat":1591977918,"user-haha":"lewin"}% 
 ```

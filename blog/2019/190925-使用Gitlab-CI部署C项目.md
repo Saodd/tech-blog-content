@@ -76,13 +76,13 @@ $ gitlab-runner register
 
 如果是运行的shell版本的runner，我们很可能需要调用docker，那首先要想到调用权限：
 
-```shell
+```shell-session
 $ sudo usermod -aG docker gitlab-runner
 ```
 
 然后还有Docker仓库的pull/push权限，注意，要切换到gitlab-runner用户执行登录操作：
 
-```shell
+```shell-session
 $ sudo su gitlab-runner
 $ docker login xxxx.gitlab.local/xxx/xxx/xxx
 ```
@@ -99,7 +99,7 @@ registry可能不太好改，那么我们只能改本地的docker配置了。我
 
 然后重启docker进程：
 
-```shell
+```shell-session
 $ service docker restart
 ```
 

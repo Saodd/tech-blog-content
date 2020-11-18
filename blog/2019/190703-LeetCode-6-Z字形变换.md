@@ -58,7 +58,7 @@ sb[numRows-1]:    T     S     G
 但是要注意s分布的方向问题，`↓`与`↑`是交替的。
 我这里不把方向作为变量来设置，而是作为两个独立的循环块来区分：
 
-```golang
+```go
 func convertZigZag_brute(s string, numRows int) string {
     result := make([][]byte, numRows)
     lengthS := len(s)
@@ -132,7 +132,7 @@ func convertZigZag_brute(s string, numRows int) string {
 
 ### 实现
 
-```golang
+```go
 func convertZigZag(s string, numRows int) string {
     lengthS := len(s)
     if numRows == 1 { 

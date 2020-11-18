@@ -90,7 +90,7 @@ func Hello() string {
 }
 ```
 
-```shell
+```shell-session
 $ go test
 go: finding rsc.io/quote v1.5.2
 go: downloading rsc.io/quote v1.5.2
@@ -116,7 +116,7 @@ go命令会解析所有的导入项（根据go.mod中定义的），如果有不
 
 我们列出现在所有的modules：
 
-```shell
+```shell-session
 $ go list -m all
 example.com/learn-go-modules
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c
@@ -126,7 +126,7 @@ rsc.io/sampler v1.3.0
 
 可以看到golang.org/x/text这个模块的版本号有些混乱，这是一个`go modules`生成的虚拟版本号。我们可以手动更新一下它：
 
-```shell
+```shell-session
 $ go get golang.org/x/text
 go: finding golang.org/x/text v0.3.2
 go: downloading golang.org/x/text v0.3.2
@@ -143,7 +143,7 @@ rsc.io/sampler v1.3.0
 
 那如果更新之后出了BUG（新版本不兼容），就像这样：
 
-```shell
+```shell-session
 $ go test
 PASS
 ok      example.com/learn-go-modules    0.613s
@@ -163,7 +163,7 @@ FAIL    example.com/learn-go-modules    0.420s
 
 怎么办？我们可以手动指定版本号来下载（并且尝试）：
 
-```shell
+```shell-session
 $ go list -m -versions rsc.io/sampler
 rsc.io/sampler v1.0.0 v1.2.0 v1.2.1 v1.3.0 v1.3.1 v1.99.99
 
@@ -218,7 +218,7 @@ func TestProverb(t *testing.T) {
 
 然后执行，然后看一下现在的依赖项版本：
 
-```shell
+```shell-session
 $ go test
 go: finding rsc.io/quote/v3 v3.1.0
 go: downloading rsc.io/quote/v3 v3.1.0
@@ -255,7 +255,7 @@ func Proverb() string {
 
 删除某项依赖必须要手动执行。我们使用`go mod tidy`命令：
 
-```shell
+```shell-session
 $ go mod tidy
 $ go list -m all
 example.com/learn-go-modules

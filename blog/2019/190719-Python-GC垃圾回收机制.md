@@ -93,7 +93,7 @@ while True:
     del c2
 ```
 
-```shell
+```shell-session
 PS > docker run --rm -m 100M -v C:/Users/lewin/mycode/APMOS:/scripts/APMOS -it appython:1.02
 root@d67209491314:/scripts# python lewin.py
 Killed

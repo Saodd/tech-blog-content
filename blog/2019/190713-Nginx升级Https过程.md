@@ -73,13 +73,13 @@ server {
 
 因为`Nginx`容器默认从`/etc/nginx/`目录下读取配置文件，我们很容易不小心写成：
 
-```shell
+```shell-session
 $ docker run -v /host/path/nginx/:/etc/nginx/ -dit nginx
 ```
 
 这样很危险！因为`Nginx`容器在`/etc/nginx/`还有很多其他的文件：
 
-```shell
+```shell-session
 root@e846a699993f:/# ls /etc/nginx/
 conf.d  fastcgi_params  koi-utf  koi-win  mime.types  modules  nginx.conf  scgi_params   wsgi_params  win-utf
 ```
@@ -129,7 +129,7 @@ http {
 
 选择一种方法就好了。写好配置文件后，重启容器：
 
-```shell
+```shell-session
 $ docker restart nginx
 ```
 
@@ -147,7 +147,7 @@ $ docker restart nginx
 
 我们把容器的启动命令完整地修改一下：
 
-```shell
+```shell-session
 $ docker run --name nginx -v /docker/:/docker/   \
 -v /home/lewin/github/BlogDj/collectstatic/:/static/dj/   \
 -v /home/lewin/github/BlogDj/settings/nginx/nginx.conf:/etc/nginx/nginx.conf   \

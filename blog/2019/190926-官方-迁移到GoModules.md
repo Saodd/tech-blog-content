@@ -23,7 +23,7 @@ Jean de Klerk
 
 To convert a project that already uses a dependency management tool, run the following commands:
 
-```shell
+```shell-session
 $ git clone https://github.com/my/project
 [...]
 $ cd project
@@ -61,7 +61,7 @@ $
 
 This is a good time to pause and run `go build ./...` and `go test ./...` before continuing. Later steps may modify your `go.mod` file, so if you prefer to take an iterative approach, this is the closest your `go.mod` file will be to your pre-modules dependency specification.
 
-```shell
+```shell-session
 $ go mod tidy
 go: downloading rsc.io/binaryregexp v0.2.1-0.20190524193500-545cabda89ca
 go: extracting rsc.io/binaryregexp v0.2.1-0.20190524193500-545cabda89ca
@@ -75,7 +75,7 @@ $
 
 Let's finish by making sure the code builds and tests pass:
 
-```shell
+```shell-session
 $ go build ./...
 $ go test ./...
 [...]
@@ -84,7 +84,7 @@ $
 
 Note that other dependency managers may specify dependencies at the level of individual packages or entire repositories (not modules), and generally do not recognize the requirements specified in the `go.mod` files of dependencies. Consequently, you may not get exactly the same version of every package as before, and there's some risk of upgrading past breaking changes. Therefore, it's important to follow the above commands with an audit of the resulting dependencies. To do so, run
 
-```shell
+```shell-session
 $ go list -m all
 go: finding rsc.io/binaryregexp v0.2.1-0.20190524193500-545cabda89ca
 github.com/my/project
@@ -94,7 +94,7 @@ $
 
 and compare the resulting versions with your old dependency management file to ensure that the selected versions are appropriate. If you find a version that wasn't what you wanted, you can find out why using `go mod why -m` and/or `go mod graph`, and upgrade or downgrade to the correct version using `go get`. (If the version you request is older than the version that was previously selected, `go get` will downgrade other dependencies as needed to maintain compatibility.) For example,
 
-```shell
+```shell-session
 $ go mod why -m rsc.io/binaryregexp
 [...]
 $ go mod graph | grep rsc.io/binaryregexp
@@ -107,7 +107,7 @@ $
 
 从零开始很简单，使用`go mod init`：
 
-```shell
+```shell-session
 $ git clone https://go.googlesource.com/blog
 [...]
 $ cd blog
@@ -124,7 +124,7 @@ $
 
 下一步，使用`go mod tidy`里将现有的依赖都添加到`go.mod`文件中：
 
-```shell
+```shell-session
 $ go mod tidy
 go: finding golang.org/x/website latest
 go: finding gopkg.in/tomb.v2 latest
@@ -165,7 +165,7 @@ $
 
 这个命令会将你所有导入过的包都添加进来。接下来看一下编译和测试：
 
-```shell
+```shell-session
 $ go build ./...
 $ go test ./...
 ok      golang.org/x/blog    0.335s
@@ -192,7 +192,7 @@ $
 
 由于`Go modules`的版本机制，强烈建议你给你的release打上三级结构的tag，比如：
 
-```shell
+```shell-session
 $ git tag v1.2.0
 $ git push origin v1.2.0
 ```

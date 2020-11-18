@@ -20,7 +20,7 @@ but maps alone are not safe for concurrent use!
 
 
 练习给出了程序的主体部分，我们要做的是对其进行改进，实现两个`TODO`目标。
-```golang
+```go
 package main
 
 import (
@@ -61,7 +61,7 @@ func main() {
 
 接下来还给了我们一个实现了`Fetcher`接口的`fakeFetcher`(假的下载器)。
 主要意思就是不从Web上下载内容了，直接用本地缓存好的数据通过`Fetch(url)`方法返回给你。
-```golang
+```go
 // fakeFetcher 是返回若干结果的 Fetcher。
 type fakeFetcher map[string]*fakeResult
 
@@ -119,7 +119,7 @@ var fetcher = fakeFetcher{
 这里我们可以看到，题目要求我们递归地调用`Crawl()`，那么如何在递归函数内实现并发？  
 
 第一个念头是想到直接加一个`go`嘛：
-```golang
+```go
     for _, u := range urls {
         go Crawl(u, depth-1, fetcher) // 这里加上go
     }
@@ -136,7 +136,7 @@ Process finished with exit code 0
 所以第一个子进程还没来得及开始"下载"，就被杀死了。
 
 那么我们就用`channel`阻塞住这个函数，相当于python中的`jion()`用法：
-```golang
+```go
 func Crawl(url string, depth int, fetcher Fetcher, chParent chan bool) {  // 增加了一个channel参数！
     defer func() {chParent <- true}()     // 返回的时候通知上一级！
     if depth <= 0 {
@@ -204,7 +204,7 @@ Process finished with exit code 0
 这样效率会非常低。学过算法我们知道有一些更高级的基于树的查找算法，我们就姑且认为Go的`map`默认就使用高级的查找算法吧，
 所以用`map[string]bool`来储存已经爬取过的url。
 
-```golang
+```go
 // 建立一个带锁的map
 var urlfetched *urlFetched = &urlFetched{urls: map[string]bool{}}
 
@@ -265,7 +265,7 @@ Process finished with exit code 0
 只有拿到令牌的人才允许参加工作，只要控制了令牌的总数，自然就控制了同时工作的Go程数。
 这里先不考虑美观性，我们优先实现功能，所以定义一个全局的Pool：
 
-```golang
+```go
 var goPool chan bool
 
 
@@ -291,7 +291,7 @@ func Crawl(url string, depth int, fetcher Fetcher, chParent chan bool) {
 ```
 
 完整代码：
-```golang
+```go
 type Fetcher interface {
     // Fetch 返回 URL 的 body 内容，并且将在这个页面上找到的 URL 放到一个 slice 中。
     Fetch(url string) (body string, urls []string, err error)
@@ -426,7 +426,7 @@ var fetcher = fakeFetcher{
 
 我们实现一下：
 
-```golang
+```go
 func Main0013_2() {
     c := NewCrawler(1, 4, "https://golang.org/", fetcher)   // 在这里设置Go程数量
     c.Run()

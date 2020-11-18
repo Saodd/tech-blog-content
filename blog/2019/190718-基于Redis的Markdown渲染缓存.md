@@ -19,8 +19,7 @@ def post_detail(request, post_id):
 
 然后引入`Pygments`实现代码高亮：
 
-```shell
-
+```shell-session
 ```
 
 ## 反思
@@ -45,7 +44,7 @@ def post_detail(request, post_id):
 
 首先这个脚本是运行于python容器的，但是必须要放在Django工程目录下（因为要共享一些配置，而且单独开一个git仓库的话也不利于管理）。我们整体建立一个app：
 
-```shell
+```shell-session
 PS > python manage.py startapp appBlogpage
 ```
 

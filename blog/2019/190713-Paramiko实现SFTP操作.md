@@ -15,7 +15,7 @@
 
 按照以往的经验来考虑，我们要实现一个命令行参数指定日期的功能。类似于这种感觉：
 
-```shell
+```shell-session
 $ python xxxsftp.py --since 20190710 --today 20190713
 ```
 

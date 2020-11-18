@@ -117,7 +117,7 @@ disable-logging = true
 
 这样我们就可以简化启动命令了：
 
-```shell
+```shell-session
 # Ctrl+C结束上一个uwsgi进程
 # 还在刚才的路径下运行,否则要改成绝对路径
 [root@容器]# uwsgi uwsgi.ini
@@ -184,7 +184,7 @@ Fri Jun 14 15:05:07 2019 - uWSGI worker 2 screams: UAAAAAAH my master disconnect
 ## 配置Nginx
 
 Nginx运行在另一个容器中：
-```shell
+```shell-session
 $ docker run --net=somenet --name mynginx -p 8080:80 -d nginx
 ```
 
@@ -218,7 +218,7 @@ server {
 }
 ```
 覆盖了原来的文件之后，我们重启一下Nginx:
-```shell
+```shell-session
 # 在宿主机
 $ docker restart mynginx
 
@@ -273,7 +273,7 @@ disable-logging = true
 
 实质就是通过文件系统来连接套接字。所以我们也要相应的**重启两个容器**，并挂载同一个目录进去：
 
-```shell
+```shell-session
 $ docker run ... -v /docker/:/docker/ ...
 # 前面一个/docker/是宿主机的目录，后面/docker/是容器内的目录
 ```
@@ -299,7 +299,7 @@ stats=/scripts/uwsgi.status
 
 这样就会把`uWSGI`的进程信息写入这个文件中，我们可以通过这个文件便捷地管理`uWSGI`进程。
 
-```shell
+```shell-session
 # 查看状态
 [root@container]# uwsgi --connect-and-read /scripts/uwsgi.status
 
