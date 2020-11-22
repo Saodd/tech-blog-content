@@ -16,11 +16,11 @@ tags: [Golang, TODO]
 var IdCounter = make(chan int)
 
 func init() {
-	go func() {
-		for i := 0; ; i++ {
-			IdCounter <- i
-		}
-	}()
+    go func() {
+        for i := 0; ; i++ {
+            IdCounter <- i
+        }
+    }()
 }
 ```
 
@@ -32,12 +32,12 @@ func init() {
 
 ```go
 func main() {
-	var i int
-	now := time.Now()
-	for i < 10000000 {
-		i = <-huobi.IdCounter
-	}
-	fmt.Println(time.Now().Sub(now))
+    var i int
+    now := time.Now()
+    for i < 10000000 {
+        i = <-huobi.IdCounter
+    }
+    fmt.Println(time.Now().Sub(now))
 }
 ```
 

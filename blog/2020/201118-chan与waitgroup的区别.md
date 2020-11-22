@@ -43,18 +43,18 @@ tags: [Golang]
 
 ```go
 func main() {
-	var urls []string
+    var urls []string
     wg := &sync.WaitGroup{}
-	wg.Add(len(urls))
-	for _, url := range urls {
-		go DownloadWebsite(wg, url)
-	}
-	wg.Wait()
+    wg.Add(len(urls))
+    for _, url := range urls {
+        go DownloadWebsite(wg, url)
+    }
+    wg.Wait()
 }
 
 func DownloadWebsite(wg *sync.WaitGroup, u string) {
-	// http.Get(u)
-	wg.Done()
+    // http.Get(u)
+    wg.Done()
 }
 ```
 
@@ -64,17 +64,17 @@ func DownloadWebsite(wg *sync.WaitGroup, u string) {
 func main() {
     var urls []string
     cb := make(chan struct{})
-	for _, url := range urls {
-		go DownloadWebsite(cb, url)
-	}
-	for range urls {
-		<-cb
-	}
+    for _, url := range urls {
+        go DownloadWebsite(cb, url)
+    }
+    for range urls {
+        <-cb
+    }
 }
 
 func DownloadWebsite(cb chan<- struct{}, u string) {
-	// http.Get(u)
-	cb <- struct{}{}
+    // http.Get(u)
+    cb <- struct{}{}
 }
 ```
 
@@ -89,21 +89,21 @@ func DownloadWebsite(cb chan<- struct{}, u string) {
 
 ```go
 func main() {
-	var urls []string
-	cb := make(chan int)
-	for _, url := range urls {
-		go DownloadWebsite(cb, url)
-	}
-	var sum int
-	for range urls {
-		sum += <-cb
-	}
+    var urls []string
+    cb := make(chan int)
+    for _, url := range urls {
+        go DownloadWebsite(cb, url)
+    }
+    var sum int
+    for range urls {
+        sum += <-cb
+    }
 }
 
 func DownloadWebsite(cb chan<- int, u string) {
-	var data int
-	// data =  http.Get(u) && Parse(resp)
-	cb <- data
+    var data int
+    // data =  http.Get(u) && Parse(resp)
+    cb <- data
 }
 ```
 
@@ -121,28 +121,28 @@ func DownloadWebsite(cb chan<- int, u string) {
 
 ```go
 func main() {
-	var urls []string
-	wg := &sync.WaitGroup{}
-	wg.Add(len(urls))
-	for _, url := range urls {
-		go DownloadWebsite(wg, url)
-	}
-	wg.Wait()
+    var urls []string
+    wg := &sync.WaitGroup{}
+    wg.Add(len(urls))
+    for _, url := range urls {
+        go DownloadWebsite(wg, url)
+    }
+    wg.Wait()
 }
 
 func DownloadWebsite(wg *sync.WaitGroup, u string) {
-	resp, _ := http.Get(u)
-	links := ParseLinksFromWebsite(resp)
-	wg.Add(len(links))
-	for _, link := range links {
-		go DownloadWebsite(wg, link) // 递归调用
-	}
-	wg.Done()
+    resp, _ := http.Get(u)
+    links := ParseLinksFromWebsite(resp)
+    wg.Add(len(links))
+    for _, link := range links {
+        go DownloadWebsite(wg, link) // 递归调用
+    }
+    wg.Done()
 }
 
 func ParseLinksFromWebsite(resp *http.Response) (links []string) {
-	// 解析网页中的超链接
-	return links
+    // 解析网页中的超链接
+    return links
 }
 ```
 
