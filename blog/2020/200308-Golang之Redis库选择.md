@@ -32,15 +32,15 @@ Redis的go语言客户端并不算多。Github上千星的只有两个：
 ```go
 // NewClient returns a client to the Redis Server specified by Options.
 func NewClient(opt *Options) *Client {
-	opt.init()
+    opt.init()
 
-	c := Client{
-		baseClient: newBaseClient(opt, newConnPool(opt)),
-		ctx:        context.Background(),
-	}
-	c.cmdable = c.Process
+    c := Client{
+        baseClient: newBaseClient(opt, newConnPool(opt)),
+        ctx:        context.Background(),
+    }
+    c.cmdable = c.Process
 
-	return &c
+    return &c
 }
 ```
 
@@ -52,10 +52,10 @@ func NewClient(opt *Options) *Client {
 
 ```go
 type Client struct {
-	*baseClient
-	cmdable
-	hooks
-	ctx context.Context
+    *baseClient
+    cmdable
+    hooks
+    ctx context.Context
 }
 ```
 

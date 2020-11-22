@@ -59,44 +59,44 @@ test:
 package main
 
 import (
-	"fmt"
-	"github.com/robfig/cron/v3"
-	"time"
+    "fmt"
+    "github.com/robfig/cron/v3"
+    "time"
 )
 
 func main() {
-	fmt.Printf("start at: %s\n", time.Now())
-	c, err := setCron()
-	if err != nil {
-		fmt.Println(err)
-	}
+    fmt.Printf("start at: %s\n", time.Now())
+    c, err := setCron()
+    if err != nil {
+        fmt.Println(err)
+    }
 
-	c.Start()
-	defer c.Stop()
-	select {}
+    c.Start()
+    defer c.Stop()
+    select {}
 }
 
 func setCron() (c *cron.Cron, err error) {
-	cst, _ := time.LoadLocation("Asia/Shanghai")
-	c = cron.New(cron.WithLocation(cst))
+    cst, _ := time.LoadLocation("Asia/Shanghai")
+    c = cron.New(cron.WithLocation(cst))
 
-	// 写任务吧
-	_, err = c.AddFunc("55 19 * * *", func() { fmt.Println("haha!") })
-	if err != nil {
-		return
-	}
+    // 写任务吧
+    _, err = c.AddFunc("55 19 * * *", func() { fmt.Println("haha!") })
+    if err != nil {
+        return
+    }
 
-	return
+    return
 }
 ```
 
 ```go
 // cron测试代码
 func Test_setCron(t *testing.T) {
-	_, err := setCron()
-	if err != nil {
-		t.Fatal(err)
-	}
+    _, err := setCron()
+    if err != nil {
+        t.Fatal(err)
+    }
 }
 ```
 
@@ -109,19 +109,19 @@ import "github.com/go-redis/redis"
 var apRedisOptions = &redis.Options{Addr: "192.168.1.242:6379"}
 
 func GetRedis() *redis.Client {
-	rd := redis.NewClient(apRedisOptions)
-	return rd
+    rd := redis.NewClient(apRedisOptions)
+    return rd
 }
 ```
 
 ```go
 // redis测试代码
 func Test_ApRedisOptions(t *testing.T) {
-	rd := GetRedis()
-	_, err := rd.Ping().Result()
-	if err != nil {
-		t.Fatal(err)
-	}
+    rd := GetRedis()
+    _, err := rd.Ping().Result()
+    if err != nil {
+        t.Fatal(err)
+    }
 }
 ```
 
@@ -147,8 +147,8 @@ module gitlab.apcapital.local/lewin/apmogo
 go 1.13
 
 require (
-	github.com/go-redis/redis v6.15.5+incompatible
-	github.com/robfig/cron/v3 v3.0.0
+    github.com/go-redis/redis v6.15.5+incompatible
+    github.com/robfig/cron/v3 v3.0.0
 )
 
 ```

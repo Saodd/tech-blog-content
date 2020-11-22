@@ -50,18 +50,18 @@ $ docker run -d -p 9222:9222 --rm --name headless-shell chromedp/headless-shell
 ```go
 {
     var imageBuf []byte
-	tasks := chromedp.Tasks{
-		chromedp.Navigate(u),
-		chromedp.EmulateViewport(1600, 900),
-		chromedp.Sleep(5 * time.Second), // 等待页面中的异步加载，这里应该换成更稳固的逻辑。
-		chromedp.ActionFunc(func(ctx context.Context) (err error) {
-			imageBuf, err = page.CaptureScreenshot().WithQuality(90).Do(ctx)
-			return err
-		}),
-	}
-	if err := chromedp.Run(ctx, tasks); err != nil {
-		logger.Fatal(err)
-	}
+    tasks := chromedp.Tasks{
+        chromedp.Navigate(u),
+        chromedp.EmulateViewport(1600, 900),
+        chromedp.Sleep(5 * time.Second), // 等待页面中的异步加载，这里应该换成更稳固的逻辑。
+        chromedp.ActionFunc(func(ctx context.Context) (err error) {
+            imageBuf, err = page.CaptureScreenshot().WithQuality(90).Do(ctx)
+            return err
+        }),
+    }
+    if err := chromedp.Run(ctx, tasks); err != nil {
+        logger.Fatal(err)
+    }
 }
 ```
 
@@ -74,8 +74,8 @@ $ docker run -d -p 9222:9222 --rm --name headless-shell chromedp/headless-shell
 ```go
 {
     if err := ioutil.WriteFile("screenshot2.png", imageBuf, 0644); err != nil {
-		logger.Fatal(err)
-	}
+        logger.Fatal(err)
+    }
 }
 ```
 

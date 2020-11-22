@@ -131,7 +131,7 @@ $ go get -u github.com/Saodd/learn-go-modules-dep/v2@v2.0.0
 
 ```text
 [url "ssh://git@git.meideng.net/"]
-	insteadOf = https://git.meideng.net/
+    insteadOf = https://git.meideng.net/
 ```
 
 然后在指定环境变量的情况下执行 go get :
@@ -151,8 +151,8 @@ module xxx
 go 1.15
 
 require (
-	git.meideng.net/somebody/learn-go-modules-private v1.0.0 // indirect
-	github.com/Saodd/learn-go-modules-dep v1.1.0 // indirect
-	github.com/Saodd/learn-go-modules-dep/v2 v2.0.0 // indirect
+    git.meideng.net/somebody/learn-go-modules-private v1.0.0 // indirect
+    github.com/Saodd/learn-go-modules-dep v1.1.0 // indirect
+    github.com/Saodd/learn-go-modules-dep/v2 v2.0.0 // indirect
 )
 ```

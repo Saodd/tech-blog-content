@@ -39,44 +39,44 @@ $ go get github.com/streadway/amqp
 
 ```go
 func send2() {
-	// 1. 建立连接
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	if err != nil {
-		log.Println(err)
-	}
-	defer conn.Close()
-	ch, err := conn.Channel()
-	if err != nil {
-		log.Println(err)
-	}
-	defer ch.Close()
+    // 1. 建立连接
+    conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+    if err != nil {
+        log.Println(err)
+    }
+    defer conn.Close()
+    ch, err := conn.Channel()
+    if err != nil {
+        log.Println(err)
+    }
+    defer ch.Close()
 
-	// 2. 声明队列
-	q, err := ch.QueueDeclare(
-		"hello", // 队列名称
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		log.Println(err)
-	}
+    // 2. 声明队列
+    q, err := ch.QueueDeclare(
+        "hello", // 队列名称
+        false,
+        false,
+        false,
+        false,
+        nil,
+    )
+    if err != nil {
+        log.Println(err)
+    }
 
-	// 3. 发布消息
-	err = ch.Publish(
-		"",
-		q.Name, // 要发往的队列名称
-		false,
-		false,
-		amqp.Publishing{ // 消息结构体
-			ContentType: "text/plain",
-			Body:        []byte("Hello World!" + fmt.Sprint(time.Now().String())),
-		})
-	if err != nil {
-		log.Println(err)
-	}
+    // 3. 发布消息
+    err = ch.Publish(
+        "",
+        q.Name, // 要发往的队列名称
+        false,
+        false,
+        amqp.Publishing{ // 消息结构体
+            ContentType: "text/plain",
+            Body:        []byte("Hello World!" + fmt.Sprint(time.Now().String())),
+        })
+    if err != nil {
+        log.Println(err)
+    }
 }
 ```
 
@@ -86,26 +86,26 @@ func send2() {
 
 ```go
 func recv2() {
-	// 1. 偷懒地建立连接
-	ch := initChannel()
-	// 1+ 这里也可以声明队列，因为我们可能会让接收方比发送方先运行
-	// 2. 监听一个队列
-	msgs, err := ch.Consume(
-		"hello", // 刚才设定的队列名称
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		log.Println(err)
-	}
-	// 3. 循环处理队列消息
-	for d := range msgs {
-		log.Printf("Received a message: %s", d.Body)
-	}
+    // 1. 偷懒地建立连接
+    ch := initChannel()
+    // 1+ 这里也可以声明队列，因为我们可能会让接收方比发送方先运行
+    // 2. 监听一个队列
+    msgs, err := ch.Consume(
+        "hello", // 刚才设定的队列名称
+        "",
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+    if err != nil {
+        log.Println(err)
+    }
+    // 3. 循环处理队列消息
+    for d := range msgs {
+        log.Printf("Received a message: %s", d.Body)
+    }
 }
 ```
 
@@ -122,48 +122,48 @@ $ go run recieve.go
 
 ```go
 func send3() {
-	ch := initChannel()
-	for i := 1; i <= 5; i++ {  // 连续发5个任务
-		ch.Publish(
-			"",
-			"3-sleep",
-			false,
-			false,
-			amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte("sleep 2 " + "序号: " + strconv.Itoa(i)), // 指定睡眠任务执行时间
-			})
-	}
+    ch := initChannel()
+    for i := 1; i <= 5; i++ {  // 连续发5个任务
+        ch.Publish(
+            "",
+            "3-sleep",
+            false,
+            false,
+            amqp.Publishing{
+                ContentType: "text/plain",
+                Body:        []byte("sleep 2 " + "序号: " + strconv.Itoa(i)), // 指定睡眠任务执行时间
+            })
+    }
 }
 ```
 
 ```go
 func recv3() {
-	ch := initChannel()
-	ch.QueueDeclare(
-		"3-sleep", // 队列名称
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	msgs, _ := ch.Consume(
-		"3-sleep", // 刚才设定的队列名称
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	for msg := range msgs {
-		var taskTimeStr = string(msg.Body[6:7])
-		taskTime, _ := strconv.Atoi(taskTimeStr)
-		log.Println("接受任务：", string(msg.Body))
-		time.Sleep(time.Duration(taskTime) * time.Second)
-		log.Println("完成任务")
-	}
+    ch := initChannel()
+    ch.QueueDeclare(
+        "3-sleep", // 队列名称
+        false,
+        false,
+        false,
+        false,
+        nil,
+    )
+    msgs, _ := ch.Consume(
+        "3-sleep", // 刚才设定的队列名称
+        "",
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+    for msg := range msgs {
+        var taskTimeStr = string(msg.Body[6:7])
+        taskTime, _ := strconv.Atoi(taskTimeStr)
+        log.Println("接受任务：", string(msg.Body))
+        time.Sleep(time.Duration(taskTime) * time.Second)
+        log.Println("完成任务")
+    }
 }
 ```
 
@@ -185,24 +185,24 @@ Rabbitmq 的做法是「消息签收`Message acknowledgment`」。即，每个�
 
 ```go
 func recv3a() {
-	ch := initChannel()
-	msgs, _ := ch.Consume(
-		"3-sleep",
-		"",
-		false,  // 这里禁止自动签收
-		false,
-		false,
-		false,
-		nil,
-	)
-	for msg := range msgs {
-		var taskTimeStr = string(msg.Body[6:7])
-		taskTime, _ := strconv.Atoi(taskTimeStr)
-		log.Println("接受任务：", string(msg.Body))
-		time.Sleep(time.Duration(taskTime) * time.Second)
-		log.Println("完成任务")
-		msg.Ack(false) // 消息签收。注意参数是false
-	}
+    ch := initChannel()
+    msgs, _ := ch.Consume(
+        "3-sleep",
+        "",
+        false,  // 这里禁止自动签收
+        false,
+        false,
+        false,
+        nil,
+    )
+    for msg := range msgs {
+        var taskTimeStr = string(msg.Body[6:7])
+        taskTime, _ := strconv.Atoi(taskTimeStr)
+        log.Println("接受任务：", string(msg.Body))
+        time.Sleep(time.Duration(taskTime) * time.Second)
+        log.Println("完成任务")
+        msg.Ack(false) // 消息签收。注意参数是false
+    }
 }
 ```
 
@@ -220,50 +220,50 @@ func recv3a() {
 
 ```go
 func send5() {
-	ch := initChannel()
-	ch.QueueDeclare(
-		"5-durable",
-		true, // 这里指定队列持久化
-		false,
-		false,
-		false,
-		nil,
-	)
-	for i := 1; i <= 5; i++ {
-		ch.Publish(
-			"",
-			"5-durable",
-			false,
-			false,
-			amqp.Publishing{
-				DeliveryMode: amqp.Persistent, // 这里指定消息持久化
-				ContentType:  "text/plain",
-				Body:         []byte("sleep 2 " + "序号: " + strconv.Itoa(i)),
-			})
-	}
+    ch := initChannel()
+    ch.QueueDeclare(
+        "5-durable",
+        true, // 这里指定队列持久化
+        false,
+        false,
+        false,
+        nil,
+    )
+    for i := 1; i <= 5; i++ {
+        ch.Publish(
+            "",
+            "5-durable",
+            false,
+            false,
+            amqp.Publishing{
+                DeliveryMode: amqp.Persistent, // 这里指定消息持久化
+                ContentType:  "text/plain",
+                Body:         []byte("sleep 2 " + "序号: " + strconv.Itoa(i)),
+            })
+    }
 }
 ```
 
 ```go
 func recv5() {
-	ch := initChannel()
-	msgs, _ := ch.Consume(
-		"5-durable",
-		"",
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	for msg := range msgs {
-		var taskTimeStr = string(msg.Body[6:7])
-		taskTime, _ := strconv.Atoi(taskTimeStr)
-		log.Println("接受任务：", string(msg.Body))
-		time.Sleep(time.Duration(taskTime) * time.Second)
-		log.Println("完成任务")
-		msg.Ack(false)
-	}
+    ch := initChannel()
+    msgs, _ := ch.Consume(
+        "5-durable",
+        "",
+        false,
+        false,
+        false,
+        false,
+        nil,
+    )
+    for msg := range msgs {
+        var taskTimeStr = string(msg.Body[6:7])
+        taskTime, _ := strconv.Atoi(taskTimeStr)
+        log.Println("接受任务：", string(msg.Body))
+        time.Sleep(time.Duration(taskTime) * time.Second)
+        log.Println("完成任务")
+        msg.Ack(false)
+    }
 }
 ```
 
@@ -293,47 +293,47 @@ $ go run recv.go
 
 ```go
 func send6() {
-	ch := initChannel()
-	for i := 1; i <= 10; i++ { // 发10个任务
-		ch.Publish(
-			"",
-			"5-durable",
-			false,
-			false,
-			amqp.Publishing{
-				DeliveryMode: amqp.Persistent,
-				ContentType:  "text/plain",
-				Body:         []byte(fmt.Sprintf("sleep %d 序号: %d", rand.Intn(10), i)), // 随机时间
-			})
-	}
+    ch := initChannel()
+    for i := 1; i <= 10; i++ { // 发10个任务
+        ch.Publish(
+            "",
+            "5-durable",
+            false,
+            false,
+            amqp.Publishing{
+                DeliveryMode: amqp.Persistent,
+                ContentType:  "text/plain",
+                Body:         []byte(fmt.Sprintf("sleep %d 序号: %d", rand.Intn(10), i)), // 随机时间
+            })
+    }
 }
 ```
 
 ```go
 func recv6() {
-	ch := initChannel()
-	ch.Qos(
-		1, // 限制数量
-		0,
-		false,
-	)
-	msgs, _ := ch.Consume(
-		"5-durable",
-		"",
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	for msg := range msgs {
-		var taskTimeStr = string(msg.Body[6:7])
-		taskTime, _ := strconv.Atoi(taskTimeStr)
-		log.Println("接受任务：", string(msg.Body))
-		time.Sleep(time.Duration(taskTime) * time.Second)
-		log.Println("完成任务")
-		msg.Ack(false)
-	}
+    ch := initChannel()
+    ch.Qos(
+        1, // 限制数量
+        0,
+        false,
+    )
+    msgs, _ := ch.Consume(
+        "5-durable",
+        "",
+        false,
+        false,
+        false,
+        false,
+        nil,
+    )
+    for msg := range msgs {
+        var taskTimeStr = string(msg.Body[6:7])
+        taskTime, _ := strconv.Atoi(taskTimeStr)
+        log.Println("接受任务：", string(msg.Body))
+        time.Sleep(time.Duration(taskTime) * time.Second)
+        log.Println("完成任务")
+        msg.Ack(false)
+    }
 }
 ```
 
@@ -355,27 +355,27 @@ func recv6() {
 
 ```go
 func send7() {
-	ch := initChannel()
-	ch.ExchangeDeclare(
-		"logs",
-		"fanout",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	for range time.Tick(time.Second) { // 每秒发送一条消息
-		ch.Publish(
-			"logs", // 注意这里指定了exchange 并清空了routing-key
-			"",
-			false,
-			false,
-			amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte(fmt.Sprintf("【%s】 一些日志内容……", time.Now().String())),
-			})
-	}
+    ch := initChannel()
+    ch.ExchangeDeclare(
+        "logs",
+        "fanout",
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+    for range time.Tick(time.Second) { // 每秒发送一条消息
+        ch.Publish(
+            "logs", // 注意这里指定了exchange 并清空了routing-key
+            "",
+            false,
+            false,
+            amqp.Publishing{
+                ContentType: "text/plain",
+                Body:        []byte(fmt.Sprintf("【%s】 一些日志内容……", time.Now().String())),
+            })
+    }
 }
 ```
 
@@ -387,34 +387,34 @@ func send7() {
 
 ```go
 func recv7() {
-	ch := initChannel()
-	q, _ := ch.QueueDeclare(  // 声明一个随机名称的队列
-		"",
-		false,
-		false,
-		true, // 注意要设置exclusive
-		false,
-		nil,
-	)
-	ch.QueueBind(  // 声明队列的时候没有指定交换器，必须要额外显式地绑定
-		q.Name,
-		"",
-		"logs", // 我们指定的交换器
-		false,
-		nil,
-	)
-	msgs, _ := ch.Consume(
-		q.Name,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	for msg := range msgs {
-		log.Println("收到日志：", string(msg.Body))
-	}
+    ch := initChannel()
+    q, _ := ch.QueueDeclare(  // 声明一个随机名称的队列
+        "",
+        false,
+        false,
+        true, // 注意要设置exclusive
+        false,
+        nil,
+    )
+    ch.QueueBind(  // 声明队列的时候没有指定交换器，必须要额外显式地绑定
+        q.Name,
+        "",
+        "logs", // 我们指定的交换器
+        false,
+        nil,
+    )
+    msgs, _ := ch.Consume(
+        q.Name,
+        "",
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+    for msg := range msgs {
+        log.Println("收到日志：", string(msg.Body))
+    }
 }
 ```
 
@@ -438,66 +438,66 @@ func recv7() {
 
 ```go
 func send8() {
-	ch := initChannel()
-	ch.ExchangeDeclare(
-		"logs_direct",
-		"direct", // 改变交换器类型
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	keyMap := map[int]string{0: "black", 1: "green", 2: "orange"}
-	for range time.Tick(time.Second) { // 每秒发送一条消息
-		key := keyMap[rand.Intn(3)] // 随机关键字
-		body := fmt.Sprintf("【%s】 一些日志内容……", time.Now().String())
-		fmt.Println(key, body)
-		ch.Publish(
-			"logs_direct",
-			key,
-			false,
-			false,
-			amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte(body),
-			})
-	}
+    ch := initChannel()
+    ch.ExchangeDeclare(
+        "logs_direct",
+        "direct", // 改变交换器类型
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+    keyMap := map[int]string{0: "black", 1: "green", 2: "orange"}
+    for range time.Tick(time.Second) { // 每秒发送一条消息
+        key := keyMap[rand.Intn(3)] // 随机关键字
+        body := fmt.Sprintf("【%s】 一些日志内容……", time.Now().String())
+        fmt.Println(key, body)
+        ch.Publish(
+            "logs_direct",
+            key,
+            false,
+            false,
+            amqp.Publishing{
+                ContentType: "text/plain",
+                Body:        []byte(body),
+            })
+    }
 }
 ```
 
 ```go
 func recv8() {
-	ch := initChannel()
-	q, _ := ch.QueueDeclare(
-		"",
-		false,
-		false,
-		true,
-		false,
-		nil,
-	)
-	for _, key := range os.Args[1:] { // 从命令行参数中读取关键字，可以绑定多个关键字
-		ch.QueueBind(
-			q.Name,
-			key,
-			"logs_direct",
-			false,
-			nil,
-		)
-	}
-	msgs, _ := ch.Consume(
-		q.Name,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	for msg := range msgs {
-		log.Println("收到日志：", string(msg.Body))
-	}
+    ch := initChannel()
+    q, _ := ch.QueueDeclare(
+        "",
+        false,
+        false,
+        true,
+        false,
+        nil,
+    )
+    for _, key := range os.Args[1:] { // 从命令行参数中读取关键字，可以绑定多个关键字
+        ch.QueueBind(
+            q.Name,
+            key,
+            "logs_direct",
+            false,
+            nil,
+        )
+    }
+    msgs, _ := ch.Consume(
+        q.Name,
+        "",
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+    for msg := range msgs {
+        log.Println("收到日志：", string(msg.Body))
+    }
 }
 ```
 
@@ -528,67 +528,67 @@ $ go run recv.go orange green
 
 ```go
 func send9() {
-	ch := initChannel()
-	ch.ExchangeDeclare(
-		"logs_topic",
-		"topic", // 改变交换器类型
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	facilityMap := map[int]string{0: "server0", 1: "server1", 2: "server2"}
-	severityMap := map[int]string{0: "error", 1: "warning", 2: "info"}
-	for range time.Tick(time.Millisecond * 100) { // 加快速度每0.1秒发送一条消息
-		key := facilityMap[rand.Intn(3)] + "." + severityMap[rand.Intn(3)] // 随机关键字
-		body := fmt.Sprintf("【%s】[%s] 一些日志内容……", time.Now().String(), key)
-		fmt.Println(body)
-		ch.Publish(
-			"logs_topic",
-			key,
-			false,
-			false,
-			amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte(body),
-			})
-	}
+    ch := initChannel()
+    ch.ExchangeDeclare(
+        "logs_topic",
+        "topic", // 改变交换器类型
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+    facilityMap := map[int]string{0: "server0", 1: "server1", 2: "server2"}
+    severityMap := map[int]string{0: "error", 1: "warning", 2: "info"}
+    for range time.Tick(time.Millisecond * 100) { // 加快速度每0.1秒发送一条消息
+        key := facilityMap[rand.Intn(3)] + "." + severityMap[rand.Intn(3)] // 随机关键字
+        body := fmt.Sprintf("【%s】[%s] 一些日志内容……", time.Now().String(), key)
+        fmt.Println(body)
+        ch.Publish(
+            "logs_topic",
+            key,
+            false,
+            false,
+            amqp.Publishing{
+                ContentType: "text/plain",
+                Body:        []byte(body),
+            })
+    }
 }
 ```
 
 ```go
 func recv9() {
-	ch := initChannel()
-	q, _ := ch.QueueDeclare(
-		"",
-		false,
-		false,
-		true,
-		false,
-		nil,
-	)
-	for _, key := range os.Args[1:]{ // 从命令行参数中读取关键字，可以绑定多个关键字
-		ch.QueueBind(
-			q.Name,
-			key,
-			"logs_topic",
-			false,
-			nil,
-		)
-	}
-	msgs, _ := ch.Consume(
-		q.Name,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	for msg := range msgs {
-		log.Println("收到日志：", string(msg.Body))
-	}
+    ch := initChannel()
+    q, _ := ch.QueueDeclare(
+        "",
+        false,
+        false,
+        true,
+        false,
+        nil,
+    )
+    for _, key := range os.Args[1:]{ // 从命令行参数中读取关键字，可以绑定多个关键字
+        ch.QueueBind(
+            q.Name,
+            key,
+            "logs_topic",
+            false,
+            nil,
+        )
+    }
+    msgs, _ := ch.Consume(
+        q.Name,
+        "",
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+    for msg := range msgs {
+        log.Println("收到日志：", string(msg.Body))
+    }
 }
 ```
 
@@ -625,13 +625,13 @@ $ go run recv.go server0.info server0.error
 
 ```go
 func fib(n int) int {
-	if n == 0 {
-		return 0
-	} else if n == 1 {
-		return 1
-	} else {
-		return fib(n-1) + fib(n-2)
-	}
+    if n == 0 {
+        return 0
+    } else if n == 1 {
+        return 1
+    } else {
+        return fib(n-1) + fib(n-2)
+    }
 }
 ```
 
@@ -639,82 +639,82 @@ func fib(n int) int {
 
 ```go
 func recv10() {
-	ch := initChannel()
-	q, _ := ch.QueueDeclare( // 在接收端定义这个rpc请求队列，不需要特别的参数
-		"rpc_queue",
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	msgs, _ := ch.Consume(
-		q.Name,
-		"",
-		false, // 不要自动签收
-		false,
-		false,
-		false,
-		nil,
-	)
-	for msg := range msgs {
-		log.Println("收到请求：", string(msg.Body))
-		n, _ := strconv.Atoi(string(msg.Body)) // 忽略异常处理，异常时为0
-		resp := fib(n)
-		ch.Publish( // 把结果发回回调队列
-			"",
-			msg.ReplyTo, // 回调队列
-			false,
-			false,
-			amqp.Publishing{
-				ContentType:   "text/plain",
-				CorrelationId: msg.CorrelationId,
-				Body:          []byte(strconv.Itoa(resp)),
-			})
-		msg.Ack(false) // 不要忘记签收
-	}
+    ch := initChannel()
+    q, _ := ch.QueueDeclare( // 在接收端定义这个rpc请求队列，不需要特别的参数
+        "rpc_queue",
+        false,
+        false,
+        false,
+        false,
+        nil,
+    )
+    msgs, _ := ch.Consume(
+        q.Name,
+        "",
+        false, // 不要自动签收
+        false,
+        false,
+        false,
+        nil,
+    )
+    for msg := range msgs {
+        log.Println("收到请求：", string(msg.Body))
+        n, _ := strconv.Atoi(string(msg.Body)) // 忽略异常处理，异常时为0
+        resp := fib(n)
+        ch.Publish( // 把结果发回回调队列
+            "",
+            msg.ReplyTo, // 回调队列
+            false,
+            false,
+            amqp.Publishing{
+                ContentType:   "text/plain",
+                CorrelationId: msg.CorrelationId,
+                Body:          []byte(strconv.Itoa(resp)),
+            })
+        msg.Ack(false) // 不要忘记签收
+    }
 }
 ```
 
 ```go
 func send10() {
-	ch := initChannel()
-	n, _ := strconv.Atoi(os.Args[1]) // 读取斐波那契函数参数，忽略异常
-	q, _ := ch.QueueDeclare( // 声明一个回调队列
-		"",
-		false,
-		false,
-		true,
-		false,
-		nil,
-	)
-	msgs, _ := ch.Consume( // 在发送请求之前，先监听回调队列
-		q.Name, // queue
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	corrId := uuid.New().String() // 生成一个随机id
-	ch.Publish(
-		"",
-		"rpc_queue",
-		false,
-		false,
-		amqp.Publishing{
-			ContentType:   "text/plain",
-			CorrelationId: corrId, // 指定任务id
-			ReplyTo:       q.Name, // 指定回调队列
-			Body:          []byte(strconv.Itoa(n)),
-		})
-	for msg := range msgs { // 处理回调消息
-		if corrId == msg.CorrelationId {
-			log.Println("收到回调：", string(msg.Body))
-			break
-		}
-	}
+    ch := initChannel()
+    n, _ := strconv.Atoi(os.Args[1]) // 读取斐波那契函数参数，忽略异常
+    q, _ := ch.QueueDeclare( // 声明一个回调队列
+        "",
+        false,
+        false,
+        true,
+        false,
+        nil,
+    )
+    msgs, _ := ch.Consume( // 在发送请求之前，先监听回调队列
+        q.Name, // queue
+        "",
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+    corrId := uuid.New().String() // 生成一个随机id
+    ch.Publish(
+        "",
+        "rpc_queue",
+        false,
+        false,
+        amqp.Publishing{
+            ContentType:   "text/plain",
+            CorrelationId: corrId, // 指定任务id
+            ReplyTo:       q.Name, // 指定回调队列
+            Body:          []byte(strconv.Itoa(n)),
+        })
+    for msg := range msgs { // 处理回调消息
+        if corrId == msg.CorrelationId {
+            log.Println("收到回调：", string(msg.Body))
+            break
+        }
+    }
 }
 ```
 
@@ -739,22 +739,22 @@ Rabbitmq 使用的是 `AMQP 0-9-1`协议来定义消息。这个协议给消息�
 
 ```go
 func send12() {
-	ch := initChannel()
-	confirms := ch.NotifyPublish(make(chan amqp.Confirmation)) // 监听发布确认结果
-	ch.Confirm(false)                                          // 对当前Channel开启监听发布确认
-	for i := 1; i <= 10; i++ {
-		ch.Publish(
-			"",
-			"5-durable",
-			false,
-			false,
-			amqp.Publishing{
-				DeliveryMode: amqp.Persistent,
-				ContentType:  "text/plain",
-				Body:         []byte(fmt.Sprintf("sleep %d 序号: %d", rand.Intn(10), i)),
-			})
-		log.Println("确认一条消息", i, <-confirms) // 阻塞等待发布确认结果
-	}
+    ch := initChannel()
+    confirms := ch.NotifyPublish(make(chan amqp.Confirmation)) // 监听发布确认结果
+    ch.Confirm(false)                                          // 对当前Channel开启监听发布确认
+    for i := 1; i <= 10; i++ {
+        ch.Publish(
+            "",
+            "5-durable",
+            false,
+            false,
+            amqp.Publishing{
+                DeliveryMode: amqp.Persistent,
+                ContentType:  "text/plain",
+                Body:         []byte(fmt.Sprintf("sleep %d 序号: %d", rand.Intn(10), i)),
+            })
+        log.Println("确认一条消息", i, <-confirms) // 阻塞等待发布确认结果
+    }
 }
 ```
 

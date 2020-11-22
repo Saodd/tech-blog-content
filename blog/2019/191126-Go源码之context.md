@@ -65,16 +65,16 @@ func main() {
 
 ```go
 type Context interface {
-	// 如果返回 ok==false 则表示没有设置Deadline时间
-	Deadline() (deadline time.Time, ok bool)
+    // 如果返回 ok==false 则表示没有设置Deadline时间
+    Deadline() (deadline time.Time, ok bool)
 
-	Done() <-chan struct{}
+    Done() <-chan struct{}
 
     // 如果ctx没有被取消，返回nil；如果是，则返回相应的原因（错误类型）
-	Err() error
+    Err() error
 
-	// 用于储存一些键值对。要注意使用类型断言。
-	Value(key interface{}) interface{}
+    // 用于储存一些键值对。要注意使用类型断言。
+    Value(key interface{}) interface{}
 }
 ```
 
@@ -87,8 +87,8 @@ type Context interface {
 
 ```go
 var (
-	background = new(emptyCtx)
-	todo       = new(emptyCtx)
+    background = new(emptyCtx)
+    todo       = new(emptyCtx)
 )
 ```
 
@@ -98,15 +98,15 @@ var (
 
 ```go
 func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
-	c := newCancelCtx(parent)
-	propagateCancel(parent, &c)
-	return &c, func() { c.cancel(true, Canceled) }
+    c := newCancelCtx(parent)
+    propagateCancel(parent, &c)
+    return &c, func() { c.cancel(true, Canceled) }
 }
 ```
 
 ```go
 func newCancelCtx(parent Context) cancelCtx {
-	return cancelCtx{Context: parent}
+    return cancelCtx{Context: parent}
 }
 ```
 
@@ -116,12 +116,12 @@ func newCancelCtx(parent Context) cancelCtx {
 
 ```go
 type cancelCtx struct {
-	Context
+    Context
 
-	mu       sync.Mutex            // protects following fields
-	done     chan struct{}         // created lazily, closed by first cancel call
-	children map[canceler]struct{} // set to nil by the first cancel call
-	err      error                 // set to non-nil by the first cancel call
+    mu       sync.Mutex            // protects following fields
+    done     chan struct{}         // created lazily, closed by first cancel call
+    children map[canceler]struct{} // set to nil by the first cancel call
+    err      error                 // set to non-nil by the first cancel call
 }
 ```
 
@@ -133,30 +133,30 @@ type cancelCtx struct {
 
 ```go
 func propagateCancel(parent Context, child canceler) {
-	if parent.Done() == nil {
-		return // parent is never canceled
-	}
-	if p, ok := parentCancelCtx(parent); ok {
-		p.mu.Lock()
-		if p.err != nil {
-			// parent has already been canceled
-			child.cancel(false, p.err)
-		} else {
-			if p.children == nil {
-				p.children = make(map[canceler]struct{})
-			}
-			p.children[child] = struct{}{}
-		}
-		p.mu.Unlock()
-	} else {
-		go func() {
-			select {
-			case <-parent.Done():
-				child.cancel(false, parent.Err())
-			case <-child.Done():
-			}
-		}()
-	}
+    if parent.Done() == nil {
+        return // parent is never canceled
+    }
+    if p, ok := parentCancelCtx(parent); ok {
+        p.mu.Lock()
+        if p.err != nil {
+            // parent has already been canceled
+            child.cancel(false, p.err)
+        } else {
+            if p.children == nil {
+                p.children = make(map[canceler]struct{})
+            }
+            p.children[child] = struct{}{}
+        }
+        p.mu.Unlock()
+    } else {
+        go func() {
+            select {
+            case <-parent.Done():
+                child.cancel(false, parent.Err())
+            case <-child.Done():
+            }
+        }()
+    }
 }
 ```
 
@@ -170,8 +170,8 @@ func propagateCancel(parent Context, child canceler) {
 
 ```go
 type canceler interface {
-	cancel(removeFromParent bool, err error)
-	Done() <-chan struct{}
+    cancel(removeFromParent bool, err error)
+    Done() <-chan struct{}
 }
 ```
 
@@ -179,30 +179,30 @@ type canceler interface {
 
 ```go
 func (c *cancelCtx) cancel(removeFromParent bool, err error) {
-	if err == nil {
-		panic("context: internal error: missing cancel error")
-	}
-	c.mu.Lock()
-	if c.err != nil {
-		c.mu.Unlock()
-		return // already canceled
-	}
-	c.err = err
-	if c.done == nil {
-		c.done = closedchan
-	} else {
-		close(c.done)
-	}
-	for child := range c.children {
-		// NOTE: acquiring the child's lock while holding parent's lock.
-		child.cancel(false, err)
-	}
-	c.children = nil
-	c.mu.Unlock()
+    if err == nil {
+        panic("context: internal error: missing cancel error")
+    }
+    c.mu.Lock()
+    if c.err != nil {
+        c.mu.Unlock()
+        return // already canceled
+    }
+    c.err = err
+    if c.done == nil {
+        c.done = closedchan
+    } else {
+        close(c.done)
+    }
+    for child := range c.children {
+        // NOTE: acquiring the child's lock while holding parent's lock.
+        child.cancel(false, err)
+    }
+    c.children = nil
+    c.mu.Unlock()
 
-	if removeFromParent {
-		removeChild(c.Context, c)
-	}
+    if removeFromParent {
+        removeChild(c.Context, c)
+    }
 }
 ```
 
@@ -216,7 +216,7 @@ func (c *cancelCtx) cancel(removeFromParent bool, err error) {
 
 ```go
 func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc) {
-	return WithDeadline(parent, time.Now().Add(timeout))
+    return WithDeadline(parent, time.Now().Add(timeout))
 }
 ```
 
@@ -226,28 +226,28 @@ func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc) {
 
 ```go
 func WithDeadline(parent Context, d time.Time) (Context, CancelFunc) {
-	if cur, ok := parent.Deadline(); ok && cur.Before(d) {
-		// The current deadline is already sooner than the new one.
-		return WithCancel(parent)
-	}
-	c := &timerCtx{
-		cancelCtx: newCancelCtx(parent),
-		deadline:  d,
-	}
-	propagateCancel(parent, c)
-	dur := time.Until(d)
-	if dur <= 0 {
-		c.cancel(true, DeadlineExceeded) // deadline has already passed
-		return c, func() { c.cancel(false, Canceled) }
-	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.err == nil {
-		c.timer = time.AfterFunc(dur, func() {
-			c.cancel(true, DeadlineExceeded)
-		})
-	}
-	return c, func() { c.cancel(true, Canceled) }
+    if cur, ok := parent.Deadline(); ok && cur.Before(d) {
+        // The current deadline is already sooner than the new one.
+        return WithCancel(parent)
+    }
+    c := &timerCtx{
+        cancelCtx: newCancelCtx(parent),
+        deadline:  d,
+    }
+    propagateCancel(parent, c)
+    dur := time.Until(d)
+    if dur <= 0 {
+        c.cancel(true, DeadlineExceeded) // deadline has already passed
+        return c, func() { c.cancel(false, Canceled) }
+    }
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    if c.err == nil {
+        c.timer = time.AfterFunc(dur, func() {
+            c.cancel(true, DeadlineExceeded)
+        })
+    }
+    return c, func() { c.cancel(true, Canceled) }
 }
 ```
 
@@ -262,9 +262,9 @@ func WithDeadline(parent Context, d time.Time) (Context, CancelFunc) {
 
 ```go
 type timerCtx struct {
-	cancelCtx
-	timer *time.Timer // Under cancelCtx.mu.
-	deadline time.Time
+    cancelCtx
+    timer *time.Timer // Under cancelCtx.mu.
+    deadline time.Time
 }
 ```
 
@@ -272,17 +272,17 @@ type timerCtx struct {
 
 ```go
 func (c *timerCtx) cancel(removeFromParent bool, err error) {
-	c.cancelCtx.cancel(false, err)
-	if removeFromParent {
-		// Remove this timerCtx from its parent cancelCtx's children.
-		removeChild(c.cancelCtx.Context, c)
-	}
-	c.mu.Lock()
-	if c.timer != nil {
-		c.timer.Stop()
-		c.timer = nil
-	}
-	c.mu.Unlock()
+    c.cancelCtx.cancel(false, err)
+    if removeFromParent {
+        // Remove this timerCtx from its parent cancelCtx's children.
+        removeChild(c.cancelCtx.Context, c)
+    }
+    c.mu.Lock()
+    if c.timer != nil {
+        c.timer.Stop()
+        c.timer = nil
+    }
+    c.mu.Unlock()
 }
 ```
 
@@ -296,13 +296,13 @@ func (c *timerCtx) cancel(removeFromParent bool, err error) {
 
 ```go
 func WithValue(parent Context, key, val interface{}) Context {
-	if key == nil {
-		panic("nil key")
-	}
-	if !reflectlite.TypeOf(key).Comparable() {
-		panic("key is not comparable")
-	}
-	return &valueCtx{parent, key, val}
+    if key == nil {
+        panic("nil key")
+    }
+    if !reflectlite.TypeOf(key).Comparable() {
+        panic("key is not comparable")
+    }
+    return &valueCtx{parent, key, val}
 }
 ```
 
@@ -310,8 +310,8 @@ func WithValue(parent Context, key, val interface{}) Context {
 
 ```go
 type valueCtx struct {
-	Context
-	key, val interface{}
+    Context
+    key, val interface{}
 }
 ```
 
@@ -319,10 +319,10 @@ type valueCtx struct {
 
 ```go
 func (c *valueCtx) Value(key interface{}) interface{} {
-	if c.key == key {
-		return c.val
-	}
-	return c.Context.Value(key)
+    if c.key == key {
+        return c.val
+    }
+    return c.Context.Value(key)
 }
 ```
 
