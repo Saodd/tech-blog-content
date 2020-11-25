@@ -106,7 +106,7 @@ func convertZigZag_brute(s string, numRows int) string {
 2. 从`N-1`开始，向↑画斜线的长度（包含起点，不含终点）也是`N-1`，所以第二个顶点的坐标是`2*(N-1)`;
 3. 从`2*(N-1)`开始，向↓画一竖的长度（包含起点，不含终点）也是`N-1`，所以第二个底点的坐标是`3*(N-1)`;
 
-![Point1](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-07-03-Point1.png)
+![Point1](https://saodd.github.io/tech-blog-pic/2019/2019-07-03-Point1.png)
 
 ### 推导其他点的`i`
 
@@ -115,11 +115,11 @@ func convertZigZag_brute(s string, numRows int) string {
 1. 左腿的坐标是`顶点-r`;
 2. 右腿的坐标是`顶点+r`;
 
-![Point2](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-07-03-Point2.png)
+![Point2](https://saodd.github.io/tech-blog-pic/2019/2019-07-03-Point2.png)
 
 进一步，把所有的点都抽象化，我们把底点算成是右腿里的：
 
-![Point3](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-07-03-Point3.png)
+![Point3](https://saodd.github.io/tech-blog-pic/2019/2019-07-03-Point3.png)
 
 ### 考虑边界问题
 

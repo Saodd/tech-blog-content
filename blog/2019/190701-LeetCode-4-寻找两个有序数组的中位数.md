@@ -76,7 +76,7 @@ nums2 = [3, 4]
 
 反之，对于任意新数组的元素`new[m]`，都能通过`old[m/2]`来获取真实值（因为0.5会被抛弃）
 
-![容量翻倍法示意图](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-07-01-Algo-DoubleList.png)
+![容量翻倍法示意图](https://saodd.github.io/tech-blog-pic/2019/2019-07-01-Algo-DoubleList.png)
 
 核心原理就是：
 ```text
@@ -143,7 +143,7 @@ nums2 = [3, 4]
 2. **目标**是把(`new1`, `new2`)分别分成两半，小的放在左边，大的放在右边；
 用二分法循环，只要max(左边)<=min(右边)并且len(左边)==len(右边)就满足了条件，跳出循环。（注意，他们都是偶数长度的数组）
 
-    ![条件示意图](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-07-01-Algo-Conditions.png)
+    ![条件示意图](https://saodd.github.io/tech-blog-pic/2019/2019-07-01-Algo-Conditions.png)
 
 3. 从`new1`任意取一个下标`c1`(0 < c1 < 2*len(nums1)切开，放在左边，
 那么必须从`new2`用下标`c2`切开(c2 = len(nums1)+len(nums2)-c1)，也放在左边。

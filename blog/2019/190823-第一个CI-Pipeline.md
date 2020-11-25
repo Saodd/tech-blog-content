@@ -138,14 +138,14 @@ SEHK_Short_Report:
 
 安排好以上设置后，我们什么都不需要做，只需要写代码-add-commit-push，推送上去之后GitLab会自动生成Pipeline任务，帮我们完成测试任务：
 
-![settings](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-08-23-first-CI.png)
+![settings](https://saodd.github.io/tech-blog-pic/2019/2019-08-23-first-CI.png)
 
 这样我们就可以看到测试结果了，并且可以看到详细的输出，帮助定位bug。
 
 如果分支功能开发完成了，此时我们可以发起`pull request`，我们可以清晰地看到我们的commit是经过测试的：
 
-![settings](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-08-23-branch.png)
+![settings](https://saodd.github.io/tech-blog-pic/2019/2019-08-23-branch.png)
 
 接受merge请求，成功合并到原始分支中！
 
-![settings](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-08-23-merge.png)
+![settings](https://saodd.github.io/tech-blog-pic/2019/2019-08-23-merge.png)
