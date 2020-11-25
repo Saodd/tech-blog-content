@@ -19,9 +19,9 @@
 这个方法我觉得是可行的，但是最大的问题还是在于用户获取到结果以后，如何以适当的形式展现它？  
 
 还考虑过一个方法就是使用`Mongo`+`Mongo-express`进行日志的储存和展现：  
-![展示3:Mongo-express列表页](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-05-25-Mongo-List.png)  
+![展示3:Mongo-express列表页](https://saodd.github.io/tech-blog-pic/2019/2019-05-25-Mongo-List.png)  
 但是问题也是有的，日志全部挤在一行了：  
-![展示4:Mongo-express详情页](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-05-25-Mongo-Detail.png)  
+![展示4:Mongo-express详情页](https://saodd.github.io/tech-blog-pic/2019/2019-05-25-Mongo-Detail.png)  
 
 所以我想到了`Django`的Admin界面，它具有简单，大方，通过网页就可以直接操作数据库，
 并且将数据库转化为对象，易于开发等等优点。实在是居家旅行之必备。
@@ -31,9 +31,9 @@
 
 首先需要一个`Model`用于保存数据，然后需要一个`View`用于响应POST请求。  
 以我的项目为例，我先做了一个储存日志的功能：  
-![展示1:Admin列表页](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-05-25-Admin1.png)  
+![展示1:Admin列表页](https://saodd.github.io/tech-blog-pic/2019/2019-05-25-Admin1.png)  
 我可以在详情页中查看详细的日志数据：  
-![展示1:Admin详情页](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-05-25-Admin2.png)
+![展示1:Admin详情页](https://saodd.github.io/tech-blog-pic/2019/2019-05-25-Admin2.png)
 
 `Model`代码如下：
 

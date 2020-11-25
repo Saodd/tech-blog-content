@@ -66,11 +66,11 @@ b.append(a)
 ```
 或者看图。我们先创建两个容器对象：
 
-![循环引用1](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-07-19-Circular-Ref-1.webp)
+![循环引用1](https://saodd.github.io/tech-blog-pic/2019/2019-07-19-Circular-Ref-1.webp)
 
 然后互相引用：
 
-![循环引用2](https://raw.githubusercontent.com/Saodd/Saodd.github.io.backup-Jun2020/master/static/blog/2019-07-19-Circular-Ref-2.webp)
+![循环引用2](https://saodd.github.io/tech-blog-pic/2019/2019-07-19-Circular-Ref-2.webp)
 
 这种情况下，它们的引用计数都是2；我们分别删除它们之后，它们里面还有互相引用，这样它们的计数永远不会下降到0了，也就永远不会被销毁了。
 
