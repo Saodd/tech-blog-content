@@ -226,7 +226,7 @@ s.value:     ........  a ..... b ...... a  ..................... a ..... b .....
 我们使用`maxRight`来记录**已知的回文子串**所达到的最右位置，用以判断`i`是否存在于任何已知的回文子串；
 用`pos`来表示`maxRight`所对应的对称轴位置。如图：
 
-![i落于已知的回文子串中](https://saodd.github.io/tech-blog-pic/2019/2019-07-02-Manacher-left.png)
+![i落于已知的回文子串中](../../../../tech-blog-pic/2019/2019-07-02-Manacher-left.png)
 
 ```text
                i'     pos      i   maxRight

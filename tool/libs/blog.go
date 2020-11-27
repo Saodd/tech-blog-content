@@ -1,6 +1,7 @@
 package libs
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +17,8 @@ const blogInputExpr = "(?s)^```yaml lw-blog-meta(.*?)```"
 const blogOutputPref = "```json lw-blog-meta\n"
 const blogExprPrefLen = 20
 const blogExprPostLen = 3
+const blogPicLocal = `../../../../tech-blog-pic/`
+const blogPicCloud = `https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/`
 
 var blogPattern *regexp.Regexp
 
@@ -41,6 +44,7 @@ func (b *Blog) PublicWrite() error {
 	if err != nil {
 		return err
 	}
+	b.Body = bytes.ReplaceAll(b.Body, []byte(blogPicLocal), []byte(blogPicCloud))
 	buf := []byte(blogOutputPref)
 	buf = append(buf, j...)
 	buf = append(buf, "\n```\n"...)
