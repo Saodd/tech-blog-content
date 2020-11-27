@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 )
 
 const ProjectDirname = "tech-blog-content"
@@ -25,6 +26,10 @@ func RecurListMds(folder string) (mds []string) {
 	files, _ := ioutil.ReadDir(folder)
 	for _, file := range files {
 		if file.IsDir() {
+			// 仅允许文件夹名为数字（年份）
+			if _, err := strconv.Atoi(file.Name()); err != nil {
+				continue
+			}
 			subFolder := path.Join(folder, file.Name())
 			mds = append(mds, RecurListMds(subFolder)...)
 		} else {

@@ -7,7 +7,7 @@ import (
 
 func main() {
 	libs.CheckWorkDir()
-	files := libs.RecurListMds("./blog")
+	files := libs.RecurListMds(".")
 	blogs, err := libs.ParseBlogFiles(files)
 	if err != nil {
 		log.Fatalln(err)
@@ -15,7 +15,7 @@ func main() {
 	if err := libs.SaveBlogs(blogs); err != nil {
 		log.Fatalln(err)
 	}
-	if err := libs.GenIndexes(blogs); err != nil {
+	if err := libs.PostPathsToServer(blogs); err != nil {
 		log.Fatalln(err)
 	}
 }
