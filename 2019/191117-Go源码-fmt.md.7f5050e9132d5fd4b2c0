@@ -1,0 +1,376 @@
+```json lw-blog-meta
+{"title":"Go源码：fmt标准库","date":"2019-11-17","brev":"前后半年时间把计算机基础课程好好地学了一遍，接下来该看源码了。第一个研读对象必须是Golang，这个凝聚了谷歌大佬思想精华的新语言，看完之后一定会受益匪浅。我们从标准库中最简单的一个 fmt 开始看。","tags":["Golang","源码"],"path":"2019/191117-Go源码-fmt.md.7f5050e9132d5fd4b2c0"}
+```
+
+
+
+## Golang源码总览
+
+我的本地是`Go:1.13.1`版本，目前官方最新版是`Go:1.13.4`，差别不会太大。
+
+关于`Go 1.13`这个版本，印象中在语言细节上应该没有太大变化，前面介绍过，最明显的变化应该是现在默认使用`go mod`进行版本管理。
+
+由于Golang是自举的，绝大多数源码都是直接可读的；但是底层还是有些的东西是c代码的，也有很多汇编代码。不过总比读Python代码好多了，Python经常读不到源码，IDE导航去的都是“恢复”版本的，底层c代码要专门去找。
+
+话不多说，看看源码总体结构：
+
+```text
+/usr/local/go/src
+|-- archive
+|-- bufio
+|-- builtin
+|-- bytes
+|-- cmd
+|-- compress
+|-- container
+|-- context
+|-- crypto
+|-- database
+|-- debug
+|-- encoding
+|-- errors
+|-- expvar
+|-- flag
+|-- fmt
+|-- go
+|-- hash
+|-- html
+|-- image
+|-- index
+|-- internal
+|-- io
+|-- log
+|-- math
+|-- mime
+|-- net
+|-- os
+|-- path
+|-- plugin
+|-- reflect
+|-- regexp
+|-- runtime
+|-- sort
+|-- strconv
+|-- strings
+|-- sync
+|-- syscall
+|-- testdata
+|-- testing
+|-- text
+|-- time
+|-- unicode
+|-- unsafe
+`-- vendor
+```
+
+最重要的是`runtime`和`syscall`目录了，这是Go的运行时，里面很多平台相关代码和汇编代码。
+
+然后比较有趣的是`go`和`cmd`目录，这里面放着是一些工具链的实现，比如build, format等。
+
+其他的都是标准库了，是我们写代码时要用到的。为什么选择`fmt`第一个看呢？首先，经常用到，熟悉它的主要函数；其次，功能简单，无非就是格式化和输出的东西，能难到哪去？（期待打脸）
+
+`fmt`功能的确简单，但是作为入门，可以先了解一下Go开发团队的风格和常用语法。
+
+## 功能一：标准输出
+
+大家都是从hello-world开始的：
+
+```go
+import "fmt"
+
+func main() {
+    fmt.Println("haha")
+}
+```
+
+我们顺着`Println`这条线去找：
+
+```go
+func Println(a ...interface{}) (n int, err error) {
+    return Fprintln(os.Stdout, a...)
+}
+```
+
+↑这个函数没做别的事，就是指定了输出为`os.Stdout`，然后调用`Fprintln`：
+
+```go
+func Fprintln(w io.Writer, a ...interface{}) (n int, err error) {
+    p := newPrinter()
+    p.doPrintln(a)
+    n, err = w.Write(p.buf)
+    p.free()
+    return
+}
+```
+
+意思大概也清楚，首先①获取一个打印机对象，②然后将打印内容缓存起来，③然后写入到IO对象中，④然后释放打印机对象。
+
+我们分别看一下：
+
+### 打印机类：pp
+
+#### pp的获取与释放
+
+```go
+// pp is used to store a printer's state and is reused with sync.Pool to avoid allocations.
+type pp struct {
+    ...
+}
+
+var ppFree = sync.Pool{
+    New: func() interface{} { return new(pp) },
+}
+
+// newPrinter allocates a new pp struct or grabs a cached one.
+func newPrinter() *pp {
+    p := ppFree.Get().(*pp)
+    p.panicking = false
+    p.erroring = false
+    p.wrapErrs = false
+    p.fmt.init(&p.buf)
+    return p
+}
+
+// free saves used pp structs in ppFree; avoids an allocation per invocation.
+func (p *pp) free() {
+    if cap(p.buf) > 64<<10 {
+        return
+    }
+
+    p.buf = p.buf[:0]
+    p.arg = nil
+    p.value = reflect.Value{}
+    p.wrappedErr = nil
+    ppFree.Put(p)
+}
+```
+
+这个`pp`类，用于储存一个打印机对象的状态，并通过`sync.Pool`进行重用，来避免GC。
+
+这里先强调一个语法细节，`p := ppFree.Get().(*pp)`后面这个括号，是`类型断言`的语法。因为`sync.Pool.Get()`的签名是`func (p *Pool) Get() interface{}`，用断言的理由是，一方面为了确定`Get()`获取的必须是对象实例而非nil，另一方面将`interface{}`转化为`*pp`便于后面的编译类型提示。
+
+这样，需要输出内容时，从`ppFree`这个池子里取一个对象；输出完毕后，将对象清空并放回池子里。这样就避免了GC。
+
+#### pp的输出执行
+
+```go
+func (p *pp) doPrintln(a []interface{}) {
+    for argNum, arg := range a {
+        if argNum > 0 {
+            p.buf.writeByte(' ')
+        }
+        p.printArg(arg, 'v')
+    }
+    p.buf.writeByte('\n')
+}
+```
+
+意思很简单，即把每个参数都按`%v`来输出，然后每个参数之间插一个空格。输出完之后加一个换行符。
+
+#### pp的缓冲区：pp.buf
+
+```go
+// Use simple []byte instead of bytes.Buffer to avoid large dependency.
+type buffer []byte
+
+func (b *buffer) write(p []byte) {
+    *b = append(*b, p...)
+}
+```
+
+缓冲区就是一个简单的`[]byte`，每次输出都`append`一下，也许效率不如`bytes.Buffer`但是降低了依赖复杂度。
+
+### 将pp.buf写入到IO
+
+回到`Fprintln()`中的`n, err = w.Write(p.buf)`这一行。
+
+其实`io.Writer`这个接口大家肯定很熟悉了，这也是在入门教程中作为例子介绍过的。
+
+```go
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+```
+
+那么，再深入看一下`os.Stdout`：
+
+```go
+var Stdout = NewFile(uintptr(syscall.Stdout), "/dev/stdout")
+
+func Write(fd Handle, p []byte) (n int, err error) {
+    if race.Enabled {
+        race.ReleaseMerge(unsafe.Pointer(&ioSync))
+    }
+    var done uint32
+    e := WriteFile(fd, p, &done, nil)
+    if e != nil {
+        return 0, e
+    }
+    if race.Enabled && done > 0 {
+        race.ReadRange(unsafe.Pointer(&p[0]), int(done))
+    }
+    if msanenabled && done > 0 {
+        msanRead(unsafe.Pointer(&p[0]), int(done))
+    }
+    return int(done), nil
+}
+```
+
+不过也就到此为止吧，这里已经进入了`syscall`的范畴了。
+
+## 功能二：格式化输出
+
+fmt标准库的另一个重要用法就是`fmt.Printf()`了。其实它与`Println()`非常相似，只不过多了一个`format`参数，然后对`pp`对象调用`doPrintf`方法。
+
+```go
+func (p *pp) doPrintf(format string, a []interface{}) {}
+```
+
+函数太长了我就省略了。主要思想是，先循环读取`format`中的格式，然后一个个地与后面的`a`参数进行匹配。（而`doPrintln()`是对所有参数使用`%v`格式）
+
+## 功能三：扫描输入
+
+输入和前面的输出是非常相似的设计逻辑，首先看调用方式：
+
+```go
+var path string
+n, e = fmt.Scanln(&path)
+```
+
+要注意的是，要自己先建立一个字符串变量，然后把地址传进去。
+
+```go
+func Scanln(a ...interface{}) (n int, err error) {
+    return Fscanln(os.Stdin, a...)
+}
+```
+
+```go
+func Fscanln(r io.Reader, a ...interface{}) (n int, err error) {
+    s, old := newScanState(r, false, true)
+    n, err = s.doScan(a)
+    s.free(old)
+    return
+}
+```
+
+看！眼熟吧！核心逻辑也是，从池子中取出一个实例来操作，减少GC负担。
+
+### 获取ss对象
+
+```go
+// ss is the internal implementation of ScanState.
+type ss struct {
+    rs    io.RuneScanner // where to read input
+    buf   buffer         // token accumulator
+    count int            // runes consumed so far.
+    atEOF bool           // already read EOF
+    ssave
+}
+```
+
+```go
+func newScanState(r io.Reader, nlIsSpace, nlIsEnd bool) (s *ss, old ssave) {
+    s = ssFree.Get().(*ss)
+    if rs, ok := r.(io.RuneScanner); ok {
+        s.rs = rs
+    } else {
+        s.rs = &readRune{reader: r, peekRune: -1}
+    }
+    s.nlIsSpace = nlIsSpace
+    s.nlIsEnd = nlIsEnd
+    // ...
+    return
+}
+```
+
+`ss`类是类似于前面的`pp`类。通过上面这个`newScanState`函数，负责从池中取出对象实例，并且还要检查`rs`成员是否符合`io.RuneScanner`接口。这个接口是这样：
+
+```go
+// RuneReader is the interface that wraps the ReadRune method.
+//
+// ReadRune reads a single UTF-8 encoded Unicode character
+// and returns the rune and its size in bytes. If no character is
+// available, err will be set.
+type RuneReader interface {
+    ReadRune() (r rune, size int, err error)
+}
+
+// RuneScanner is the interface that adds the UnreadRune method to the
+// basic ReadRune method.
+//
+// UnreadRune causes the next call to ReadRune to return the same rune
+// as the previous call to ReadRune.
+// It may be an error to call UnreadRune twice without an intervening
+// call to ReadRune.
+type RuneScanner interface {
+    RuneReader
+    UnreadRune() error
+}
+```
+
+`RuneReader`方法的功能是读取单个utf8编码字符，并返回这个字符的长度；`RuneScanner`是撤销。
+
+关于他们的具体实现，这里不展开了，因为其实就是解决字符编码的问题。即，一个utf8字符可能是1-4byte长度，因此需要进行判断才能读出一个正确的utf8字符。（参考阅读：[阮一峰的网络日志](http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html)）
+
+### ss对象执行扫描
+
+```go
+// doScan does the real work for scanning without a format string.
+func (s *ss) doScan(a []interface{}) (numProcessed int, err error) {
+    defer errorHandler(&err)
+    for _, arg := range a {
+        s.scanOne('v', arg)
+        numProcessed++
+    }
+    // Check for newline (or EOF) if required (Scanln etc.).
+    if s.nlIsEnd {
+        for {
+            r := s.getRune()
+            if r == '\n' || r == eof {
+                break
+            }
+            if !isSpace(r) {
+                s.errorString("expected newline")
+                break
+            }
+        }
+    }
+    return
+}
+```
+
+这个地方有点奇怪，回想一下，最初函数的签名是：`func Scanln(a ...interface{})`，它能接收多个参数。在`doScan`中，就是循环执行`s.scanOne('v', arg)`这个方法。我这里暂时称`arg`为容器参数吧。
+
+```go
+func (s *ss) scanOne(verb rune, arg interface{}) {
+    s.buf = s.buf[:0]
+    var err error
+    // If the parameter has its own Scan method, use that.
+    if v, ok := arg.(Scanner); ok {
+        err = v.Scan(s, verb)
+        if err != nil {
+            if err == io.EOF {
+                err = io.ErrUnexpectedEOF
+            }
+            s.error(err)
+        }
+        return
+    }
+
+    switch v := arg.(type) {
+        case *bool:
+        // ... 根据容器参数的类型，选择不同的转换函数。
+    }
+}
+```
+
+上面这个方法的功能是，如果容器参数自己实现了`Scanner`接口（即一个`Scan`方法），那么就调用这个容器参数自己的方法；如果没有，那么就判断一下容器参数的类型，然后选择不同的转换函数。
+
+总体来说，`fmt`库的输入功能部分，由于用户输入的任意性，所以大量的代码都是在见机行事，比较复杂，但是并不深奥。
+
+## 小结
+
+综上所述，`fmt`库果然是并不难的。
+
+在这个库的学习过程中，见到了类型断言（类型选择）的语法，见到了接口，见到了对象池的用法。收获比想象中大一些。挺好的。

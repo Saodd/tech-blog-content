@@ -1,0 +1,183 @@
+```json lw-blog-meta
+{"title":"LeetCode[62]: 不同路径","date":"2019-12-16","brev":"标签：数组，动态规划。中等难度。","tags":["算法与数据结构"],"path":"2019/191216-LeetCode-62.md.1d3b92a4ce650d311350"}
+```
+
+
+
+## 读题
+
+```text
+一个机器人位于一个 m x n 网格的左上角 （起始点在下图中标记为“Start” ）。
+
+机器人每次只能向下或者向右移动一步。机器人试图达到网格的右下角（在下图中标记为“Finish”）。
+
+问总共有多少条不同的路径？
+
+说明：m 和 n 的值均不超过 100。
+
+示例 1:
+
+输入: m = 3, n = 2
+输出: 3
+解释:
+从左上角开始，总共有 3 条路径可以到达右下角。
+1. 向右 -> 向右 -> 向下
+2. 向右 -> 向下 -> 向右
+3. 向下 -> 向右 -> 向右
+
+示例 2:
+
+输入: m = 7, n = 3
+输出: 28
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/unique-paths
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+## 分析
+
+由于不小心，在看题目标签的时候看到了“动态规划”这个词，因此直接就用这个思路来解了。
+
+核心思路就是，建立一个 m*n 的二维数组，上面记录着每个点到终点的总路径数。对于每个点来说，当前点的路径数=右边点的路径数+下面点的路径数，这是一个递归；递归的终止条件是m或者n等于0的时候（也就是说触到了边界，只有一条路可以走了）
+
+## 实现1：函数式
+
+```go
+func uniquePaths(m int, n int) int {
+    // 创建一个二维数组
+    var cache = make([][]int, m)
+    for i := 0; i < m; i++ {
+        cache[i] = make([]int, n)
+    }
+    // 递归求解
+    return uniquePathsRec(m-1, n-1, cache)
+}
+
+func uniquePathsRec(m, n int, cache [][]int) int {
+    // 递归终止条件
+    if m == 0 || n == 0 {
+        return 1
+    }
+    // 查看之前是否计算过
+    if cache[m][n] == 0 {
+        cache[m][n] = uniquePathsRec(m-1, n, cache) + uniquePathsRec(m, n-1, cache)
+    }
+    return cache[m][n]
+}
+
+```
+
+手写时间：8.5分钟。提交成绩：
+
+```text
+执行用时 :0 ms, 在所有 golang 提交中击败了100.00%的用户
+内存消耗 :2.1 MB, 在所有 golang 提交中击败了10.45%的用户
+```
+
+测试用例略。
+
+## 实现2：对象式
+
+上面这个函数式的算法，有个小瑕疵，二维切片不断地在递归中传递，感觉不太好。其实一开始的想法是做一个全局变量，但是觉得全局变量也有很明显的缺陷；然后想到可以用对象来持有这个二维切片，应该会看起来更自然。
+
+```go
+func uniquePaths(m int, n int) int {
+    b := newUniquePathsBoard(m, n)
+    return b.Paths(m-1, n-1)
+}
+
+type uniquePathsBoard [][]int
+
+func newUniquePathsBoard(m, n int) uniquePathsBoard {
+    var cache = make([][]int, m)
+    for i := 0; i < m; i++ {
+        cache[i] = make([]int, n)
+    }
+    return cache
+}
+
+func (b uniquePathsBoard) Paths(m, n int) int {
+    if m == 0 || n == 0 {
+        return 1
+    }
+    if b[m][n] == 0 {
+        b[m][n] = b.Paths(m-1, n) + b.Paths(m, n-1)
+    }
+    return b[m][n]
+}
+```
+
+## 其他思路
+
+### 数学思路
+
+首先这个问题可以看做一个纯数学问题：『袋子里有m个红球（向右走）和n个白球（向下走），求不放回的取法有多少种？』
+
+对于这个数学问题，我们先假设所有的球都是有独立编号的，那么答案就是全排列`(m+n)!`；但是实际上白球跟白球都是一样的红球跟红球都是一样的，所以要除去相同颜色的排列，即最后答案是`(m+n)! / m! / n!`。在这一题中，m和n都要减去一。
+
+```go
+func uniquePaths(m int, n int) int {
+    return Factorial(m+n-2)/Factorial(m-1)/Factorial(n-1)
+}
+```
+
+但是这里有个坑，是由于int数值范围的导致的。当m或者n达到一定大小时会造成溢出。
+
+一种思路是用浮点数来计算，但是最后要转换回整形返回。
+
+另一种思路是改良计算步骤，我们用分子分母同时消去公约数的办法来防止溢出，最后再把剩下的因子乘起来。
+
+```go
+func uniquePaths(m int, n int) int {
+    m--
+    n--
+    // 保证n更小
+    if n > m {
+        n, m = m, n
+    }
+    // 准备分子和分母
+    var numo, deno = make([]int, n), make([]int, n)
+    for i := 0; i < n; i++ {
+        numo[i] = m + i + 1
+        deno[i] = i + 1
+    }
+    // 分子分母对消。最后答案一定是整数，分母一定能全部被分子消除掉。
+    for _, d := range deno {
+        // 把分子的元素集中一下，减少循环次数
+        for numo[0] < 1<<25 && len(numo) > 1 {
+            numo[0] = numo[0] * numo[1]
+            numo[1], numo[len(numo)-1] = numo[len(numo)-1], numo[1]
+            numo = numo[:len(numo)-1]
+        }
+        for i := range numo {
+            // 分母元素能被分子整除就最好了，不能整除就去掉最大公约数
+            if numo[i]%d == 0 {
+                numo[i] /= d
+                break
+            } else {
+                g := Gcd(numo[i], d)
+                numo[i] /= g
+                d /= g
+            }
+        }
+    }
+    // 把分子剩下的元素乘起来
+    var paths int = 1
+    for _, n := range numo {
+        paths *= n
+    }
+    return paths
+}
+```
+
+这个算法，时间复杂度最坏`n^2`，空间复杂度`n^2`，其实没有多大的改进（尴尬笑）。提交成绩：
+
+```text
+执行用时 :0 ms, 在所有 golang 提交中击败了100.00%的用户
+内存消耗 :1.9 MB, 在所有 golang 提交中击败了98.51%的用户
+```
+
+### 空间压缩优化思路
+
+理论上，我们的动态规划可以逐层计算的，也就是说空间复杂度可以降到`O(n)`。这里不展开了。

@@ -1,0 +1,204 @@
+```json lw-blog-meta
+{"title":"LeetCode[51]: N皇后","date":"2019-09-04","brev":"困难难度。因为在python教程中见到过八皇后问题，所以再做一遍。对于这种经典的问题果然应该不厌其烦啊~","tags":["算法与数据结构"],"path":"2019/190904-LeetCode-51.md.89121d49e9b8132ac282"}
+```
+
+
+
+## 读题
+
+```text
+n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并且使皇后彼此之间不能相互攻击。
+
+给定一个整数 n，返回所有不同的 n 皇后问题的解决方案。
+
+每一种解法包含一个明确的 n 皇后问题的棋子放置方案，
+该方案中 'Q' 和 '.' 分别代表了皇后和空位。
+
+示例:
+
+输入: 4
+输出: [
+ [".Q..",  // 解法 1
+  "...Q",
+  "Q...",
+  "..Q."],
+
+ ["..Q.",  // 解法 2
+  "Q...",
+  "...Q",
+  ".Q.."]
+]
+
+解释: 4 皇后问题存在两个不同的解法。
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/n-queens
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+注，皇后的攻击范围是『米』字形的，即任意两个皇后不能放在同一排、同一列、同一斜线上。
+
+## 思路
+
+首先我们考虑『任意两个皇后不能放在同一排、同一列』这个条件。
+
+根据这个特性，我们维护一个『棋盘』，理论上棋盘是二维的，不过我们只需要一维的`[]int`就可以表示了，索引表示列、值表示排，像这样：
+
+```text
+var temp []int = {0,1,3,2}
+   {0,  1,  3,  2}
+    Q   -   -   -
+    -   Q   -   -
+    -   -   -   Q
+    -   -   Q   -
+
+```
+
+我们用回溯法，每一列抢占一个行，后面的列只能选择其他行。主要思路为：
+
+```go
+var len0051 int
+var temp0051 []int
+
+func recSolveNQueens(n int) {
+    for i := n; i < len0051; i++ {
+        temp0051[n], temp0051[i] = temp0051[i], temp0051[n]
+        recSolveNQueens(n + 1)
+        temp0051[n], temp0051[i] = temp0051[i], temp0051[n]
+    }
+}
+```
+
+这个棋盘数组已经保证了任意两个皇后横竖不冲突，那么还需要一个检测斜线的条件：
+
+```go
+for j := 0; j < n; j++ {
+    if temp0051[j]+n-j == num || temp0051[j]-n+j == num {  // 右下斜线||左上斜线
+        goto NEXTNUM
+    }
+}
+```
+
+最后，递归到最后一位时，如果满足条件，就把这个解法记录下来：
+
+```go
+func recordNQueens() {
+    // pattern0051 = []byte{'.', '.', ...}
+    solution := make([]string, len0051)
+    for i, n := range temp0051 {
+        pattern0051[i] = 'Q'
+        solution[n] = string(pattern0051)
+        pattern0051[i] = '.'
+    }
+    result0051 = append(result0051, solution)
+}
+```
+
+## 实现
+
+完整代码：
+
+```go
+func solveNQueens(n int) [][]string {
+    // 初始化各项全局变量
+    len0051 = n
+    temp0051 = make([]int, n)
+    pattern0051 = make([]byte, n)
+    for i := range temp0051 {
+        temp0051[i] = i
+        pattern0051[i] = '.'
+    }
+    result0051 = [][]string{}
+    // 开始递归
+    recSolveNQueens(0)
+
+    return result0051
+}
+
+var len0051 int           // 皇后的数量
+var temp0051 []int        // 当前棋盘的摆放情况
+var result0051 [][]string // 最后返回的结果
+var pattern0051 []byte    // 帮助生成字符串
+
+func recSolveNQueens(n int) {
+    var num int
+    // 递归到最后一位，如果满足斜线条件就记录这个答案
+    if n == len0051-1 {
+        num = temp0051[n]
+        for j := 0; j < n; j++ {
+            if temp0051[j]+n-j == num || temp0051[j]-n+j == num {
+                return
+            }
+        }
+        recordNQueens()
+        return
+    }
+    // 不是最后一位，就回溯+递归
+    for i := n; i < len0051; i++ {
+        if i == n {
+            num = temp0051[n]
+            for j := 0; j < n; j++ {
+                if temp0051[j]+n-j == num || temp0051[j]-n+j == num {
+                    goto NEXTNUM
+                }
+            }
+            recSolveNQueens(n + 1)
+        } else {
+            temp0051[n], temp0051[i] = temp0051[i], temp0051[n]
+            num = temp0051[n]
+            for j := 0; j < n; j++ {
+                if temp0051[j]+n-j == num || temp0051[j]-n+j == num {
+                    temp0051[n], temp0051[i] = temp0051[i], temp0051[n]
+                    goto NEXTNUM
+                }
+            }
+            recSolveNQueens(n + 1)
+            temp0051[n], temp0051[i] = temp0051[i], temp0051[n]
+        }
+    NEXTNUM:
+    }
+}
+
+func recordNQueens() {
+    // 记录当前的答案
+    solution := make([]string, len0051)
+    for i, n := range temp0051 {
+        pattern0051[i] = 'Q'
+        solution[n] = string(pattern0051)
+        pattern0051[i] = '.'
+    }
+    result0051 = append(result0051, solution)
+}
+```
+
+提交成绩：
+
+```text
+执行用时 :8 ms, 在所有 Go 提交中击败了97.48%的用户
+内存消耗 :6.6 MB, 在所有 Go 提交中击败了100.00%的用户
+```
+
+测试用例：
+
+```go
+{
+    name: "示例",
+    args: args{4},
+    want: [][]string{
+        {"..Q.", "Q...", "...Q", ".Q.."},
+        {".Q..", "...Q", "Q...", "..Q."},
+    },
+},
+{
+    name: "两个",
+    args: args{2},
+    want: [][]string{
+    },
+},
+{
+    name: "三个",
+    args: args{3},
+    want: [][]string{
+    },
+},
+```

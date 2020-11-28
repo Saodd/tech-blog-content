@@ -1,0 +1,121 @@
+```json lw-blog-meta
+{"title":"LeetCode[49]: 字母异位词分组","date":"2019-08-29","brev":"中等难度。没什么意思的一题。","tags":["算法与数据结构"],"path":"2019/190829-LeetCode-49.md.61e00bc48fc77b4a0c5e"}
+```
+
+
+
+## 读题
+
+```text
+给定一个字符串数组，将字母异位词组合在一起。
+字母异位词指字母相同，但排列不同的字符串。
+
+示例:
+
+输入: ["eat", "tea", "tan", "ate", "nat", "bat"],
+输出:
+[
+  ["ate","eat","tea"],
+  ["nat","tan"],
+  ["bat"]
+]
+
+说明：
+
+所有输入均为小写字母。
+不考虑答案输出的顺序。
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/group-anagrams
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+## 实现
+
+一开始能想到一个大概的类似字典树的数据结构，不过没有实现过，所以没有尝试。
+
+然后就想，我给每个字符串排序，这样拥有相同字母的字符串在排序后就都是一样的了；然后用一个map来分组；最后输出答案。
+
+```go
+func groupAnagrams(strs []string) [][]string {
+    var dictionary = map[string][]string{}
+
+    var p []byte
+    var temp string
+    for i := range strs {
+        // 转化为数组来排序
+        p = []byte(strs[i])  // 因为字符串不可变更，反正也要复制，就用这个强制类型转换了
+        QuickSortByte(p)
+        temp = *(*string)(unsafe.Pointer(&p))  // 转换回字符串，用于分组
+        // 分组
+        if value, ok := dictionary[temp]; ok {
+            dictionary[temp] = append(value, strs[i])
+        } else {
+            dictionary[temp] = []string{strs[i]}
+        }
+    }
+    // map转化为数组，得到答案
+    var result = [][]string{}
+    for _, v := range dictionary {
+        result = append(result, v)
+    }
+    return result
+}
+```
+
+在写的时候就觉得可能性能不理想，不过总归是实现了嘛。提交成绩：
+
+```text
+执行用时 :512 ms, 在所有 Go 提交中击败了41.88%的用户
+内存消耗 :73.2 MB, 在所有 Go 提交中击败了47.22%的用户
+```
+
+还好，没有超时，中等水平。
+
+## 其他思路
+
+为什么一定要排序呢？排序提供的信息太多了！
+
+其实，只要计数就可以了……
+
+```go
+func groupAnagrams(strs []string) [][]string {
+    var dictionary = map[string][]string{}
+
+    var temp string
+    for i := range strs {
+        temp = countAlpha(strs[i])
+        if value, ok := dictionary[temp]; ok {
+            dictionary[temp] = append(value, strs[i])
+        } else {
+            dictionary[temp] = []string{strs[i]}
+        }
+    }
+
+    var result = [][]string{}
+    for _, v := range dictionary {
+        result = append(result, v)
+    }
+
+    return result
+}
+
+var counter []byte = make([]byte, 26)
+
+func countAlpha(s string) (count string) {
+    for i := 0; i < 26; i++ {
+        counter[i] = 0
+    }
+    for _, i := range s {
+        counter[i-'a']++
+    }
+    return string(counter)
+}
+```
+
+但是成绩依然不理想……
+
+```text
+执行用时 :508 ms, 在所有 Go 提交中击败了44.87%的用户
+内存消耗 :79.1 MB, 在所有 Go 提交中击败了41.67%的用户
+```

@@ -1,1 +1,0 @@
-{"blogs":[{"title":"第一个CI-Pipeline","date":"2019-08-23","brev":"使用测试机上已经build好的image，来实现一个真正的测试项目。","tags":["DevOps"],"path":"blog/2019/190823-第一个CI-Pipeline.md"},{"title":"GitLab配置CI环境","date":"2019-08-21","brev":"CI/CD应该是DevOps的关键内容之一吧。本文以Python项目为例，简述GitLab-CI的安装和运行。","tags":["DevOps"],"path":"blog/2019/190821-GitLab部署CI持续集成.md"}],"total":12}

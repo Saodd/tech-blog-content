@@ -1,0 +1,96 @@
+```json lw-blog-meta
+{"title":"LeetCode[92]: 反转链表 II","date":"2019-11-25","brev":"数据结构：链表(5/10)。中等难度。","tags":["算法与数据结构"],"path":"2019/191125-LeetCode-92.md.93189328f4b54dda38b8"}
+```
+
+
+
+## 读题
+
+```text
+反转从位置 m 到 n 的链表。请使用一趟扫描完成反转。
+
+说明:
+1 ≤ m ≤ n ≤ 链表长度。
+
+示例:
+
+输入: 1->2->3->4->5->NULL, m = 2, n = 4
+输出: 1->4->3->2->5->NULL
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/reverse-linked-list-ii
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+## 分析
+
+主要思路很简单，找到m和n位置的节点，然后把他们中间的子链表逐个翻转。翻转过程中要用三个指针`a, b, c`，令`b.Next=a`，然后三个指针一起前进即可。翻转完成后，把翻转过的链表的头接在m后面，尾巴接上原来的n节点。
+
+特别要注意的是边界条件，因为翻转过程用了三个指针，要考虑链表长度是否够三个？
+
+（答案，其实最少只要两个节点就可以了，此时`c==nil`是没问题的；我们只需要排除`if m==n {return head}`这个条件就可以保证至少有两个节点了。）
+
+## 实现
+
+```go
+func reverseBetween(head *ListNode, m int, n int) *ListNode {
+    if m == n {
+        return head
+    }
+    var dumHead = &ListNode{Next: head}
+    var start = dumHead
+    for i := 1; i < m; i++ {
+        start = start.Next
+    }
+
+    var a, b, c *ListNode
+    a = start // start, a, b, c 都不会是nil，因为 m < n <= 链表长度
+    b = a.Next
+    c = b.Next
+    for i := m; i < n; i++ {
+        a, b, c = b, c, c.Next
+        b.Next = a
+    }
+    start.Next, start.Next.Next = b, c
+    return dumHead.Next
+}
+```
+
+手写时间：16分钟。排除边界条件的时候磨蹭太久了。
+
+```text
+提交成绩：
+执行用时 :0 ms, 在所有 golang 提交中击败了100.00%的用户
+内存消耗 :2.1 MB, 在所有 golang 提交中击败了64.15%的用户
+```
+
+测试用例：
+
+```go
+{
+    name: "示例1",
+    args: args{common.CreateListInt([]int{1, 2, 3, 4, 5}), 2, 4},
+    want: common.CreateListInt([]int{1, 4, 3, 2, 5}),
+},
+{
+    name: "走到尾部",
+    args: args{common.CreateListInt([]int{1, 2, 3, 4, 5}), 2, 5},
+    want: common.CreateListInt([]int{1, 5, 4, 3, 2}),
+},
+{
+    name: "从头开始",
+    args: args{common.CreateListInt([]int{1, 2, 3, 4, 5}), 1, 4},
+    want: common.CreateListInt([]int{4, 3, 2, 1, 5}),
+},
+{
+    name: "全部翻转",
+    args: args{common.CreateListInt([]int{1, 2, 3, 4, 5}), 1, 5},
+    want: common.CreateListInt([]int{5, 4, 3, 2, 1}),
+},
+```
+
+## 其他思路
+
+官方给出的解题思路是：递归法……归法……法……
+
+外行看一下挺炫酷的，实际上对于链表来说，递归法太烂了，空间复杂度是`O(n)`，有这复杂度我还不如把链表转化为数组来操作呢！

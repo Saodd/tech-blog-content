@@ -1,0 +1,56 @@
+```json lw-blog-meta
+{"title":"[官方] Go.dev: a new hub for Go developers","date":"2020-09-19","brev":"发布时间2019-11-13，以及第二篇发布于2020-1-31，关于Go.dev","tags":["Golang"],"path":"2020/200919-官方-GoDev.md.563ef3422e130799150e"}
+```
+
+
+# Go.dev: a new hub for Go developers
+
+[原文链接](https://blog.golang.org/go.dev)
+
+Steve Francia and Julie Qiu  
+13 November 2019
+
+最近两年，我们在和开发者交谈时，我们总是被问到三个问题：还有谁在用Go？他们用Go来做什么？我如何使用Go packages？
+
+今天我们正式宣布部署 [go.dev](https://go.dev/) ， 一个新的Go开发者的中心，来帮助回答上述问题。在那里你可以找到大量的学习资源，包括语言、特性使用案例以及公司使用案例。
+
+（记住 [golang.org](https://golang.org) 依然是Go项目以及Go发行版的主页。 Go.dev 只是用来提供一些支持性的资源的。）
+
+再看看 [pkg.go.dev](https://pkg.go.dev/) ，跟 godoc.org 一样， 这里也提供了Go文档。但是它还能理解 模块(`modules`)，并且保存了每个包的所有版本的信息。它还会侦测开源许可信息。它还提供了更好的搜索算法。（详情可以了解 [Go issue 33654](https://golang.org/issue/33654) ）
+
+这次的发布只是一个最小的可行的版本，我们计划继续扩张这个网站的内容。我们期待反馈！
+
+## 译者感言
+
+1. 这个域名应该挺贵吧，Google果然还是很重视Golang的。
+2. 这个网站似乎是用 Hugo 做的。
+3. pkg.go.dev 的搜索算法的确不错。
+
+# Next steps for pkg.go.dev
+
+Julie Qiu  
+31 January 2020
+
+## 将 godoc.org 转发到 pkg.go.dev
+
+为了避免造成误解，我们将只保留后者。我们将在2020年晚些时候将前者的流量全部转发到后者上去。
+
+## pkg.go.dev 的常见问题
+
+### 1. 我的包没有出现在上面！如何添加？
+
+我们监听 [Go Module Index](https://index.golang.org/index) 并周期性地将新包添加到 pkg.go.dev 中去。因此如果你没看到你的包，可以尝试从 proxy.golang.org 上拉取一下。
+
+### 2. 上面显示我的包有许可限制？
+
+我们正在改进许可探测算法。如有疑问请联系。
+
+### 3. 它能开源吗？我想在公司部署一套。
+
+我们理解这种需求，但是又感觉这种需求不是很有必要。
+
+我们听说，私有化运行 godoc.org 的过程非常麻烦。那是因为它本身是为互联网规模设计的，而不是为了一家公司（，因此设计上会有不同）。因此我们估计 pkg.go.dev 的私有化部署肯定也有类似的问题。
+
+我们认为另一种形式的服务器应该是您所需要的。参考 `goimports` 和 `gopls` 。
+
+如果您的确需要，请填写问卷来反馈给我们。

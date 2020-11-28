@@ -1,0 +1,135 @@
+```json lw-blog-meta
+{"title":"LeetCode[20]: 有效的括号","date":"2019-08-09","brev":"简单难度。","tags":["算法与数据结构"],"path":"2019/190809-Leetcode-20.md.d9ab11c1b32f3f99baad"}
+```
+
+
+
+## 读题
+
+```text
+给定一个只包括 '('，')'，'{'，'}'，'['，']' 的字符串，
+判断字符串是否有效。
+
+有效字符串需满足：
+
+左括号必须用相同类型的右括号闭合。
+左括号必须以正确的顺序闭合。
+注意空字符串可被认为是有效字符串。
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/valid-parentheses
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+## 分析
+
+在学习`栈`数据结构的时候，当时的案例就是括号问题了，非常简单。如果只有小括号的话，那么甚至都不用`栈`，只需要一个计数器就够了。
+
+不过这里有三种括号，所以还是老老实实用栈吧。
+
+在栈的基础上钻了个空子，直接根据三种括号的`ASCII码`来计算，不需要判断字符是否匹配。
+（只在题目规定**输入字符串只包含这三种括号字符**的情况下有效，如果输入的是任意字符就不可以这样做。）
+
+```text
+fmt.Println('(', ')', '[', ']', '{', '}')
+// 40 41 91 93 123 125
+```
+
+## 实现
+
+```go
+func isValid(s string) bool {
+    if len(s)%2 != 0 {
+        return false
+    }
+    var halfLen, p int = len(s)/2, 0
+    var stack []byte = make([]byte, halfLen)
+    for i, le := 0, len(s); i < le; i++ {
+        c := s[i]
+        switch c {
+        case '(', '[', '{':
+            if p == halfLen {
+                return false
+            }
+            stack[p] = c
+            p++
+        case ')', ']', '}':
+            if p == 0 {
+                return false
+            }
+            if c-stack[p-1] <= 2 { // 40 41 91 93 123 125
+                p--
+            } else {
+                return false
+            }
+        }
+    }
+    if p==0{
+        return true
+    }
+    return false
+}
+```
+
+首先排除了奇数长度的情况（也可以再排除0长度的情况）。
+
+然后新建一个切片和一个指针作为栈。
+
+然后循环遍历字符串参数。在栈的操作过程中，要注意栈的边界问题。
+
+提交成绩：
+
+```text
+执行用时 :0 ms, 在所有 Go 提交中击败了100.00%的用户
+内存消耗 :2 MB, 在所有 Go 提交中击败了79.23%的用户
+```
+
+### 测试案例
+
+```go
+{
+    args:args{"()"},
+    want:true,
+},
+{
+    args:args{"()[]{}"},
+    want:true,
+},
+{
+    args:args{"(]"},
+    want:false,
+},
+{
+    args:args{"([)]"},
+    want:false,
+},
+{
+    args:args{"{[]}"},
+    want:true,
+},
+{
+    args:args{"(("},
+    want:false,
+},
+{
+    args:args{"))"},
+    want:false,
+},
+{
+    args:args{"(()("},
+    want:false,
+},
+```
+
+## 其他解法
+
+官方题解也是栈的思想，不过在细节上，使用了一个哈希表来配对左右括号，值得借鉴：
+
+```java
+public Solution() {
+    this.mappings = new HashMap<Character, Character>();
+    this.mappings.put(')', '(');
+    this.mappings.put('}', '{');
+    this.mappings.put(']', '[');
+}
+```

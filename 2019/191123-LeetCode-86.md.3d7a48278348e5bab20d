@@ -1,0 +1,68 @@
+```json lw-blog-meta
+{"title":"LeetCode[86]: 分隔链表","date":"2019-11-23","brev":"数据结构：链表(4/10)。中等难度。现在回过头来看，其实这是实现链表排序算法的一部分，所以做起来就很简单了。","tags":["算法与数据结构"],"path":"2019/191123-LeetCode-86.md.3d7a48278348e5bab20d"}
+```
+
+
+
+## 读题
+
+```text
+给定一个链表和一个特定值 x，对链表进行分隔，使得所有小于 x 的节点都在大于或等于 x 的节点之前。
+
+你应当保留两个分区中每个节点的初始相对位置。
+
+示例:
+
+输入: head = 1->4->3->2->5->2, x = 3
+输出: 1->2->2->4->3->5
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/partition-list
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+## 分析
+
+思路就是，分成两个链表，小的串起来、大的串起来，最后把大的拼接在小的链表后面。
+
+就以这一题来看，因为没有递归，所以做两个哑结点无伤大雅，增加的空间复杂度只有`O(1)`，所以用哑结点来简化代码，效果明显。
+
+## 实现
+
+```go
+func partition(head *ListNode, x int) *ListNode {
+    var smallHead, bigHead = &ListNode{}, &ListNode{}
+    var smallTail, bigTail = smallHead, bigHead
+    for p := head; p != nil; p = p.Next {
+        if p.Val < x {
+            smallTail.Next = p
+            smallTail = p
+        } else {
+            bigTail.Next = p
+            bigTail = p
+        }
+    }
+    bigTail.Next = nil
+    smallTail.Next = bigHead.Next
+    return smallHead.Next
+}
+```
+
+手写时间：几分钟，未计时。
+
+提交成绩：
+
+```text
+执行用时 :0 ms, 在所有 golang 提交中击败了100.00%的用户
+内存消耗 :2.4 MB, 在所有 golang 提交中击败了51.11%的用户
+```
+
+测试用例：
+
+```go
+{
+    name: "示例1",
+    args: args{common.CreateListInt([]int{1, 4, 3, 2, 5, 2}), 3},
+    want: common.CreateListInt([]int{1, 2, 2, 4, 3, 5}),
+},
+```

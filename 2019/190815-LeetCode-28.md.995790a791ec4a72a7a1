@@ -1,0 +1,172 @@
+```json lw-blog-meta
+{"title":"LeetCode[28]: 实现 strStr()","date":"2019-08-15","brev":"简单难度。这其实也是我们熟知的Index()函数，在strings标准库中有。看了一下标准库代码，啧啧，真会玩。","tags":["算法与数据结构"],"path":"2019/190815-LeetCode-28.md.995790a791ec4a72a7a1"}
+```
+
+
+
+## 读题
+
+```text
+实现 strStr() 函数。
+
+给定一个 haystack 字符串和一个 needle 字符串，
+在 haystack 字符串中找出 needle 字符串出现的
+第一个位置 (从0开始)。如果不存在，则返回  -1。
+
+示例 1:
+
+输入: haystack = "hello", needle = "ll"
+输出: 2
+
+示例 2:
+
+输入: haystack = "aaaaa", needle = "bba"
+输出: -1
+
+说明:
+
+当 needle 是空字符串时，我们应当返回什么值呢？这是一个在面试中很好的问题。
+
+对于本题而言，当 needle 是空字符串时我们应当返回 0 。
+这与C语言的 strstr() 以及 Java的 indexOf() 定义相符。
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/implement-strstr
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+思路就是逐位遍历大字符串，然后与子字符串逐位比对。
+
+## 实现
+
+```go
+func strStr(haystack string, needle string) int {
+    if len(needle) == 0 {
+        return 0
+    }
+    if len(haystack) < len(needle) {
+        return -1
+    }
+    var offset, offsetMax int = 0, len(needle)
+    for i, le := 0, len(haystack)-offsetMax+1; i < le; i++ {
+        for offset = 0; offset < offsetMax && haystack[i+offset]==needle[offset]; offset++ {
+        }
+        if offset==offsetMax{
+            return i
+        }
+    }
+    return -1
+}
+```
+
+提交成绩：
+
+```text
+执行用时 :0 ms, 在所有 Go 提交中击败了100.00%的用户
+内存消耗 :2.4 MB, 在所有 Go 提交中击败了38.50%的用户
+```
+
+## 优化
+
+我觉得我这样粗暴的算法应该不是最优解，所以我们与标准库函数`strings.Index`对比一下时间效率：
+
+```go
+func Test_strStr_Time(t *testing.T) {
+    var haystack = make([]byte, 100000000)
+    var needle = make([]byte, 100)
+    rand.Read(haystack)
+    rand.Read(needle)
+    var s, s2 string = *(*string)(unsafe.Pointer(&haystack)), *(*string)(unsafe.Pointer(&needle))
+    {
+        start := time.Now()
+        got := strStr(s, s2)
+        totalTime := time.Since(start)
+        fmt.Println(got, totalTime.Seconds())
+    }
+    {
+        start := time.Now()
+        got := strings.Index(s, s2)
+        totalTime := time.Since(start)
+        fmt.Println(got, totalTime.Seconds())
+    }
+}
+```
+
+1亿/100长度，性能对比是（0.0830389：0.0119917）；
+10亿/100长度，性能对比是（0.8360009：0.1169955）；
+10亿/100000长度，性能对比是（0.8419718：0.1189569）。
+
+好，至少数量级是一样的，那应该就是代码层面的优化了，而不是算法层面。
+
+那我们看一下Go的标准库`strings.Index`是如何实现的：
+
+```go
+func Index(s, substr string) int {
+    n := len(substr)
+    switch {
+    // 省略...
+    // 列举了一些特殊情况的应对，
+    // 以及当s较小的时候，会调用bytealg.IndexString(s, substr)
+    }
+    c0 := substr[0]
+    c1 := substr[1]
+    i := 0
+    t := len(s) - n + 1
+    fails := 0
+    // 下面开始大循环，遍历传入的字符串s
+    for i < t {
+        if s[i] != c0 {
+            o := IndexByte(s[i:t], c0)  // 在i右边的子数组中，找到与substr第一个字符相等的位置
+            if o < 0 {
+                return -1
+            }
+            i += o // 跳跃
+        }
+        if s[i+1] == c1 && s[i:i+n] == substr { // 检查第二个字符，然后再检查剩下的字符
+            return i
+        }
+        i++
+        fails++
+        // 如果失败次数超过了i/16，可以认为是s的前端过多地命中了substr的第一位
+        if fails >= 4+i>>4 && i < t {  
+            // 就换一种算法，这里面用的是hash算法，
+            // 大概是先计算substr的哈希值，然后逐位地在s字符串中寻找是否有匹配哈希值的段
+            j := indexRabinKarp(s[i:], substr)
+            if j < 0 {
+                return -1
+            }
+            return i + j
+        }
+    }
+    return -1
+}
+```
+
+可以看到，标准库中的算法其实也是类似的逐位求解，主要思路就是偷懒，把第一位和第二位单独拿出来，如果都命中了，才会对余下的进行整体比对；运行中，如果发现这种优先识别前两位的算法效率太低，就换一种哈希算法来做。
+
+哈希算法学不来，但是`s[x:y]==s2[i:j]`这种写法倒是可以学的：
+
+```go
+func strStr(haystack string, needle string) int {
+    // ...
+    for i, le := 0, len(haystack)-offsetMax+1; i < le; i++ {
+        if haystack[i:i+offsetMax]==needle{  // 直接对比，不用循环
+            return i
+        }
+    }
+    return -1
+}
+```
+
+效率直接下降了5倍哈哈哈，1亿/100长度输入的情况下，耗费的时间由0.08上升到0.42了哈哈哈。
+第一眼看去我还以为效率提升了一倍呢。
+
+## 小结
+
+标准库里真是有一些骚操作……看到`4+i>>4`这个表达式的时候简直一脸懵逼！然后了解了一下，`i>>4`大概就是给i除以16的意思。
+
+原来位运算还有很多妙用，
+比如判断正负、2的幂计算相关等等，还有之前看到的用异或运算符来检查重复元素的算法。
+以后有机会慢慢了解吧。
+
+当然，还有很多算法比如KMP，BM，自动机之类的，但是为什么标准库没有采用，暂时就不得而知了。

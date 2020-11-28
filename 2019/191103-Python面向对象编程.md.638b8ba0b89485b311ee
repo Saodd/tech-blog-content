@@ -1,0 +1,187 @@
+```json lw-blog-meta
+{"title":"Python面向对象编程","date":"2019-11-03","brev":"在面向对象领域还是有不少坑的，成员变量、魔法方法本身并不难，但是与继承结合在一起，就有很多细节需要关注了。在此做个基本的盘点和分析。","tags":["Python"],"path":"2019/191103-Python面向对象编程.md.638b8ba0b89485b311ee"}
+```
+
+
+
+## 引子：单例模式
+
+我们从一个简单Python问题开始思考：请写一段代码实现单例设计模式。
+
+我更喜欢面向过程编程，所以以前在代码中用装饰器实现：（也可以用生成器，不过装饰器可以实现无感包装）
+
+```python
+def wrapper_mysql_engine(f):
+    sqla = f()  # 只实例化一次
+    def _inner() -> sqlalchemy.engine.Engine:
+        return sqla  # 每次调用函数都只返回同一个对象
+    return _inner
+
+@wrapper_mysql_engine
+def get_mysql_engine() -> sqlalchemy.engine.Engine:
+    pass
+```
+
+问题中并没有限制说一定要用类来实现单例模式，不过当我真的尝试用类来实现时，发现这块内容对我来说居然是个盲点。在创建一个对象时，到底发生了什么？
+
+### __init__与__new__
+
+`__init__`是非常常见了，这个函数（或称魔法方法）的用处是在对象生成后进行一些初始化工作。注意，是**对象生成以后**，它的签名是`__init__(self)`，第一个参数（接受体）是对象。
+
+我们知道`__new__`也是在对象实例化时调用的，那么，对象生成以后我们用__init__，__new__方法只能是在对象生成时（或者生成之前）用了，否则没有意义。而我们注意到，它的签名是`__new__(cls)`，第一个参数（接受体）是类。
+
+因此我们可以想象在底层的某个地方有类似这样的逻辑：
+
+```python
+def new_someclass()
+    obj = __new__(SomeClass)
+    __init__(obj)
+    return obj
+```
+
+因此我们可以这样设计一个类：
+
+```python
+class MyClass(object):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        print("running in __new__")
+        if cls._instance is None:
+            cls._instance = super(MyClass, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    def __init__(self):
+        print("running in __init__")
+```
+
+> 注：不需要在__new__中显式地调用__init__
+
+为什么要用`super().__new__`而不是`MyClass.__new__()`？仔细想一想，后者会造成无限递归，最后栈溢出异常。那么为什么前者就不会形成递归？
+
+## Python的继承机制
+
+### super()
+
+`super()`的作用是找到父类。我们写一段继承代码，看看super()返回的到底是什么东西：
+
+```python
+class MySubClass(MyClass):
+    def __new__(cls, *args, **kwargs):
+        print(super(), type(super()))
+        print(cls, type(cls))
+```
+
+```text
+<super: <class 'MySubClass'>, <MySubClass object>> <class 'super'>
+<class '__main__.MySubClass'> <class 'type'>
+```
+
+注意，`super()`返回了一个super对象，而不是返回的父类本身。可以想象，在底层有一些特殊的机制，使得`super().__new__()`与`MyClass.__new__()`的效果不同，这样就不会递归了。
+
+### 继承链
+
+Python中的术语叫做『方法解析顺序`MRO`（Method Resolution Order）』，它代表了类继承的顺序。我们写一个简单的祖孙三代：
+
+```python
+class MyClass(object):
+    def show(self):
+        print("MyClass ↓↓↓↓↓↓↓")
+        print("MyClass ↑↑↑↑↑↑↑")
+
+class MySubClass(MyClass):
+    def show(self):
+        print("MySubClass ↓↓↓↓↓↓↓")
+        super().show()
+        print("MySubClass ↑↑↑↑↑↑↑")
+
+class MySubSubClass(MySubClass):
+    def show(self):
+        print("MySubSubClass ↓↓↓↓↓↓↓")
+        super().show()
+        print("MySubSubClass ↑↑↑↑↑↑↑")
+```
+
+```python
+MySubSubClass ↓↓↓↓↓↓↓
+MySubClass ↓↓↓↓↓↓↓
+MyClass ↓↓↓↓↓↓↓
+MyClass ↑↑↑↑↑↑↑
+MySubClass ↑↑↑↑↑↑↑
+MySubSubClass ↑↑↑↑↑↑↑
+```
+
+`super()`的用处就是顺着MRO找到下一个可用的父类。我们分析一下特殊情况：
+
+- 父类`MySubClass`没有这个方法会怎样？——会继续向上搜索，在本例中会找到爷爷类`MyClass`进行调用。
+- 如果要跳过父代，直接调用爷爷代咋办？——给参数就可以跳过了，这里用`super(MySubClass, self)`就能从父类的父类开始查找，最后会找到爷爷类。
+
+### 多继承
+
+我们给子类增加一个叔叔类：
+
+```python
+class MySubClass2(MyClass):
+    def show(self):
+        print("MySubClass2 ↓↓↓↓↓↓↓")
+        super().show()
+        print("MySubClass2 ↑↑↑↑↑↑↑")
+
+
+class MySubSubClass(MySubClass, MySubClass2):  # 继承两个类
+    # ...略
+```
+
+其他代码不变，这时会执行几个类的方法？答案非常意外——4个类全部执行了。
+
+```text
+MySubSubClass ↓↓↓↓↓↓↓
+MySubClass ↓↓↓↓↓↓↓
+MySubClass2 ↓↓↓↓↓↓↓
+MyClass ↓↓↓↓↓↓↓
+```
+
+如何去理解呢？只要记住，super对象所记录的MRO，在父类中与子类中是一样的。
+
+也就是说，虽然叔叔只继承了爷爷，但由于查户口是从儿子查起的，子、叔、父、爷都被依次列入了MRO，所以此时在叔叔中调用`super()`得到的是父亲，而不是爷爷。
+
+相应地，如果从叔叔开始查户口，MRO中就只有叔、爷，在叔叔中调用`super()`得到的就是爷爷。
+
+### 多继承的顺序
+
+记住一点：左边优先。在`class D(B, C)`中，B比C优先，调用同名方法时，会解析到B的方法。
+
+所以，在MRO中就是B在C的后面。`super()`是从后向前搜索的，此时D的MRO是`[A, C, B, D]`。（可以理解为后来的类会覆盖前面的类）这样就解释了前面的输出结果的原因。
+
+## 成员变量的继承
+
+依然是从一个经典的题目入手，看看下面代码输出内容是什么：
+
+```python
+class Parent(object):
+    x = 1
+class Child1(Parent):
+    pass
+class Child2(Parent):
+    pass
+
+print(Parent.x, Child1.x, Child2.x)
+
+Child1.x = 2
+print(Parent.x, Child1.x, Child2.x)
+
+Parent.x = 3
+print(Parent.x, Child1.x, Child2.x)
+```
+
+要掌握的一点是，对象的所有属性/方法都是以字典的格式存放起来的，如果在本类的字典中没有找到，会自动去父类中查找。用代码来表示就是`get_attr(Child, key, default=Parent[key])`
+
+那么问题就简单了，修改一个字典之后，默认值（父类变量）会被自有值覆盖。于是上面的代码输出：
+
+```text
+1 1 1
+1 2 1
+3 2 3
+```
+
+可以看到，`Child1.x`被赋值了，因此指向了另一个整数对象；所以修改`Parent.x`也不会影响到它。

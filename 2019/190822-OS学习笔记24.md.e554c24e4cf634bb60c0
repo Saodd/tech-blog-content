@@ -1,0 +1,48 @@
+```json lw-blog-meta
+{"title":"OS学习笔记24：内存虚拟化小结","date":"2019-08-22","brev":"对整个章节的总结。","tags":["OS"],"path":"2019/190822-OS学习笔记24.md.e554c24e4cf634bb60c0"}
+```
+
+
+
+[PDF链接](http://pages.cs.wisc.edu/~remzi/OSTEP/vm-dialogue.pdf)
+
+## 为什么要学内存虚拟化
+
+比如当你发现一个性能问题的时候，你要能够想象到可能是哪个部分产生了延迟。
+
+甚至，你在写程序的时候就应该充分认识并且利用各种性能优化技巧。（比如TLB缓存，页面大小等）
+
+## 内存虚拟化是什么
+
+应用程序所有的指针地址都是虚拟地址。
+
+OS使用页码表来将虚拟地址翻译为物理地址。页码表的实质只是一种数据结构，理论上任何数据结构都可以（只是性能有不同）。多级页码表是为了节省内存空间。
+
+TLB缓存了少量的页码翻译，以提升性能。（充分利用时空地点性来优化你的程序！）
+
+每一条翻译——即页面入口信息PTE——需要保存一些额外的信息来支持更多的控制功能。（比如保护位有效位等）
+
+## 硬盘交换区的作用
+
+内存不足时，将一部分内存页面放到硬盘交换区中。
+
+但是再好的算法也不如**多买几根内存条**有用！
+
+## 我的吐槽
+
+这本书的对话部分真的是很幽默了，这一节又让我笑了几次，比如：
+
+> Student: ...I shudder at the thought of a program with a working set that exceeds the
+coverage of the TLB: with all those TLB misses, it would be hard to watch.  
+> Professor: Yes, cover the eyes of the children!
+
+学生：每当我想到，如果一个程序的工作集总是超过TLB大小，那也太可怕了，根本不敢看呀！  
+教授：是的，快遮住孩子们的眼睛！
+
+> Student: Well, my machine is running a little slowly these days... and memory
+certainly doesn’t cost that much...  
+> Professor: Oh fine, fine! Here’s a few bucks. Go and get yourself some DRAM,
+cheapskate.
+
+学生：（前面说最好的办法是多买内存）好吧，我发现最近我的电脑运行的好慢啊，既然内存并不贵的话……  
+教授：好好好！这里有几块钱，你快拿去买内存吧！！

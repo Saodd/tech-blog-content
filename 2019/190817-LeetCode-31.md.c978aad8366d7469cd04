@@ -1,0 +1,207 @@
+```json lw-blog-meta
+{"title":"LeetCode[31]: 下一个排列","date":"2019-08-17","brev":"中等难度。","tags":["算法与数据结构"],"path":"2019/190817-LeetCode-31.md.c978aad8366d7469cd04"}
+```
+
+
+
+## 读题
+
+```text
+实现获取下一个排列的函数，算法需要将给定数字序列
+重新排列成字典序中下一个更大的排列。
+
+如果不存在下一个更大的排列，
+则将数字重新排列成最小的排列（即升序排列）。
+
+必须原地修改，只允许使用额外常数空间。
+
+以下是一些例子，输入位于左侧列，其相应输出位于右侧列。
+1,2,3 → 1,3,2
+3,2,1 → 1,2,3
+1,1,5 → 1,5,1
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/next-permutation
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+## 分析
+
+这个算法在生活中没有碰到过。很陌生。那么我们的办法依然是，从人工算法中总结规律，然后再实现机器算法。
+
+经过一番推演，得出以下规律：
+
+```text
+从右向左找到一个最小的索引i，使得nums[i:]为降序排列，称为顶点，那么：
+将顶点左边一个值nums[i-1]，与右边nums[i:]中的最小的且大于目标的值交换，然后再对nums[i:]升序排序，得到答案
+```
+
+![LeetCode 31](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-17-LeetCode-31.png)
+
+举例子演示一下：
+
+```text
+args：  1   2  *5*  4   3
+want：  1   3   2   4   5
+```
+
+以上情况中，索引2对应的数字5，它右边的部分是完全降序的。那么我们将索引1（数字2）与索引4（数字3）对换，排序就得到答案。
+
+```text
+args: 1   2   7   4    3   *6*   5
+want: 1   2   7   4    5    3    6
+```
+
+上面的例子中，数字6的右边是降序的，所以将左边的数字3与右边的数字5对换，排序得到答案。
+
+基本思路就是以上，剩下就是注意重复值，注意边界条件。
+
+## 实现
+
+```go
+func nextPermutation(nums []int) {
+    if len(nums) < 2 {
+        return
+    }
+    var top int
+    // 找到顶点，即降序排列的头部
+    for top = len(nums) - 1; top > 0; top-- {
+        if nums[top-1] < nums[top] {
+            break
+        }
+    }
+    if top == 0 {
+        learnAlgo.QuickSortInt(nums)  // 快速排序函数
+        return
+    }
+    // 在右边数组中找到一个值去跟左边交换
+    var targetNum, updateIndex int = nums[top-1], top
+    for i := len(nums) - 1; i > top; i-- {
+        if nums[i]>targetNum && nums[i]<nums[updateIndex]{
+            updateIndex = i
+        }
+    }
+    nums[top-1], nums[updateIndex] = nums[updateIndex], nums[top-1]
+    learnAlgo.QuickSortInt(nums[top:])  // 快速排序函数
+    return
+}
+```
+
+提交成绩：
+
+```text
+执行用时 :8 ms, 在所有 Go 提交中击败了43.90%的用户
+内存消耗 :3.5 MB, 在所有 Go 提交中击败了40.00%的用户
+```
+
+测试用例：
+
+```go
+func Test_nextPermutation(t *testing.T) {
+    type args struct {
+        nums []int
+    }
+    tests := []struct {
+        name string
+        args args
+        want []int
+    }{
+        {
+            args: args{[]int{1, 2, 3}},
+            want: []int{1, 3, 2},
+        },
+        {
+            args: args{[]int{1, 3, 2}},
+            want: []int{2, 1, 3},
+        },
+        {
+            args: args{[]int{3, 2, 1}},
+            want: []int{1, 2, 3},
+        },
+        {
+            args: args{[]int{1, 1, 5}},
+            want: []int{1, 5, 1},
+        },
+        {
+            args: args{[]int{1, 2, 4, 5, 3}},
+            want: []int{1, 2, 5, 3, 4},
+        },
+        {
+            args: args{[]int{}},
+            want: []int{},
+        },
+        {
+            args: args{[]int{1}},
+            want: []int{1},
+        },
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            nextPermutation(tt.args.nums)
+            if !reflect.DeepEqual(tt.args.nums, tt.want) {
+                t.Errorf("nextPermutation() = %v, want %v", tt.args.nums, tt.want)
+            }
+        })
+    }
+}
+```
+
+## 改进
+
+性能不够理想，为什么呢？
+
+其实有一个重要的特性，我这里没有使用，那就是：顶点右部的数组是完全降序的。
+
+因此，我在查找以及排序的时候，都可以利用这个特性：遍历查找`O(n)`可以改为二分查找`O(logN)`，快速排序`O(NlogN)`可以改为交换排序`O(n)`。
+
+```go
+func nextPermutation(nums []int) {
+    if len(nums) < 2 {
+        return
+    }
+    var top int
+    for top = len(nums) - 1; top > 0; top-- {
+        if nums[top-1] < nums[top] {
+            break
+        }
+    }
+    if top == 0 {
+        swapSortInt(nums)
+        return
+    }
+    exchId := indexOfMinGreater(nums[top:], nums[top-1]) + top
+    nums[top-1], nums[exchId] = nums[exchId], nums[top-1]
+    swapSortInt(nums[top:])
+    return
+}
+
+// 二分查找
+func indexOfMinGreater(nums []int, target int) int {
+    var gt, lt int
+    for gt, lt = 0, len(nums); lt-gt > 1; {
+        mid := (gt + lt) / 2
+        if nums[mid] > target {
+            gt = mid
+        } else {
+            lt = mid
+        }
+    }
+    return gt
+}
+
+// 交换排序
+func swapSortInt(nums []int) {
+    for i, j := 0, len(nums)-1; i < j; {
+        nums[i], nums[j] = nums[j], nums[i]
+        i++
+        j--
+    }
+}
+```
+
+提交成绩：
+
+```text
+执行用时 :0 ms, 在所有 Go 提交中击败了100.00%的用户
+内存消耗 :3.5 MB, 在所有 Go 提交中击败了52.00%的用户
+```

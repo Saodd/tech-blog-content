@@ -1,0 +1,243 @@
+```json lw-blog-meta
+{"title":"详解with语句实现机制","date":"2019-05-13","brev":"之前自己在学python的时候，对于with还是很头疼的。在网上看过看多资料，但是感觉都讲的没到点子上。所以今天自己来归纳一下有关with语句的实现机制。","tags":["Python"],"path":"2019/190513-详解with语句实现机制.md.2f594b9ab6ebae06b73e"}
+```
+
+
+
+## 常见的with语句
+
+我们最常见到的应该就是`open()`函数配合`with`语句使用了吧，像这样：
+
+```python
+with open("somefile.txt", "w") as f:
+    f.write("Haha!")
+```
+
+官方也好，书上也好，一定有很多地方都建议你这样使用，并且告诉你：
+无论`with`语句块内部执行情况如何，被`open()`打开的文件描述符都会被安全的关闭(保存并关闭)。  
+那我们先来搞清楚里面发生了什么。
+
+## 一句话解释with语句
+
+别去看什么“上下文管理器”什么鬼的，只要看下面这段代码，与上面with语句等价：
+
+```python
+obj = open("somefile.txt", "w")
+f = obj.__enter__()
+try:
+    f.write("Haha!")
+finally:
+    obj.__exit__(exc_type, exc_val, exc_tb)
+```
+
+代码可能有点不规范，但是理解其中意思就好。  
+那么，`with`做了什么？
+
+1. 执行`with`后面跟的代码`open("somefile.txt", "w")`，我愿意称它为*环境函数*，因为它为下面的代码块提供了一个上下文环境。
+2. 调用*环境函数*所返回**对象**的`__enter__()`方法，并赋值给`f`
+3. 执行代码块`f.write("Haha!")`
+4. 无论结果如何，调用*环境函数*所返回对象的`__exit__()`方法，并传入参数`exc_type`, `exc_val`, `exc_tb`
+
+## 结合案例分析with语句背后的实现
+
+```python
+def example1():
+    class Dream:
+        def __init__(self, name):
+            print("我是%s。" % name)
+
+        def __enter__(self):
+            print("我要准备睡觉了。")
+            return "别偷看！"
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            print("我要醒来了！")
+
+    with Dream("Lewin") as f:
+        print(f)
+```
+
+运行结果：
+
+```shell-session
+我是Lewin。
+我要准备睡觉了。
+别偷看！
+我要醒来了！
+```
+
+一切都非常清晰了：创建对象，调用`__enter__`，执行语句块，调用`__exit__`。  
+唯一需要注意的就是这其中一些细节：
+
+1. `with`后面跟的东西应该返回一个`对象`，对象必须要有`__enter__`和`__exit__`方法。
+这里我们自定义的`Dream类`生成的`对象`就符合上述条件。
+2. `as`后面跟的`变量`，会指向`__enter__`返回的结果。
+在本例中，`f`指向的就是返回的结果`"别偷看！"`。有的时候比如`open()`，我们需要对打开的文件进行操作，怎么办？`return self`就好了。
+3. `__exit__`方法会传入**3个参数**，如果不能正确接收的话，程序会崩溃（异常）。
+这三个参数，在本例中命名为`exc_type`, `exc_val`, `exc_tb`，实际上是指"Exception type", "Exception value", "Exception traceback",
+利用这三个参数可以对代码块内部的`Exception`进行处理，我们现在来看一看。
+
+## __exit__中的异常处理
+
+### 这里不讲太多，简单讲一下用法
+
+在本例中，`__exit__`并没有返回值（也就是返回了None）。在这种情况下，语句块内部的`异常`会继续**上浮**。  
+我们试一下在语句块内部人为引发异常。
+
+```python
+with Dream("Lewin") as f:
+    print(f)
+    raise Exception("做噩梦了！！吓死我了！！")
+    print("这里的不会被执行了。")
+```
+
+运行结果：
+
+```shell-session
+我是Lewin。
+我要准备睡觉了。
+别偷看！
+我要醒来了！
+Traceback (most recent call last):
+  File "C:/Users/lewin/github/Saodd.github.io/example/20190513_with.py", line 35, in <module>
+    example2()
+  File "C:/Users/lewin/github/Saodd.github.io/example/20190513_with.py", line 31, in example2
+    raise Exception("做噩梦了！！吓死我了！！")
+Exception: 做噩梦了！！吓死我了！！
+```
+
+可以看到，之前的所有操作依然正常执行了，在执行完毕之后，`异常`才被暴露出来。
+这也就是为什么各种教程里都会建议我们多多使用`with`语句，因为这的确是非常安全的做法。  
+
+### 说好的异常处理呢
+
+那我们先看一下系统到底给了些什么参数。我们在`__exit__`方法中查看所有的**参数**。
+
+```python
+def example3():
+    class Dream:
+        def __init__(self, name):
+            print("我是%s。" % name)
+
+        def __enter__(self):
+            print("我要准备睡觉了。")
+            return "别偷看！"
+
+        def __exit__(self, *args):
+            print("我梦到了:", args)
+            print("我要醒来了！")
+
+    with Dream("Lewin") as f:
+        print(f)
+        raise Exception("做噩梦了！！吓死我了！！")
+        print("这里的不会被执行了。")
+```
+
+运行结果：
+
+```shell-session
+我是Lewin。
+我要准备睡觉了。
+别偷看！
+我梦到了: (<class 'Exception'>, Exception('做噩梦了！！吓死我了！！'), <traceback object at 0x0000018E62D5ED08>)
+我要醒来了！
+Traceback (most recent call last):
+  File "20190513_with.py", line 55, in <module>
+    example3()
+  File "20190513_with.py", line 50, in example3
+    raise Exception("做噩梦了！！吓死我了！！")
+Exception: 做噩梦了！！吓死我了！！
+```
+
+其中的`<class 'Exception'>, Exception('做噩梦了！！吓死我了！！'), <traceback object at 0x0000018E62D5ED08>`三个东西就是传入的参数。
+
+### 用__exit__返回值处理异常
+
+怎么处理异常？很简单，我们只要操纵`__exit__`的返回值就可以了。
+
+1. 返回`True`，异常不再上浮
+
+    ```python
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("我梦到了:", exc_type, exc_val, exc_tb)
+        print("我要醒来了！")
+        return True
+    ```
+
+    ```shell-session
+我是Lewin。
+    我要准备睡觉了。
+    别偷看！
+    我梦到了: <class 'Exception'> 做噩梦了！！吓死我了！！ <traceback object at 0x0000025071A64188>
+    我要醒来了！
+    ```
+
+2. 返回`False`，异常原样上浮
+
+    ```python
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("我梦到了:", exc_type, exc_val, exc_tb)
+        print("我要醒来了！")
+        return False
+    ```
+
+    ```shell-session
+我是Lewin。
+    我要准备睡觉了。
+    别偷看！
+    我梦到了: <class 'Exception'> 做噩梦了！！吓死我了！！ <traceback object at 0x000002B48B57EF08>
+    我要醒来了！
+    Traceback (most recent call last):
+      File "20190513_with.py", line 92, in <module>
+        example5()
+      File "20190513_with.py", line 88, in example5
+        raise Exception("做噩梦了！！吓死我了！！")
+    Exception: 做噩梦了！！吓死我了！！
+    ```
+
+3. 返回`None`或者不返回，同`False`。（之前的例子就没有返回值。）
+
+### 使用`isinstance()`进行异常处理
+
+有的时候我们只想处理一部分异常，而让**真正的**异常直接上浮，怎么做？
+只需要根据异常类型进行处理即可：
+
+```python
+def example6():
+    class Dream:
+        def __init__(self, name):
+            print("我是%s。" % name)
+
+        def __enter__(self):
+            print("我要准备睡觉了。")
+            return "别偷看！"
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            print("我梦到了:", exc_type, exc_val, exc_tb)
+            print("我要醒来了！")
+            if exc_type == TimeoutError:  # 或者isinstance(exc_val, TimeoutError)都可以
+                print("指定异常处理完毕！")
+                return True
+
+    with Dream("Lewin") as f:
+        print(f)
+        raise TimeoutError("做噩梦了！！吓死我了！！")
+```
+
+```shell-session
+我是Lewin。
+我要准备睡觉了。
+别偷看！
+我梦到了: <class 'TimeoutError'> 做噩梦了！！吓死我了！！ <traceback object at 0x0000022358C9EF88>
+我要醒来了！
+指定异常处理完毕！
+```
+
+## 小结
+
+以上就是`with`语句的核心内容了，理解了这些，我们可以做一些很骚的操作。  
+比如，在进行测试的时候，先准备一些文件，测试完毕之后全部清空测试文件。参考:[我的Findfiles类测试](https://github.com/Saodd/LewinTools/blob/master/_tests/base__file__unittest.py#L202)  
+再比如，我们在某段代码中劫持sys.stdout，(用于截取所有的print()输出)，执行完之后恢复原样。参考:[我的Logger类](https://github.com/Saodd/LewinTools/blob/master/lewintools/base/logging.py#L137)  
+
+其实还有一些内容，比如，在`__enter__`的时候产生异常了怎么办？之类的，这会儿懒得说了，有兴趣自己研究吧~  
+bye~

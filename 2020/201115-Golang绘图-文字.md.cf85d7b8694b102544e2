@@ -1,0 +1,133 @@
+```json lw-blog-meta
+{"title":"Golang绘图: 文字","date":"2020-11-15","brev":"Golang在 图像 这种特殊领域上表现如何呢？来尝试一个最基本的功能：文字转图片","tags":["Golang"],"path":"2020/201115-Golang绘图-文字.md.cf85d7b8694b102544e2"}
+```
+
+
+## 常见解法: freetype
+
+```shell-session
+$ go get -u github.com/golang/freetype
+```
+
+这个库的维护时间是2015-2017年，因此如果我们现在去搜索一下相关内容，看到的几乎都是这个库的用法。
+
+它的缺点很明显：仅支持`TTF`文件格式。对于`OTF`格式，作者在2016年表示 [心有余力不足](https://github.com/golang/freetype/issues/38) ，但是到了0202年了也没有实现。~~有得你用就不错了，六字真言~~（那么作者去干嘛了呢？）
+
+我们来看一下它的主要逻辑。
+
+首先，我们需要准备一块画布，给它画上白色背景（也可不画留作透明）：
+
+```go
+// import "image"
+// import "image/draw"
+background := image.NewRGBA(image.Rect(0, 0, 319, 71))  // 长宽任意值
+draw.Draw(background, background.Bounds(), image.White, image.ZP, draw.Src)
+```
+
+然后呢，在`freetype`的术语里，要把文字画在画布上，需要一个「上下文`*freetype.Context`」对象，这个上下文对象呢，保存着一些配置信息，例如 size, dpi 等等：
+
+```go
+// import "github.com/golang/freetype"
+c := freetype.NewContext()
+c.SetDPI(72)
+c.SetFont(fontObject)
+c.SetFontSize(26)
+c.SetClip(background.Bounds())
+c.SetDst(background)  // 之前创建的画布对象
+c.SetSrc(image.Black)  // 字体颜色：黑色
+```
+
+其中，`fontObject`是我的本地变量名，它其实是由一个TTF字体文件转换而来的对象，保存着的是字符到图像的转换关系。为了创建它，我们需要先读取字体文件的二进制内容，然后交给`freetype`去解析：
+
+```go
+fontBytes, _ := ioutil.ReadFile(filePath)
+fontObject, _ = freetype.ParseFont(fontBytes)
+```
+
+然后还要决定一下文字在画布上的位置。这里采用的是**左下角**的坐标（更详细的关于字体高度、尺寸等问题，我也没完全搞懂，略过不讲）。
+
+```go
+pt := freetype.Pt(0, int(context.PointToFixed(26)>>6))  // 26 是 font-size
+```
+
+然后把文字画在画布上：
+
+```go
+c.DrawString("一些文字啊啊", pt)
+```
+
+最后把画布输出出去，这里选择`png`格式，这个函数会把画布写到一个`io.writer`中去：
+
+```go
+png.Encode(fileWriter, background)
+```
+
+至此，全部完成。具体的代码请自行完善。
+
+## 新解法: 标准库 x/image
+
+参考： [stackoverflow - How to add a simple text label to an image in Go?](https://stackoverflow.com/questions/38299930/how-to-add-a-simple-text-label-to-an-image-in-go)
+
+就在前不久（2020年9月27日），golang的标准库 [`x/image`](https://go.googlesource.com/image/) 添加了对`OTF`文件的支持。
+
+之前不是疑惑`freetype`的 [作者](https://github.com/nigeltao) 干嘛去了吗？看了这里就知道了，原来他给golang打工来了，在标准库里写代码了。~~（不对啊，freetype本来就挂在golang项目组里呀？精神分裂.jpg）~~
+
+稍微试用了一下，觉得还是现在这个标准库版本的设计更合理一些，我们来看一下——
+
+首先，依然是准备画布，这个环节不再赘述。不过值得一提的是，我们可以先"测量"文字的宽度，然后根据这个宽度来定制画布的宽度。（高度好像无法测量，只能自己算）
+
+```go
+// import "golang.org/x/image/font"
+picWidth := int(font.MeasureString(fontFace, "一些文字啊啊啊") >> 6)
+```
+
+上面的`fontFace`也是我的本地变量，它与`freetype.Context`类似，保存着一些画图所需的配置参数。我们这里以`opentype`(即OTF格式)为例：
+
+```go
+// import "golang.org/x/image/font/opentype"
+fontFace, _ := opentype.NewFace(fontObject, &opentype.FaceOptions{
+    Size:    70,
+    DPI:     72,
+    Hinting: font.HintingNone,
+})
+```
+
+上面的`fontObject`也是我的本地变量，它也是从字体文件中解析出来的：
+
+```go
+// import "golang.org/x/image/font/sfnt"
+fontObject, _ := sfnt.Parse(fileContent)
+```
+
+`sfnt`这个单词怎么理解？我们只需要知道 TTF 和 OTF 都是 SFNT 的一种就可以了。参考 [Wikipedia - SFNT](https://en.wikipedia.org/wiki/SFNT) 。
+
+画图配置信息有了，接下来还需要计算画图坐标：
+
+```go
+// import "golang.org/x/image/math/fixed"
+point := fixed.Point26_6{X: 0, Y: fixed.Int26_6(fontSize * 64)}  // *64 相当于 <<6
+```
+
+最后把文字画到画布上，然后输出：
+
+```go
+d := &font.Drawer{
+    Dst:  background,
+    Src:  image.White,
+    Face: fontFace,
+    Dot:  point,
+}
+d.DrawString("一些文字啊啊啊")
+```
+
+```go
+png.Encode(fileWriter, background)
+```
+
+## 小结
+
+其实两个库的主要使用思路都是一样的（毕竟是同一个作者），现在标准库的版本强在对于OTF格式的额外支持。但是目前依然有一些字体是不支持的，所以它目前比我们期待的还是差一点点的。
+
+不过嘛，毕竟放在标准库里了，产出效率应该可以稍微微微微地期待一下了吧。
+
+那么问题来了，为什么要期待它呢？因为性能啊。根据我的测试，它的处理能力是python的2-3倍，值得期待。

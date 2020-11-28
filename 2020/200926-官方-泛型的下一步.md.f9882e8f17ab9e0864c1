@@ -1,0 +1,53 @@
+```json lw-blog-meta
+{"title":"[官方] The Next Step for Generics","date":"2020-09-26","brev":"发布时间2020-06-16，关于泛型草案的重要改动。","tags":["Golang"],"path":"2020/200926-官方-泛型的下一步.md.f9882e8f17ab9e0864c1"}
+```
+
+
+# The Next Step for Generics
+
+[原文链接](https://blog.golang.org/generics-next-step)
+
+Ian Lance Taylor and Robert Griesemer  
+16 June 2020
+
+## 前言
+
+距离我们上次发表泛型的文章已经过去一年了，是时候更新一下了。
+
+## 更新设计稿
+
+我们一直在提炼 [泛型设计稿](https://go.googlesource.com/proposal/+/refs/heads/master/design/go2draft-contracts.md) 。我们写了一些示例代码，以及一个类型检查器。接着我们收集到了很多很多的反馈。感谢大家！
+
+基于我们总结的经验，我们 [更新了泛型设计稿](https://go.googlesource.com/proposal/+/refs/heads/master/design/go2draft-type-parameters.md) 。最大的变化是我们**抛弃了「契约`contracts`」的概念**。因为「接口`interface`」和契约很容易让人产生误解，所以我们正在消除它们的差别。现在，「类型参数`type parameter`」接收「接口类型`interface type`」。接口类型现在允许包括一组类型。
+
+我们希望大家会觉得这份设计比之前的更简单、更好理解。
+
+## 实验工具
+
+我们开发了一个编译(`translation`)工具，它可以将按照上述设计稿编写的Go代码转化为传统的Go代码。它有一些限制，但我们希望它已经足够目前所需。如果这份设计稿被接受，那么以后真正的编译实现可能会完全不同。
+
+这个工具可以在 https://go2goplay.golang.org 上面玩耍。
+
+你也可以自己写编译工具。在Go仓库中有一个分支。
+
+工具文章在 [README.go2go](https://go.googlesource.com/go/+/refs/heads/dev.go2go/README.go2go.md)
+
+## 下一步
+
+我们希望社区可以借助这个工具，参与到泛型的设计中来。我们有两个主要的问题需要了解：
+
+第一，泛型代码有意义吗？它符合Go的风格吗？使用中遇到了什么意外？报错信息有用吗？
+
+第二，我们知道很多人说Go需要泛型，但我们不确定这些说法的真正含义。所以，这次的设计能真正有效地解决人们的需求吗？如果之前你遇到了一个"假如Go有泛型的话我本该可以解决"的问题，现在使用这份方案能够帮助你达成目标吗？
+
+我们会参考社区的意见来决定下一步如何走。如果这份设计被很好地接收而且没有特别大的变更，下一步我们就会提出一个正式的语言变化提案(`language change proposal`)。乐观估计，如果一切顺利，泛型最快可以在 Go 1.17 版本被引入，时间将会在2021年八月；如果有不顺利的话，将会继续延期。
+
+## 反馈
+
+对于语言变化的提案，最佳的反馈渠道是 邮件列表`mailing list`: `golang-nuts@googlegroups.com`，详情略。
+
+对于编译工具的 bug 反馈，请去 https://golang.org/issue 提交 issue，详情略。
+
+## 致谢
+
+略。

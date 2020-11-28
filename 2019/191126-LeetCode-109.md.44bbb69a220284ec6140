@@ -1,0 +1,113 @@
+```json lw-blog-meta
+{"title":"LeetCode[109]: 有序链表转换二叉搜索树","date":"2019-11-26","brev":"数据结构：链表(6/10)。中等难度。","tags":["算法与数据结构"],"path":"2019/191126-LeetCode-109.md.44bbb69a220284ec6140"}
+```
+
+
+
+## 读题
+
+```text
+给定一个单链表，其中的元素按升序排序，将其转换为高度平衡的二叉搜索树。
+
+本题中，一个高度平衡二叉树是指一个二叉树每个节点 的左右两个子树的高度差的绝对值不超过 1。
+
+示例:
+
+给定的有序链表： [-10, -3, 0, 5, 9],
+
+一个可能的答案是：[0, -3, 9, -10, null, 5], 它可以表示下面这个高度平衡二叉搜索树：
+
+      0
+     / \
+   -3   9
+   /   /
+ -10  5
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/convert-sorted-list-to-binary-search-tree
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+## 分析
+
+一开始觉得挺难的。因为要做一个平衡树的话，脑子里第一个反应是红黑树的平衡，也就是那些左旋右旋进位的操作，特别复杂。如果真是这样实现的话，那难度绝对是困难级，而不是中等。
+
+然后仔细想想，平衡树的特性就是“左右子树高度差不超过1”，那么我做一个“左右子树节点总数相差不超过1”也是符合要求的。
+
+那么思路就来了，我只要递归地寻找链表的中点，作为当前树节点；然后左子链表递归生成左子树，右子链表递归生成右子树。这种分治法思想，时间复杂度是`nlogn`，对于链表来说应该是正确的复杂度。
+
+## 实现
+
+```go
+func sortedListToBST(head *ListNode) *TreeNode {
+    if head == nil {
+        return nil
+    }
+    // 用快慢指针找到中点，并在中点前后将链表切分成两部分
+    var before, slow, fast *ListNode = nil, head, head.Next
+    for fast != nil && fast.Next != nil {
+        before = slow
+        slow = slow.Next
+        fast = fast.Next.Next
+    }
+    // 递归
+    if before != nil {
+        before.Next = nil
+        return &TreeNode{Val: slow.Val, Left: sortedListToBST(head), Right: sortedListToBST(slow.Next)}
+    } else {
+        return &TreeNode{Val: slow.Val, Right: sortedListToBST(slow.Next)}
+    }
+}
+```
+
+手写时间：19分钟。其中前11分钟都在找思路……
+
+手写完了，在电脑上调试，修改，还花了十几二十分钟吧。主要是之前没有针对树的调试工具。
+
+成绩还是很满意的，算法的时间复杂度应该是最优了，而且空间复杂度上，由于我在递归过程中没有做哑结点，因此空间复杂度也是最优的。提交成绩：
+
+```text
+执行用时 :8 ms, 在所有 golang 提交中击败了97.98%的用户  （看分布表得知，很多解答的时间是400-500ms）
+内存消耗 :6.2 MB, 在所有 golang 提交中击败了100.00%的用户
+```
+
+测试用例：
+
+```go
+{
+    name: "示例1",
+    args: args{common.CreateListInt([]int{-10, -3, 0, 5, 9})},
+    want: &common.TreeNode{
+        Val:   0,
+        Left:  &common.TreeNode{Val: -10, Right: &common.TreeNode{Val: -3}},
+        Right: &common.TreeNode{Val: 5, Right: &common.TreeNode{Val: 9}},
+    },
+},
+```
+
+用于调试的，把树的结构打印出来的函数：
+
+```go
+var printCache [][]string
+
+func PrintTreeNodes(root *TreeNode) {
+    printCache = [][]string{}
+    printTreeNodes(root, 0)
+    for i := range printCache {
+        fmt.Println(printCache[i])
+    }
+}
+
+func printTreeNodes(node *TreeNode, depth int) {
+    if len(printCache) <= depth {
+        printCache = append(printCache, []string{})
+    }
+    if node == nil {
+        printCache[depth] = append(printCache[depth], "null")
+        return
+    }
+    printCache[depth] = append(printCache[depth], fmt.Sprint(node.Val))
+    printTreeNodes(node.Left, depth+1)
+    printTreeNodes(node.Right, depth+1)
+}
+```

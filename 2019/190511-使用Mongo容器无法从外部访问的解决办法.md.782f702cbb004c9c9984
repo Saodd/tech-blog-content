@@ -1,0 +1,275 @@
+```json lw-blog-meta
+{"title":"设置MongoDB允许从外部IP访问","date":"2019-05-11","brev":"接着上一篇的内容，在本地上配置好了一个mongodb容器，并且运行，但是从外部访问api的时候出现了问题","tags":["DB"],"path":"2019/190511-使用Mongo容器无法从外部访问的解决办法.md.782f702cbb004c9c9984"}
+```
+
+
+
+## 症状
+
+```
+pymongo.errors.ServerSelectionTimeoutError: localhost:27017:[Errno 111] Connection refused
+```
+
+## 20191013更新
+
+最佳解决办法是在启动时给一个参数：
+
+```shell-session
+docker run mongo:4.2.0 mongod --bind_ip 0.0.0.0
+```
+
+注意:
+
+- 后面的`mongod ...`是容器启动时的命令，我们在这里相当于直接给`mongod`程序发送参数。
+- 将IP设为`0.0.0.0`(完全开放)是没有问题的，因为更常见的用法是将Mongo作为集群的其中一个服务，
+只要集群不向外部直接暴露数据库端口，里面的内容就是安全的。
+
+以下是当时博客原文：
+
+## 首先确认容器内服务是否正常开启
+
+在`mongo:4.0.9容器`内部使用mongo命令连接数据库。
+
+```shell-session
+root@ae05bba9c809:/# mongo
+MongoDB shell version v4.0.9
+connecting to: mongodb://127.0.0.1:27017/?gssapiServiceName=mongodb
+Implicit session: session { "id" : UUID("83953268-ed3c-4ce2-a785-dc3a0ca010c0") }
+MongoDB server version: 4.0.9
+
+> use admin
+switched to db admin
+
+> db.auth("root","example")
+1
+
+> use db00
+switched to db db00
+
+> db.tb001.find()
+{ "_id" : ObjectId("5cd526e37a06410007d06d08"), "msg" : "hahaha" }
+
+>
+```
+
+可以看到一切正常。
+有一个用户root，密码是example；
+之前建立了一个`database` db00，`collection` tb001， 插入了一条`document`。
+
+## 问题代码
+
+我在另一个`python:3.7.3容器`上使用pymongo进行连接，非常简单的代码： 
+
+```python
+from pymongo import MongoClient
+
+def mg_test():
+    MG = MongoClient("mongo", 27017)
+    print(MG.HOST)
+    log = MG.get_database("admin").authenticate("root", "example")
+    print(log)
+    one = MG.db00.tb001.find_one()  #MG.get_database("db00").get_collection("tb001").insert_one(dc)
+    print(one)
+    MG.close()
+```
+
+运行长时间无响应，然后timeouterror：
+
+```python
+localhost
+Traceback (most recent call last):
+  File "/scripts/APMOS/apmos_spid/email/mo_downloader.py", line 36, in <module>
+    mo_downloader()
+  File "/scripts/APMOS/apmos_spid/email/mo_downloader.py", line 28, in mo_downloader
+    log = MG.get_database("admin").authenticate("root", "example")
+  File "/usr/local/lib/python3.7/site-packages/pymongo/database.py", line 1346, in authenticate
+    connect=True)
+  File "/usr/local/lib/python3.7/site-packages/pymongo/mongo_client.py", line 642, in _cache_credentials
+    writable_preferred_server_selector)
+  File "/usr/local/lib/python3.7/site-packages/pymongo/topology.py", line 226, in select_server
+    address))
+  File "/usr/local/lib/python3.7/site-packages/pymongo/topology.py", line 184, in select_servers
+    selector, server_timeout, address)
+  File "/usr/local/lib/python3.7/site-packages/pymongo/topology.py", line 200, in _select_servers_loop
+    self._error_message(selector))
+pymongo.errors.ServerSelectionTimeoutError: localhost:27017: [Errno 111] Connection refused
+```
+
+## 问题排除
+
+### 首先怀疑是不是pymongo版本的问题
+
+为了验证这个猜想，我在`mongo:4.0.9容器`内部安装了python3……  
+（顺便吐槽一下，这些`image`实在是太精简了，里面的linux系统干干净净，连`vi`都没有，要从`apt-get update`开始一步一步的装……）  
+附上安装过程:
+
+```shell-session
+root@ae05bba9c809:/# apt-get update
+ ...
+root@ae05bba9c809:/# apt-get install python3
+ (这里安装的是python3的精简版，28.8MB，没有pip，为了省事我又重新装一遍。)
+root@ae05bba9c809:/# apt-get remove python3
+root@ae05bba9c809:/# apt-get install python-pip
+ (这样就安装了带pip的python3，82.2MB，感觉良好)
+root@ae05bba9c809:/# pip install pymongo
+```
+
+```shell-session
+root@ae05bba9c809:/# python
+Python 2.7.12 (default, Nov 12 2018, 14:36:49)
+[GCC 5.4.0 20160609] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+
+>>> from pymongo import MongoClient
+>>> MG = MongoClient()
+>>> MG
+MongoClient(host=['localhost:27017'], document_class=dict, tz_aware=False, connect=True)
+>>> admin = MG.admin
+>>> admin
+Database(MongoClient(host=['localhost:27017'], document_class=dict, tz_aware=False, connect=True), u'admin')
+>>> admin.authenticate("root", "example",mechanism='SCRAM-SHA-256')
+True
+>>> admin.logout()
+>>> admin.authenticate("root", "example")  # 看一下使用默认的验证机制是否有效
+True
+>>> quit()
+```
+
+没有测试能否读写，但是到此为止已经验证了能够登录，而我从另一个`python:3.7.3容器`
+中访问这个`mongo数据库`，是连登录都失败的。
+所以排除了是`pymongo`的问题。
+
+### 然后想到是否是ip访问限制的问题
+
+首先想到iptable防火墙，但是我试过，对于这个`mongo:4.0.9容器`所在的精简版的linux内核来说，根本就没有iptable这个东西……  
+然后就想到是不是`mongod`的配置问题。  
+上网搜了一堆资料，但是不管用；然后去看了`mongo:4.0.9`的Dockerfile，其中有一行让我很感兴趣： 
+
+```bash
+RUN set -x \
+    && apt-get update \
+    && apt-get install -y \
+        ${MONGO_PACKAGE}=$MONGO_VERSION \
+        ${MONGO_PACKAGE}-server=$MONGO_VERSION \
+        ${MONGO_PACKAGE}-shell=$MONGO_VERSION \
+        ${MONGO_PACKAGE}-mongos=$MONGO_VERSION \
+        ${MONGO_PACKAGE}-tools=$MONGO_VERSION \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/mongodb \
+    && mv /etc/mongod.conf /etc/mongod.conf.orig
+```
+
+注意最后一行，我们知道`mongod`的配置文件默认是放在/etc/mongod.conf这里的，但是为什么官方的`image`里给他改名了？
+而且还加上了**orig**后缀？？这不就是**origin**的缩写吗？  
+所以我就手动给他还原回去，把自己的配置文件放回mongod.conf的位置。  
+
+## 配置自己的mongod.conf
+
+查看了一些资料显示，在配置文件中有这样一行：
+
+```yaml
+bindIp: 127.0.0.1
+```
+
+这一行的意思是仅限本地ip访问，解决方案是改为允许任意ip访问：
+
+```yaml
+bindIp: 0.0.0.0
+```
+
+改写之后我想着就自己build一下吧，省得以后每次要设置，于是在`mongo:4.0.9`的基础上建一个自己的`image`。
+
+```dockerfile
+# 这是Dockerfile
+
+FROM mongo:4.0.9
+
+COPY . /dockerbuild/
+
+RUN mv /dockerbuild/mongod.conf.orig /etc/mongod.conf
+
+CMD ["mongod"]
+```
+
+```yaml
+# 这是mongod.conf.orig配置文件，把原来的文件复制过来，仅改动其中一行bindIP
+
+# mongod.conf
+
+# for documentation of all options, see:
+#   http://docs.mongodb.org/manual/reference/configuration-options/
+
+# Where and how to store data.
+storage:
+  dbPath: /var/lib/mongodb
+  journal:
+    enabled: true
+#  engine:
+#  mmapv1:
+#  wiredTiger:
+
+# where to write logging data.
+systemLog:
+  destination: file
+  logAppend: true
+  path: /var/log/mongodb/mongod.log
+
+# network interfaces
+net:
+  port: 27017
+  bindIp: 0.0.0.0
+
+
+# how the process runs
+processManagement:
+  timeZoneInfo: /usr/share/zoneinfo
+
+#security:
+
+#operationProfiling:
+
+#replication:
+
+#sharding:
+
+## Enterprise-Only Options:
+
+#auditLog:
+
+#snmp:
+```
+
+到这里其实就可以了，运行`docker build`就可以把他打包了，然后`docker run`就可以了。  
+但我用的是`docker-compose`，所以在`.yml`文件中改为：
+
+```yaml
+mongo:
+    build: ./mongo/
+    image: apmongo:4.0.9   # apmongo是我自己起的名字
+```
+
+然后重启服务，再从`python:3.7.3容器`上使用之前的python代码进行连接：
+
+```bash
+root@01ec538652bb:/volume# python /scripts/APMOS/apmos_spid/email/mo_downloader.py
+localhost
+True
+{'_id': ObjectId('5cd526e37a06410007d06d08'), 'msg': 'hahaha'}
+```
+
+这样就运行正常了！
+
+## 小结
+
+1. 核心问题就是`mongod`限制了本地以外的ip访问，我们重新对这个进行设置就好了。
+2. 官方的`image`还是要信赖一下的。其实[官方](https://hub.docker.com/_/mongo)也有自定义配置文件的说明：
+
+> For example, /my/custom/mongod.conf is the path to the custom configuration file. 
+> Then start the MongoDB container like the following:
+
+```bash
+PS > docker run --name some-mongo -v /my/custom:/etc/mongo -d mongo --config /etc/mongo/mongod.conf
+```
+
+3. 仅仅简单的解除ip限制其实并不是最优解，因为这会带来安全问题。等我需要的时候再研究一下。
+4. 其实Docker并没有想象的那么简单，他仅仅只是提供了一个虚拟的环境，内部的配置依然需要你对这些东西有深刻的理解才能较好的实现。

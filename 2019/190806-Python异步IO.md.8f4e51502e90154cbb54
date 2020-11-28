@@ -1,0 +1,432 @@
+```json lw-blog-meta
+{"title":"Python异步IO","date":"2019-08-06","brev":"面试的时候被问到过Python异步模型的问题，但是当时居然满脑子的go，答得不好。时隔数日回首，如果再给我一次机会，我一定要反问回去：“用Python实现高并发不累吗？？为什么不用go？？” 好吧，今天来好好看一下Python的异步IO用法。","tags":["Python"],"path":"2019/190806-Python异步IO.md.8f4e51502e90154cbb54"}
+```
+
+
+
+## 前言
+
+我们知道，Python有一个绕不过去的大坑`GIL`，我们甚至可以直接认为Python就是单线程程序。那么为了实现良好的并发，就必须要用一些线程内部的调度工具，这就是`异步`的舞台（多进程、多线程也可以实现并发，但是相对来说系统资源的占用很大，做客户端还好，如果是服务端肯定不行的）。
+
+那么什么情况要异步呢？一般我们不会说内存慢吧，虽然比缓存慢，但是也得忍。一般我们考虑异步的场景只会是IO密集型场景，比如硬盘读写（1-10ms级），或者网络读写（10-100ms级）。
+
+打个比方，对于一个3GHz的处理器来说，如果它的一个时钟周期(3*10^-9)对它来说是1秒钟的话，那么一次正常速度的30ms网络延迟对它来说就是等待了42年。
+
+另外，对于`并发`的认识，我是绝对相信`Golang`的。如果有机会再实现一个Go版本的爬虫来对比一下。
+
+## 同步/异步，阻塞/非阻塞
+
+这两对其实是完全不同的概念。前者是一种事件通知机制，后者是程序流程机制。
+
+假设调用者caller和被调用者worker：
+
+- 阻塞
+
+    caller调用worker()以后，就一直等着，等到worker工作结束后才继续。（程序停在这一行了！！）
+
+- 非阻塞
+
+    caller调用worker()以后，worker马上return了（但是后台做了一些epoll之类的注册的事情），caller可以继续执行后面的代码。
+
+- 同步
+
+    caller要通过某种方式查询worker是否完成。在阻塞模式下，表现为等待worker的return；在非阻塞模式下，表现为通过轮询来确认worker的执行状态。
+
+- 异步
+
+    caller调用了worker()之后就不管不顾了，等worker完成任务之后自己通知caller。caller可以在任何时候取出worker的结果。
+
+这两对进行两两配对，就有四种并发模型：
+
+1. 同步阻塞
+
+    就是最普通最简单的执行模式。
+
+2. 同步非阻塞
+
+    worker在处理任务，caller虽然没有阻塞住，但是反复的查询，效率很低。一般很少直接用这种模式。
+
+3. 异步阻塞（IO多路复用）
+
+    caller停在这里，如果来了消息就马上处理。最典型的是服务器监听端口的感觉？
+
+4. 异步非阻塞
+
+    caller发出任务就继续执行后面的代码，并且后面的代码也不受worker返回状态的限制，是真正的异步。
+
+其实以上IO模型都与操作系统内核的实现密切相关，这方面我还不是很了解，就不说了。
+
+## 爬虫案例：多线程并发
+
+在真正进入`asyncio`之前，我们先来看一下传统的多线程爬虫的实现。这里我拿之前实现的**从上海期货交易所爬取成交排名数据的爬虫**作为例子：
+
+```python
+# 主调度进程
+def main_download():
+    manager = Manager()
+    q_in, q_out, q_log= manager.Queue(), manager.Queue(), manager.Queue()
+
+    today = datetime.strptime('20170101', '%Y%m%d')
+    since = datetime.strptime('20130101', '%Y%m%d')
+
+    # 生成url任务
+    while since <= today:
+        q_in.put("http://www.shfe.com.cn/data/dailydata/kx/pm{}.dat".format(since.strftime("%Y%m%d")))
+        since = since + timedelta(1)
+
+    # 启动独立的进程来多线程
+    p = Process(target=Lewin_Spider_Threading, args=(q_in, q_out, q_log))
+    p.start()
+
+    while (p.is_alive()) or (not q_out.empty()):
+        while not q_log.empty():
+            print(q_log.get_nowait())
+        try:
+            web, url=q_out.get(timeout=1)
+            # ... 对取回的数据进行清洗整理 ...
+        except Exception as e:
+            print("Failed! %s" % e)
+    p.join()
+```
+
+```python
+# 子进程开启多线程爬取
+class Lewin_Spider_Threading:
+    def get_threading(self, q_urls: Queue, q_back: Queue, q_log: Queue):
+        ts = []
+        for i in range(7):
+            t = threading.Thread(target=Lewin_Spider_Threading._get_worker, args=(q_urls, q_back, q_log))
+            ts.append(t)
+        for t in ts:
+            t.start()
+        for t in ts:
+            t.join()
+
+    @staticmethod
+    def _get_worker(q_urls: Queue, q_back: Queue, q_log: Queue):
+        while not q_urls.empty():
+            try:
+                url = q_urls.get(timeout=1)
+            except:
+                break
+            else:
+                q_log.put("getting %s" % url, timeout=1)
+            try:
+                web = requests.get(url)
+                web.encoding = 'utf-8'
+            except:
+                q_log.put("Failed! %s" % url, timeout=1)
+                # q_in.put(url)
+            else:
+                q_back.put([web, url], timeout=1)
+                q_log.put("Success get: %s" % url, timeout=1)
+```
+
+主要的逻辑就是建立几个`multiprocessing.Queue`用于通信，分别储存任务、结果、日志。主进程负责初始化任务队列，然后不断地从结果队列中取出数据进行清洗（计算密集型）；子进程开启多个线程并发爬取。
+
+在4个月之前的我看来，当时觉得写的挺好的，不过现在看来还是觉得`多线程`+`共享队列`的实现方式过于笨重了。（特别是接触了`Golang`之后。）
+
+那么我们试着用异步包来实现一下。
+
+## asyncio与aiohttp的实现
+
+### 吐槽与错误示范
+
+我觉得`aiohttp`是一个非常不负责任的第三方库。
+
+怎么说呢？他的官方文档说了这么几句：
+
+> Don’t create a session per request. Most likely you need a session per application which performs all requests altogether.  
+> More complex cases may require a session per site, e.g. one for Github and other one for Facebook APIs. Anyway making a session for every request is a very bad idea.  
+> A session contains a connection pool inside. Connection reusage and keep-alives (both are on by default) may speed up total performance.
+
+意思是，不要为每个请求都创建`session`，最好的情况是你整个程序中只有一个`session`，或者对应每个网站只用一个`session`。因为`session`的内部维护着一个连接池。
+
+嚯，听起来好棒啊！
+
+**但是**！！整个官方文档没有任何一段代码教你如何复用`session`！！！全部都是长这样的一次性的请求：
+
+```python
+async with aiohttp.ClientSession() as session:
+    async with session.get('http://httpbin.org/get') as resp:
+        print(resp.status)
+        print(await resp.text())
+```
+
+我搜看了几十篇博客文章，根本没有任何人实现了`session`的复用。
+
+我期待的复用应该是这样的：
+
+```python
+async with aiohttp.ClientSession() as session:
+    while True:
+        async with session.get(some_url) as resp:
+            pass
+```
+
+但是所有人都这样写：
+
+```python
+while True:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(some_url) as resp:
+            pass
+```
+
+好，那我自己看源代码吧。然后就被吓尿了。来感受一下：
+
+![aiohtto](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-06-python-asyncio.png)
+
+好，我费尽九牛二虎之力，终于写出了一版异步爬虫：
+
+```python
+class MySpider(object):
+    def __init__(self):
+        self.since = datetime.strptime('20190601', '%Y%m%d')
+        self.today = datetime.strptime('20190701', '%Y%m%d')
+
+    async def fetch(self, name):
+        async with aiohttp.ClientSession() as session:
+            while self.since <= self.today:
+                the_date = self.since.strftime("%Y%m%d")
+                self.since += timedelta(1)
+                url = "http://www.shfe.com.cn/data/dailydata/kx/pm%s.dat" % the_date
+
+                print("[%s] is getting %s" % (name, url))
+                async with session.get(url) as response:
+                    text = await response.text()
+                    print("[%s] finish %s" % (name, url))
+                    self.parse(url, text, the_date)
+
+    def parse(self, url: str, text: str, the_date: str):
+        pass  # json.loads(text)
+
+
+loop = asyncio.get_event_loop()
+
+my_spider = MySpider()
+tasks = [my_spider.fetch(i) for i in range(5)]
+loop.run_until_complete(asyncio.wait(tasks))
+loop.run_until_complete(asyncio.sleep(0))
+loop.close()
+```
+
+看起来一切正常，可当我准备大规模运行（下载一个月的数据）时，他报错了：
+
+```text
+Task exception was never retrieved
+future: <Task finished coro=<MySpider.monitor() done, defined at C:/Users/lewin/mycode/AP/lewintest2.py:37> exception=ServerDisconnectedError(None)>
+Traceback (most recent call last):
+  File "C:/Users/lewin/mycode/AP/lewintest2.py", line 44, in monitor
+    await self.fetch(name)
+  File "C:/Users/lewin/mycode/AP/lewintest2.py", line 32, in fetch
+    async with session.get(url) as response:
+  File "C:\Users\lewin\AppData\Local\Programs\Python\Python37\lib\site-packages\aiohttp\client.py", line 1005, in __aenter__
+    self._resp = await self._coro
+  File "C:\Users\lewin\AppData\Local\Programs\Python\Python37\lib\site-packages\aiohttp\client.py", line 497, in _request
+    await resp.start(conn)
+  File "C:\Users\lewin\AppData\Local\Programs\Python\Python37\lib\site-packages\aiohttp\client_reqrep.py", line 844, in start
+    message, payload = await self._protocol.read()  # type: ignore  # noqa
+  File "C:\Users\lewin\AppData\Local\Programs\Python\Python37\lib\site-packages\aiohttp\streams.py", line 588, in read
+    await self._waiter
+aiohttp.client_exceptions.ServerDisconnectedError: None
+```
+
+这是什么鬼？？说好的`session`复用呢？？服务器关闭连接，你都没有重连机制的？？
+
+好吧，我加一个错误处理并重启：
+
+```python
+    async def monitor(self, name):
+        while self.since <= self.today:
+            try:
+                await self.fetch(name)
+            except Exception as e:
+                print("Restarting %s, Error: %s" % (name, e))
+```
+
+然后就控制台里就到处都是"Restarting 1, Error: None"这样的信息……
+
+`None`是什么鬼？？？你的库里定义了一个`ServerDisconnectedError`异常，居然不写异常注释的？？……
+
+而且无论是Github-Issues，还是StackOverFlow，都只有关于这个异常的提问，而没有任何官方的答复（只有一个人自己写了一段代码来忽略这个异常并重启任务。
+
+我这个错误处理并不完善，因为如果抛出异常了，那么当前的url任务也就丢失了。如果要改进的话，要能获取到当前的url并重新添加进入任务队列中才行。
+
+不过这都是小问题了，目前最大的问题是，下载速度并没有想象中快，感觉依然是单任务顺序下载。
+
+### 改进
+
+好吧，我们就一次性使用`session`吧。
+
+```python
+import os
+import asyncio
+import aiohttp
+import json
+import pandas as pd
+from datetime import datetime, timedelta
+import queue
+
+
+class MySpider(object):
+    def __init__(self, urlQ: queue.Queue):
+        self.urlQ = urlQ
+
+    async def fetch(self, url, name):
+        async with asyncio.Semaphore(5):  # 限制并发数为5个
+            async with aiohttp.ClientSession() as response:
+                async with response.get(url) as html:
+                    print("[%s] is getting %s" % (name, url))
+                    text = await html.text(encoding="utf-8")
+                    print("[%s] finish %s" % (name, url))
+                    self.parse(url, text, url[-12:-4])
+
+    def parse(self, url: str, text: str, the_date: str):
+        try:
+            dic = json.loads(text)
+        except:
+            return
+
+        if dic:
+            df = pd.DataFrame(dic['o_cursor'])
+
+            df_ok = pd.DataFrame()
+            df_ok['INSTRUMENTID'] = df['INSTRUMENTID'].str.strip()
+            df_ok['PRODUCTSORTNO'] = df['PRODUCTSORTNO']
+            df_ok['trade_name'] = df['PARTICIPANTABBR1'].str.strip()
+            df_ok['trade_amount'] = df['CJ1']
+            df_ok['trade_change'] = df['CJ1_CHG']
+            df_ok['open_name'] = df['PARTICIPANTABBR2'].str.strip()
+            df_ok['open_amount'] = df['CJ2']
+            df_ok['open_change'] = df['CJ2_CHG']
+            df_ok['close_name'] = df['PARTICIPANTABBR3'].str.strip()
+            df_ok['close_amount'] = df['CJ3']
+            df_ok['close_change'] = df['CJ3_CHG']
+            path_dir = "C:/Users/lewin/mydata/SHFE/%s" % the_date
+            if not os.path.isdir(path_dir):
+                os.mkdir(path_dir)
+
+            set_product = set(df_ok['PRODUCTSORTNO'])
+            dic_name = {10: "铜", 20: "铝", 30: "锌", 40: "铅", 45: "镍", 48: "锡", 50: "黄金", 60: "白银", 70: "螺纹钢",
+                        85: "热轧卷板", 92: "燃料油", 95: "石油沥青", 100: "天然橡胶", 110: "纸浆"}
+            print("Saving files...")
+            for product in set_product:
+                path_file = os.path.join(path_dir, "%s_%s.csv" % (the_date, dic_name[product]))
+                df_ok[df_ok['PRODUCTSORTNO'] == product].to_csv(path_file, encoding="utf-8", index=False)
+                # print("saved file: %s" % path_file)
+
+    async def main(self, name):
+        print("Start main!!!!", self.urlQ.qsize())
+        while not self.urlQ.empty():
+            await self.fetch(self.urlQ.get(), name)
+
+
+urlQ = queue.Queue()
+since = datetime.strptime('20190101', '%Y%m%d')
+today = datetime.strptime('20190501', '%Y%m%d')
+while since <= today:
+    urlQ.put("http://www.shfe.com.cn/data/dailydata/kx/pm%s.dat" % since.strftime("%Y%m%d"))
+    since += timedelta(1)
+print("Urls ok!!")
+
+loop = asyncio.get_event_loop()
+
+my_spider = MySpider(urlQ)
+tasks = [asyncio.ensure_future(my_spider.main(i)) for i in range(5)]
+loop.run_until_complete(asyncio.wait(tasks))
+loop.run_until_complete(asyncio.sleep(0))
+loop.close()
+
+```
+
+顺利打印出日志：
+
+```text
+Urls ok!!
+Start main!!!! 31
+Start main!!!! 30
+Start main!!!! 29
+Start main!!!! 28
+Start main!!!! 27
+[1] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190602.dat
+[1] finish http://www.shfe.com.cn/data/dailydata/kx/pm20190602.dat
+[3] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190604.dat
+[0] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190601.dat
+[0] finish http://www.shfe.com.cn/data/dailydata/kx/pm20190601.dat
+[2] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190603.dat
+[4] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190605.dat
+[1] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190606.dat
+[0] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190607.dat
+[0] finish http://www.shfe.com.cn/data/dailydata/kx/pm20190607.dat
+[0] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190608.dat
+[0] finish http://www.shfe.com.cn/data/dailydata/kx/pm20190608.dat
+[0] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190609.dat
+[0] finish http://www.shfe.com.cn/data/dailydata/kx/pm20190609.dat
+[0] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190610.dat
+[0] finish http://www.shfe.com.cn/data/dailydata/kx/pm20190610.dat
+Saving files...
+[2] finish http://www.shfe.com.cn/data/dailydata/kx/pm20190603.dat
+Saving files...
+[4] finish http://www.shfe.com.cn/data/dailydata/kx/pm20190605.dat
+Saving files...
+[3] finish http://www.shfe.com.cn/data/dailydata/kx/pm20190604.dat
+Saving files...
+[2] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190612.dat
+[0] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190611.dat
+[3] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190614.dat
+[4] is getting http://www.shfe.com.cn/data/dailydata/kx/pm20190613.dat
+..............省略
+```
+
+保存到本地的文件：
+
+![aiohtto](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-06-python-result.png)
+
+从日志最后几行可以看出，由于我们的解析函数`self.parse()`是同步的，而且`self.main()`函数分派任务的机制也不合理，所以整个程序的异步流程都受到了一定的干扰。
+
+不过最后依然得到了想要的数据，并且可以明显感受到是在并发运行，输出速度比之前那个复用`session`的版本快几倍。
+
+### 继续优化的思路
+
+要继续优化，无非就是解决异步跳转的流程了，目前初步思路：
+
+```python
+    async def fetch(self, url, name):
+        async with asyncio.Semaphore(5):  # 限制并发数为5个
+            async with aiohttp.ClientSession() as response:
+                async with response.get(url) as html:
+                    print("[%s] is getting %s" % (name, url))
+                    text = await html.text(encoding="utf-8")
+                    print("[%s] finish %s" % (name, url))
+        await asyncio.sleep(0)   # 这里跳出去让其他IO任务有机会启动
+        self.parse(url, text, url[-12:-4])  # 计算密集型任务
+```
+
+未验证，仅供参考。
+
+还有`self.main()`任务分配机制和`asyncio.Semaphore()`的锁机制，我觉得都有深入研究的价值。
+
+
+## 小结
+
+`asyncio`是python官方标准库，提供了基本的异步IO操作接口。但是多数内容要自己处理，比如http协议，encode/decode，redirect等。
+
+`aiohttp`是一个强大的三方库，提供了基本的http协议的操作接口。至少写个爬虫是够的。而且我觉得他总在宣扬作为服务器端的并发表现，也许客户端的并发实现只是顺便的吧哈哈哈。但是我依然觉得文档不够友好。
+
+其实异步并发的概念并不难理解。异步非阻塞无非就是**我程序执行到这里了，下达一个IO命令之后我就去做别的了，处理完了别的操作，我再回来看消息列表，如果有消息就切换回到上次异步出去的位置继续执行。**
+
+难的是对于不同语言异步实现的写法，以及如何梳理异步流程来减少阻塞、最大化性能表现。
+
+而对于Python这种"单线程"语言来说，虽然可以通过异步来实现IO密集型任务的并发执行，但如果让我来选的话，我选择Golang。
+
+人家golang天生就善于并发，你python还要搞这搞那委曲求全。
+
+不过python的优势也很明显，对于web应用，数据格式可能会非常的复杂，对于python这种动态类型的语言来说是比较有利的。
+
+各有利弊吧。也许`go`+`消息队列中间人`+`python`（基于Docker伸缩算力）也会是很棒的解决方案。
+
+## 参考资料：
+
+- [Python 3.7.4文档](https://docs.python.org/3/library/asyncio.html)
+- [AIOHTTP 文档](https://aiohttp.readthedocs.io/en/stable/index.html)

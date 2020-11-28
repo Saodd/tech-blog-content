@@ -1,0 +1,229 @@
+```json lw-blog-meta
+{"title":"OS学习笔记36：持久化：IO设备","date":"2019-08-29","brev":"进入第三部分，持久化。应该是讲硬盘操作了。先从IO设备讲起。","tags":["OS"],"path":"2019/190829-OS学习笔记36.md.574f994b5a7b5c0d2bbf"}
+```
+
+
+
+# 第三五章 开场对白
+
+[PDF链接](http://pages.cs.wisc.edu/~remzi/OSTEP/dialogue-persistence.pdf)
+
+`持久化Persistence`的字面意思是『不顾困难或反对而坚定地或顽固地继续做某件事』。
+
+- 比如你有一颗桃子树，你摘了很多桃子，你如何保存它们来应对严酷的冬天？
+  - 腌制、烤个派、做成果酱。
+
+对于数据也是一样，我们需要进行一些加工，以便于其持久化保存。
+
+# 第三六章 <IO设备>
+
+[PDF链接](http://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf)
+
+`IO`是`input/output`的缩写。因为程序必须要有输入和输出（否则程序就没有意义），所以如何储存输入输出就会是一个问题：
+
+**关键问题：如何将IO整合到OS中？需要哪些机制、如何提高效率？**
+
+## 36.1 系统架构
+
+![Figure 36.1](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-29-Fig-36-1.png)
+
+上图是一个典型系统的“经典”架构图。一个CPU，通过`内存总线memory bus`链接到主储存（内存）；一些其他的设备通过`通用总线general I/O bus`来接入系统，在现代系统中一般叫`外部控制器接口PCI`，比如一些图形设备或者其他的高性能设备；最后，有`外围总线peripheral bus`来连接一些缓慢的设备，比如硬盘键鼠等。
+
+为什么我们要分多个层次？有两点考虑：物理限制和成本考量。越高速的总线就必须越短。因此使用这种分级结构，越高性能的总线越接近CPU。
+
+同时，现在系统也逐渐使用特殊的芯片和更快的点对点连接来提升性能。比如下图是Intel-Z270芯片组。
+CPU与内存和图像设备直连。对于IO设备，则通过`直接媒体接口DMI`连接。
+
+![Figure 36.2](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-29-Fig-36-2.png)
+
+> `eSATA`：其中AT表示『IBM PC AT』，ATA表示『AT Attachment』（对AT的连接），SATA表示『Serial ATA』（连续的），eSATA表示『external SATA』表示数十年以来接口的逐步进化。  
+> `USB`：Universal Serial Bus通用设备总线。  
+> `PCIe`：Peripheral Component Interconnect Express外围设备直连。
+
+## 36.2 典范设备
+
+我们来看一个经典的（但并不现实存在的）设备来帮助理解。
+
+![Figure 36.3](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-29-Fig-36-3.png)
+
+设备应该由两部分组成。一部分是硬件`接口interface`，暴露给系统，以实现控制。因此，所有的设备都有指定的接口和典型的协议。
+
+另一部分是内部结构。它们是上部接口的具体实现。
+
+## 36.3 典范协议
+
+上面的结构图中，继承其由三部分组成：一个`状态status`寄存器，可读；一个是`命令command`寄存器，可写，用于下达命令；还有一个`数据data`寄存器用于输入或者输入数据。
+
+我们描述一下OS可能用怎样的协议来控制设备：
+
+```pseudo
+While(STATUS == BUSY)
+    ;  // wait until device is not busy
+Write data to DATA register 
+Write command to COMMAND register
+    starts the device and executes the command
+While(STATUS == BUSY)
+    ;  // wait until device is done with your request
+```
+
+首先，发起`轮询poll`确认设备空闲；然后写入数据（假如是一块硬盘，将一个磁盘块传输到设备需要进行多次写操作，这种涉及主CPU的操作我们称为`程序控制IO programmed I/O`；然后下达指令；然后等待设备执行完成。
+
+这种协议简单，但是低效和不方便。比如轮询就是低效的，在进程虚拟化章节我们就学了，此时我们应该调度其他进程/线程来执行。
+
+**关键问题：如何避免轮询消耗？**
+
+## 36.4 使用中断
+
+之前我们学了中断了！即发起请求，然后将线程推去睡眠，然后切换下一个线程来执行。当设备完成请求时，会引发一个`设备中断hardware interrupt`，让CPU回到内核态并调用预先设定的`中断服务例程interrupt service routine(ISR)`（或者叫`interrupt handler`）来处理。它只是OS中的一小段代码，会完成此前的请求（比如从设备中读取执行结果）然后唤醒之前的线程。
+
+中断允许我们将IO和计算进行重叠，以提高利用率：
+
+![Figure 36.3.1](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-29-Fig-36-3-1.png)
+
+![Figure 36.3.2](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-29-Fig-36-3-2.png)
+
+但是要记住，中断并不一定是完美的。比如极端例子，设备的性能很高，在第一次轮询时就能完成指令，那么中断反而降低了性能（因为内核态和上下文的切换以及调度损耗）。如果设备的性能未知，我们一般用混合方法，即轮询几次之后中断。
+
+另一个不适用的领域是网络。当一大股下行数据包（incoming packets）到来，如果每个包都引起中断，那OS啥也不用干了。所以对Web服务器，一般用轮询的方式，并且允许服务器程序取得一个请求后执行一些操作，而不是立即检查下一个请求。
+
+还可以对中断进行优化，使用`粗颗粒coalescing`。如果设置了，设备将在引发中断之前先等一小会儿；在等待过程中，其他请求可能也完成了，这样就可以一次性处理。不过这样会增大请求的延迟，所以需要权衡。
+
+## 36.5 通过DMA实现更加高效的数据传输
+
+让CPU去拷贝数据是很低效的，所以找个助理`直接内存访问Direct Memory Access(DMA)`：
+
+![Figure 36.3.3](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-29-Fig-36-3-3.png)
+
+![Figure 36.3.4](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-29-Fig-36-3-4.png)
+
+OS需要告诉DMA：源数据在哪里、拷贝多少数据、目标设备在哪。当DMA完成任务，会引发中断，这样OS就可以知道了。
+
+## 36.6 设备交互
+
+**关键问题：如何与设备通信？需要用显式的指令吗？**
+
+历史来看，有两种主要方法。旧方法是使用显式的IO指令，这些指令允许OS给设备发送数据，从而实现前述的协议。
+
+比如在x86架构上，提供了`in`和`out`指令来与设备通信。如果要给设备发送数据，调用者必须声明数据在哪个寄存器里，并指定设备的端口号。这种指令需要特权（即内核态）。
+
+另一种方法是`内存映射 memory-mapped IO`，硬件将设备寄存器视为内存上的位置。
+
+两种方法之间没有绝对的优劣。内存映射稍微好一点，因为不需要额外的指令。两种在当前都在使用。
+
+## 36.7 设备驱动
+
+如何将设备与OS进行匹配？我们希望通过一种通用的方式来简化。
+
+**关键问题：如何构建一个设备中性的OS？如何隐藏设备交互的细节？**
+
+借助古老的思想：`抽象abstraction`。在最底层，OS必须详细知道设备是如何工作的，我们称其为`设备驱动device driver`，它包含某个设备的全部交互接口。
+
+![Figure 36.4](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/2019/2019-08-29-Fig-36-4.png)
+
+如上图所示，一个文件系统（或者说上面的应用程序）完全不知道下面用的是什么类型的硬盘；它只对`块block`进行读写，即将请求发送到`通用块层generic block layer`；block层将请求发送到驱动层；驱动层负责执行细节。
+
+上图还展示了`原始数据接口raw interface`，它允许应用（比如文件系统检查器、磁盘碎片清理工具等）直接读写block，而不通过文件系统的抽象。
+
+通过驱动来实现也有缺点。比如如果设备有很多先进的功能，但是由于必须要通过通用接口来访问，因此可能先进的功能都无法使用了。（比如，Linux访问SCSI设备时，SCSI提供丰富的异常提示，但是由于其他类型的设备ATA/IDE不支持，所以Linux也没有支持这些额外的特性）
+
+有趣的是，由于必须要有驱动才能支持额外的设备，因此目前OS大概有70%的代码都是设备驱动；在Window系统中，可能更多。不幸的是，由于驱动程序往往是由“业余人员”（即非全职内核开发者）编写的，所以往往有很多bug。
+
+## 36.8 仔细看一个案例：IDE硬盘驱动
+
+```text
+Control Register:
+    Address 0x3F6 = 0x08 (0000 1RE0): R=reset,
+                    E=0 means "enable interrupt"
+
+Command Block Registers:
+    Address 0x1F0 = Data Port
+    Address 0x1F1 = Error
+    Address 0x1F2 = Sector Count
+    Address 0x1F3 = LBA low byte
+    Address 0x1F4 = LBA mid byte
+    Address 0x1F5 = LBA hi byte
+    Address 0x1F6 = 1B1D TOP4LBA: B=LBA, D=drive
+    Address 0x1F7 = Command/status
+
+Status Register (Address 0x1F7):
+    7      6     5      4   3   2     1     0
+    BUSY READY FAULT  SEEK DRQ CORR IDDEX ERROR
+
+Error Register (Address 0x1F1): (check when ERROR==1)
+    7   6   5   4   3    2    1    0
+
+    BBK UNC MC IDNF MCR ABRT T0NF AMNF
+    BBK = Bad Block
+    UNC = Uncorrectable data error
+    MC = Media Changed
+    IDNF = ID mark Not Found
+    MCR = Media Change Requested
+    ABRT = Command aborted
+    T0NF = Track 0 Not Found
+    AMNF = Address Mark Not Found
+```
+
+IDE硬盘暴露了一个简单的接口给OS，包含四个寄存器。
+
+基本的协议如下所示，我们假设都经过了初始化：
+
+- 等待驱动就绪：Read Status Register (0x1F7) until drive is READY and not BUSY.
+- 将参数写入命令寄存器：Write the sector count and drive number to command registers(0x1F2-0x1F6).
+- 启动IO：Write READ—WRITE command to command register (0x1F7)。
+- 写入数据传输：Wait until drive status is READY and DRQ (drive request for data); write data to data port
+- 处理中断：允许一个或一批区块完成时的处理；
+- 错误处理：每次操作之后都读取状态寄存器，如果错误位开启了，就读取错误寄存器。
+
+我们稍微实现一下：
+
+```c
+static int ide_wait_ready() {
+    while (((int r = inb(0x1f7)) & IDE_BSY) || !(r & IDE_DRDY))
+        ;  // loop until drive isn’t busy
+}
+static void ide_start_request(struct buf *b) {
+    ide_wait_ready();
+    outb(0x3f6, 0);                         // generate interrupt
+    outb(0x1f2, 1);                         // how many sectors?
+    outb(0x1f3, b->sector & 0xff);          // LBA goes here ...
+    outb(0x1f4, (b->sector >> 8) & 0xff);   // ... and here
+    outb(0x1f5, (b->sector >> 16) & 0xff);  // ... and here!
+    outb(0x1f6, 0xe0 | ((b->dev & 1) << 4) | ((b->sector >> 24) & 0x0f));
+    if (b->flags & B_DIRTY) {
+        outb(0x1f7, IDE_CMD_WRITE);      // this is a WRITE
+        outsl(0x1f0, b->data, 512 / 4);  // transfer data too!
+    } else {
+        outb(0x1f7, IDE_CMD_READ);  // this is a READ (no data)
+    }
+}
+void ide_rw(struct buf *b) {
+    acquire(&ide_lock);
+    for (struct buf **pp = &ide_queue; *pp; pp = &(*pp)->qnext)
+        ;                      // walk queue
+    *pp = b;                   // add request to end
+    if (ide_queue == b)        // if q is empty
+        ide_start_request(b);  // send req to disk
+    while ((b->flags & (B_VALID | B_DIRTY)) != B_VALID)
+        sleep(b, &ide_lock);  // wait for completion
+    release(&ide_lock);
+}
+void ide_intr() {
+    struct buf *b;
+    acquire(&ide_lock);
+    if (!(b->flags & B_DIRTY) && ide_wait_ready() >= 0)
+        insl(0x1f0, b->data, 512 / 4);  // if READ: get data
+    b->flags |= B_VALID;
+    b->flags &= ˜B_DIRTY;
+    wakeup(b);                         // wake waiting process
+    if ((ide_queue = b->qnext) != 0)   // start next request
+        ide_start_request(ide_queue);  // (if one exists)
+    release(&ide_lock);
+}
+```
+
+## 36.9 历史
+
+## 36.10 小结
+
+现在你应该对OS如何与设备交互有了一个基本的认识。主要是两个技术（中断与DMA）与两种方法（显式指令与内存映射）。
+最后还讲了一些驱动的概念。

@@ -1,0 +1,182 @@
+```json lw-blog-meta
+{"title":"LeetCode[16]: 最接近的三数之和","date":"2019-08-05","brev":"中等难度。","tags":["算法与数据结构"],"path":"2019/190805-LeetCode-16.md.97ebe3d053e5f12392c2"}
+```
+
+
+
+## 读题
+
+```text
+给定一个包括 n 个整数的数组 nums 和 一个目标值 target。
+
+找出 nums 中的三个整数，使得它们的和与 target 最接近。
+返回这三个数的和。假定每组输入只存在唯一答案。
+
+例如，给定数组 nums = [-1，2，1，-4], 和 target = 1.
+
+与 target 最接近的三个数的和为 2. (-1 + 2 + 1 = 2).
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/3sum-closest
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+## 分析
+
+咋一看跟第15题没有什么区别。无非就是把“三数之和等于0”改为“三数之和改为n”而已。
+
+不过仔细想一下，并不是等于，而是接近于，所以在判定上要多花费一点功夫。
+
+主要思路依然是先排序，首先在外层从左到右遍历，然后加2个指针在右部子数组内逼近。
+
+考虑一些特殊情况：
+
+1. 中途发现三数的和已经和目标相等了；那么直接跳出循环，返回当前的和；
+2. 中途有重复值的时候，要设定跳过的逻辑。
+
+## 初步实现
+
+```go
+func threeSumClosest(nums []int, target int) int {
+    const minInt = - 1 << 31
+    const maxInt = 1<<31 - 1
+    // 题目没有说错误处理，姑且假设len(nums)>=3
+    learnAlgo.QuickSortInt(nums)  // 自己写的快排算法实现
+    var iNum int = minInt
+    var minDiff = maxInt
+    var l, r, sum, theSum int
+    for i, le := 0, len(nums); i < le && iNum < target; i++ {
+        if nums[i] == iNum {
+            continue
+        }
+        iNum = nums[i]
+        l, r = i+1, le-1
+        for l < r {
+            if nums[l] == nums[l+1] {
+                sum = iNum + 2*nums[l]
+                fmt.Println(sum, i, l, r)
+                if abs(target-sum) < minDiff {
+                    minDiff, theSum = abs(target-sum), sum
+                }
+                for l++;l < r && nums[l] == nums[l+1] ; l++ {
+                }
+            }
+            if nums[r] == nums[r-1] {
+                sum = iNum + 2*nums[r]
+                fmt.Println(sum, i, l, r)
+                if abs(target-sum) < minDiff {
+                    minDiff, theSum = abs(target-sum), sum
+                }
+                for r--;l < r && nums[r] == nums[r-1]; r-- {
+                }
+            }
+            sum = iNum + nums[l] + nums[r]
+            fmt.Println(sum, i, l, r)
+            if abs(target-sum) < minDiff {
+                minDiff, theSum = abs(target-sum), sum
+            }
+            if minDiff == 0 {
+                goto STOPLOOP
+            }
+            if sum > target {
+                r--
+            } else {
+                l++
+            }
+        }
+    }
+STOPLOOP:
+    return theSum
+}
+
+func abs(x int) int {
+    if x >= 0 {
+        return x
+    }
+    return -x
+}
+```
+
+因为边界很多，要特别小心，并不难。提交结果：
+
+```text
+执行用时 :8 ms, 在所有 Go 提交中击败了86.03%的用户
+内存消耗 :2.7 MB, 在所有 Go 提交中击败了78.49%的用户
+```
+
+## 改进
+
+想一下，还是觉得这个逻辑太复杂了，如果省去检查重复的代码，会简单很多。
+
+试着实现一下，然后待会对比性能：
+
+```go
+func threeSumClosest(nums []int, target int) int {
+    learnAlgo.QuickSortInt(nums)
+    var minDiff int = 1<<31 - 1
+    var theSum, theDiff int
+    var twoTarget int
+    var l, r int
+    for i, le := 0, len(nums); i < le; i++ {
+        twoTarget = target - nums[i]
+        l, r = i+1, le-1
+        for l < r {
+            theDiff = twoTarget - nums[l] - nums[r]
+            if abs(theDiff) < minDiff {
+                minDiff, theSum = abs(theDiff), nums[i]+nums[l]+nums[r]
+            }
+            if minDiff == 0 {
+                return theSum
+            }
+            if theDiff > 0 {
+                l++
+            } else {
+                r--
+            }
+        }
+    }
+    return theSum
+}
+```
+
+提交成绩：
+
+```text
+执行用时 :4 ms, 在所有 Go 提交中击败了99.37%的用户
+内存消耗 :2.7 MB, 在所有 Go 提交中击败了78.49%的用户
+```
+
+## 性能测试
+
+
+
+```text
+// 一百万个int
+2.6090400000000002   // 版本一
+2.6169982000000003   // 版本二
+
+// 三百万个int
+23.4699634
+23.6490327
+```
+时间消耗理论上是`O(n^2)`级别的，这与以上的时间增长比例也是相符的。
+
+然后我们试着将排序代码排除在外，仅考虑查找的时间：
+
+```text
+// 一百万个int
+0
+0.0020385
+
+// 三百万个int
+0
+0.0069597
+```
+
+时间几乎不需要……前面都是排序使用的时间……难怪二者总是如此接近。
+
+想了一下应该是由于随机数的原因，当样本数量很大的时候，可以认为是平铺在数轴上的。可以很容易地匹配到所需要的数字并退出循环。
+
+## 小结
+
+理论时间复杂度也许会与实践中的表现有很大的出入，还是要以实践为准。
