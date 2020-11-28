@@ -177,7 +177,7 @@ while True:
 
 好，那我自己看源代码吧。然后就被吓尿了。来感受一下：
 
-![aiohtto](../../../tech-blog-pic/2019/2019-08-06-python-asyncio.png)
+![aiohtto](../../tech-blog-pic/2019/2019-08-06-python-asyncio.png)
 
 好，我费尽九牛二虎之力，终于写出了一版异步爬虫：
 
@@ -383,7 +383,7 @@ Saving files...
 
 保存到本地的文件：
 
-![aiohtto](../../../tech-blog-pic/2019/2019-08-06-python-result.png)
+![aiohtto](../../tech-blog-pic/2019/2019-08-06-python-result.png)
 
 从日志最后几行可以看出，由于我们的解析函数`self.parse()`是同步的，而且`self.main()`函数分派任务的机制也不合理，所以整个程序的异步流程都受到了一定的干扰。
 

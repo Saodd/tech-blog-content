@@ -44,7 +44,7 @@ apt install p7zip-full
 
 如果当时没有选（或者当时还没装编译器），那么也简单，在界面中找到`Settings → Build, Execution, Deployment → Toolchains`，这时Clion会自己搜索本地的编译器。
 
-![Clion](../../../tech-blog-pic/2019/2019-08-10-Clion.png)
+![Clion](../../tech-blog-pic/2019/2019-08-10-Clion.png)
 
 这里可能会出现一些错误警告：
 

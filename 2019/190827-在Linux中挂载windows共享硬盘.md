@@ -83,7 +83,7 @@ lewin@aphkapmosprod02:~$ ls ./windows/
 
 首先想到的是通过软件，比如moba家族的`MobaSSH`，提供一个图形化的界面，基于`openssh`并兼容所有主流的ssh客户端。非常方便。
 
-![mobaSSH](../../../tech-blog-pic/2019/2019-08-27-mobassh.png)
+![mobaSSH](../../tech-blog-pic/2019/2019-08-27-mobassh.png)
 
 开启运行后，相当于一个普通的windows服务，并不会挂在任务栏中。通过windows用户账户登录即可。
 

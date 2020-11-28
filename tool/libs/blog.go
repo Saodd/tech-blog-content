@@ -18,7 +18,7 @@ const blogInputExpr = "(?s)^```yaml lw-blog-meta(.*?)```"
 const blogOutputPref = "```json lw-blog-meta\n"
 const blogExprPrefLen = 20
 const blogExprPostLen = 3
-const blogPicLocal = `../../../../tech-blog-pic/`
+const blogPicLocal = `../../tech-blog-pic/`
 const blogPicCloud = `https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/`
 
 var blogPattern, _ = regexp.Compile(blogInputExpr)
