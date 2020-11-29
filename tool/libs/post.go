@@ -3,6 +3,7 @@ package libs
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 )
@@ -20,7 +21,10 @@ func PostPathsToServer(blogs []*Blog) error {
 	reqBody, _ := json.Marshal(paths)
 	req, _ := http.NewRequest("POST", ServerAddress, bytes.NewReader(reqBody))
 	req.Header.Set("X-Github-PostToken", ServerToken)
-	_, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if resp.StatusCode != 200 {
+		return errors.New("推送数据失败：" + resp.Status)
+	}
 	return err
 }
 
