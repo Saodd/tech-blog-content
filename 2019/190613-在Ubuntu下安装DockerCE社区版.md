@@ -34,7 +34,19 @@ tags: [Docker]
     ```bash
     sudo docker run hello-world
     ```
+   
+## 快捷命令
 
+在Ubuntu20.04下安装的命令：
+
+```shell
+curl -fsSL https://download.docker.com/linux/ubuntu/dists/focal/pool/stable/amd64/containerd.io_1.4.3-1_amd64.deb -o containerd.io_1.4.3-1_amd64.deb
+curl -fsSL https://download.docker.com/linux/ubuntu/dists/focal/pool/stable/amd64/docker-ce_20.10.0~3-0~ubuntu-focal_amd64.deb -o docker-ce_20.10.0~3-0~ubuntu-focal_amd64.deb
+curl -fsSL https://download.docker.com/linux/ubuntu/dists/focal/pool/stable/amd64/docker-ce-cli_20.10.0~3-0~ubuntu-focal_amd64.deb -o docker-ce-cli_20.10.0~3-0~ubuntu-focal_amd64.deb 
+sudo dpkg -i docker-ce_20.10.0~3-0~ubuntu-focal_amd64.deb docker-ce-cli_20.10.0_3-0_ubuntu-focal_amd64.deb containerd.io_1.4.3-1_amd64.deb
+sudo usermod -aG docker yourusername
+sudo service docker restart
+```
 
 ## 安装完成后顺便设置权限
 
