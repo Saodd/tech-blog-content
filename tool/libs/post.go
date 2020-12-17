@@ -8,12 +8,20 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 var (
 	ServerAddress string
 	ServerToken   string
 )
+
+var httpClient = &http.Client{
+	Transport: &http.Transport{
+		MaxIdleConnsPerHost: 10,
+	},
+	Timeout: time.Second * 10,
+}
 
 func SyncServer(blogs []*Blog) {
 	toPut, toDel, err := CheckServerBlogs(blogs)
@@ -62,7 +70,7 @@ func GetServerBlogs() ([]*Blog, error) {
 	u := ServerAddress + "/all-hash"
 	req, _ := http.NewRequest("GET", u, nil)
 	req.Header.Set("X-Github-PostToken", ServerToken)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +95,7 @@ func PutBlog(blog *Blog) error {
 	reqBody, _ := json.Marshal(blog)
 	req, _ := http.NewRequest("PUT", u, bytes.NewReader(reqBody))
 	req.Header.Set("X-Github-PostToken", ServerToken)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -103,7 +111,7 @@ func DeleteBlog(blog *Blog) error {
 	u := ServerAddress + "/content/" + blog.Path
 	req, _ := http.NewRequest("DELETE", u, nil)
 	req.Header.Set("X-Github-PostToken", ServerToken)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}

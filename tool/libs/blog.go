@@ -13,8 +13,8 @@ import (
 const blogInputExpr = "(?s)^```yaml lw-blog-meta(.*?)```"
 const blogExprPrefLen = 20
 const blogExprPostLen = 3
-const blogPicLocal = `../../tech-blog-pic/`
-const blogPicCloud = `https://cdn.jsdelivr.net/gh/Saodd/tech-blog-pic@gh-pages/`
+const blogPicLocal = `](../pic/`
+const blogPicCloud = `](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-content@gh-pages/pic/`
 
 var blogPattern, _ = regexp.Compile(blogInputExpr)
 

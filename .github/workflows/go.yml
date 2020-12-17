@@ -28,6 +28,9 @@ jobs:
         RUN_MODE: gh-actions
       run: go run tool/main.go
 
+    - name: Copy Pic Directory
+      run: mkdir -p public && cp -r pic public
+
     - name: Prepare html for gh-page
       run: mv ./tool/index.html ./public/index.html && cp ./public/index.html ./public/404.html && mv ./README.MD ./public/README.MD
 
