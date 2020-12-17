@@ -74,10 +74,10 @@ func GetServerBlogs() ([]*Blog, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, errors.New("推送数据失败：" + resp.Status)
 	}
-	defer resp.Body.Close()
 
 	var serverBlogs []*Blog
 	body, err := ioutil.ReadAll(resp.Body)
@@ -99,10 +99,11 @@ func PutBlog(blog *Blog) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return errors.New("PUT推送数据失败：" + resp.Status)
 	}
-	defer resp.Body.Close()
+	log.Println("推送博客：", blog.Path)
 
 	return nil
 }
@@ -115,10 +116,11 @@ func DeleteBlog(blog *Blog) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return errors.New("DELETE推送数据失败：" + resp.Status)
 	}
-	defer resp.Body.Close()
+	log.Println("删除博客：", blog.Path)
 
 	return nil
 }
