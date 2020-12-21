@@ -124,3 +124,27 @@ indexName, err := col.Indexes().CreateOne(context.Background(), mongo.IndexModel
 上述结果说明，先用`ts`索引查询出了25w条记录，然后把这25w条记录全部取出来再逐条检查`uid`字段，最后得到结果。总时间花费是861ms。比`uid`索引好一些，是因为本次只逐条检查了25w条记录，少了5w。
 
 也就是说，两个单个的索引，对于联合条件查询，并没有任何作用。（以前我以为会有点作用，看来是理解的不对）
+
+## 4. 联合索引vs单查询条件
+
+准备{"uid":1,"ts":1}的联合索引，并且在上面只查询一个条件，会发生什么？
+
+```text
+> db.shuiyin_log.explain('executionStats').count({'uid':0})
+...
+"executionTimeMillis" : 202,
+"totalKeysExamined" : 300002,
+"totalDocsExamined" : 0,
+```
+
+```text
+> db.shuiyin_log.explain('executionStats').count({'applied':ISODate('2020-12-16T00:00:00.000Z')})
+...
+"executionTimeMillis" : 517,
+"totalKeysExamined" : 0,
+"totalDocsExamined" : 500001,
+```
+
+可以看到，联合索引仅对其中一个字段生效，并且**只对第一个索引生效**（或者说，是对前几个索引生效，不能跳过）。这也说明了，在建立索引时，字段的顺序是有影响的。
+
+值得一提的是，在联合索引上查询第一个索引，是跟在单索引上查询的效率一样的（看起来）。
