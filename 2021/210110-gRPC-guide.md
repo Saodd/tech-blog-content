@@ -1,7 +1,7 @@
 ```yaml lw-blog-meta
 title: "gRPC 入门教程"
 date: "2021-01-10"
-brev: "序列化无非是为了通信"
+brev: "序列化无非是为了通信。尝试用Go,Python,Node三种语言分别快速实现RPC代码。"
 tags: ["中间件"]
 ```
 
@@ -19,7 +19,29 @@ tags: ["中间件"]
 
 代码地址： [github](https://github.com/Saodd/learn-grpc)
 
-## 准备工作
+## proto 定义
+
+没有什么比"回声"更简单的了吧，这也是web框架的常见demo形式。
+
+功能是，客户端给服务端发一个数据结构`Sentence`，服务端更新其中一个字段`speaker`后，将数据结构返回。并将这个远程函数命名为`Echo`：
+
+```protobuf
+// hello.proto
+syntax = "proto3";
+
+service Chat {
+  rpc Echo (Sentence) returns (Sentence);
+}
+
+message Sentence {
+  string speaker = 1 ;
+  string content = 2;
+}
+```
+
+## Step1: Go的基础实现
+
+### 准备工作
 
 按教程中get两个模块：
 
@@ -41,27 +63,7 @@ google.golang.org/grpc v1.34.0 // indirect
 google.golang.org/protobuf v1.25.0
 ```
 
-## Step1: Go的基础实现
-
-没有什么比回声更简单的了吧，这也是web框架的常见demo形式。
-
-功能是，客户端给服务端发一个数据结构`Sentence`，服务端更新其中一个字段`speaker`后，将数据结构返回。并将这个远程函数命名为`Echo`：
-
-```protobuf
-// hello.proto
-syntax = "proto3";
-
-service Chat {
-  rpc Echo (Sentence) returns (Sentence);
-}
-
-message Sentence {
-  string speaker = 1 ;
-  string content = 2;
-}
-```
-
-然后我们使用编译工具将其转化为 Go 代码：
+然后我们使用编译工具将 .proto 转化为 Go 代码：
 
 ```shell
 protoc --go_out=hello_go --go-grpc_out=hello_go hello.proto
@@ -265,4 +267,114 @@ if __name__ == '__main__':
 
 ## step2-2: Node实现
 
-未完待续……
+Node 的部分更加奇葩，它允许你在运行时直接加载`.proto`文件，而不需要预先生成……
+
+好吧你NB，但是我选择静态生成。
+
+### 准备&编译
+
+先安装全局的编译工具，然后编译：
+
+```shell
+npm install -g grpc-tools
+
+grpc_tools_node_protoc --js_out=import_style=commonjs,binary:hello_node --grpc_out=grpc_js:hello_node hello.proto
+```
+
+编译后我们得到了`hello_node/hello_pb.js`和`hello_node/hello_grpc_pb.js`两个文件，分别对应着数据结构和服务。
+
+为了后续的运行，我们还需要安装一些依赖，直接写到`package.json`里然后去`install`吧：
+
+```json
+{
+  "dependencies": {
+    "@grpc/grpc-js": "^1.2.3",
+    "@grpc/proto-loader": "^0.5.5",
+    "google-protobuf": "^3.14.0",
+    "grpc": "^1.24.4",
+    "grpc-tools": "^1.10.0"
+  }
+}
+```
+
+### Node客户端
+
+此时我们先用着之前写的Go服务端，然后来写Node客户端。
+
+由于教程上都是动态加载的方式，因此下面使用静态代码的代码是我自己写的：
+
+```js
+const messages = require('./hello_pb');
+const services = require('./hello_grpc_pb');
+const grpc = require('@grpc/grpc-js');
+
+function main() {
+    // 1. 建立连接
+    const client = new services.ChatClient("localhost:5005", grpc.credentials.createInsecure())
+
+    // 2. 准备请求数据。
+    // 这里很恐怖的是，初始化数据居然是通过Array传入的……所以强烈建议使用setXXX方法来准备参数……
+    const req = new messages.Sentence(["Lewin-Client-Node", "Hello, world!"])
+    req.setContent("Hello, 世界!")
+    console.log(`发送: ${req.getSpeaker()} | ${req.getContent()}`)
+
+    // 3. 执行调用。
+    client.echo(req, function (err, resp) {
+        console.log(`结果: ${err} | ${resp.getSpeaker()} | ${resp.getContent()}`)
+    })
+}
+```
+
+这里有一些东西让我不太舒服：
+
+第一，依然没有类型的代码提示。而且需要再次强调的是，在 new 一个 message 的时候，传入的初始参数居然是 Array …… 也就是说，如果不小心搞错了顺序，救都救不回来。因此务必使用`setXXX`的方法来设置参数。
+
+第二，不支持 async/await 的调用方式（即 Promise 的写法）。也许是我编译参数给的不对？或者用`promisify`可以包装一下吗？暂时还不确定。
+
+总之姑且是跑起来了~
+
+### Node服务端
+
+服务端依然是那几个步骤：实现服务函数、初始化服务器、注册服务路由、监听端口：
+
+```js
+const echo = (call, callback) => {
+    console.log(`收到: ${call.request.getSpeaker()} | ${call.request.getContent()}`)
+    call.request.setSpeaker("Lewin-Server-Node")
+    callback(null, call.request)
+}
+
+function main() {
+    const server = new grpc.Server();
+    server.addService(services.ChatService, {echo})
+    server.bindAsync('0.0.0.0:5007', grpc.ServerCredentials.createInsecure(), () => {
+        server.start();
+    });
+}
+```
+
+然后这里又遇到了奇怪的行为，即，服务函数的参数，是通过`call.request`去访问的，对，不论参数是什么类型，都是用`request`去访问。这个行为让我觉得很怪异。
+
+然后是在注册服务路由的环节，IDE一直提示我上面的`echo`函数不符合它的类型定义……可我明明是参考官方示例来抄的，没有做什么奇怪的事情啊……很怪异。
+
+罢了，总之姑且是跑起来了~ 现在我可以实现 py, node, go 之前的任意互相调用了。
+
+## step3: stream类型
+
+其实也没有什么特别的。就不详细展开了。
+
+简单说，在Golang中，就是直接把它当作一个连接来处理，一端循环地`Send()`，另一端循环地`Recv()`直到`EOF`。
+
+## 总结
+
+首先必须吐槽一下， [grpc.io的文档](https://grpc.io/) 页面的加载速度实在是慢。简单排查了一下是jquery和bootstrap的CDN资源挂了（也许是我没出国），但是它们挂了也没影响页面的正常运行，估计是框架的锅？但是对于一个这么成熟的框架的文档来说，不应该出现这种事情。
+
+然后，无论是`protobuf` 还是 `gPRC`，我感觉它们的文档都很不友好。特别是对 Python 和 Node 来说，让我感到一种“二等公民”的感觉。毕竟，给没有类型的语言增加类型约束这件事，本身就是很奇怪的行为（虽然不得不做）。
+
+不过呢，总体来说还是挺满意的。 gRPC 给我打开了新世界的大门。
+
+虽然以前我们用 HTTP 也同样是一种 RPC，理念是相似的。不过，在与 protobuf 结合之后，我发现原来在不同服务之间快速生成 RPC 逻辑是这么简单的事情。
+
+俗话说，「量变产生质变」，当某种技术的复杂度降低到一定程度后，它能发挥的作用也会有一个质的飞跃。
+
+我想今后我会把 gPRC 作为我个人默认的服务间通讯的最佳选择。
