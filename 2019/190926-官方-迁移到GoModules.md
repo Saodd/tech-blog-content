@@ -1,5 +1,5 @@
 ```yaml lw-blog-meta
-title: '[官方] Migrating to Go Modules'
+title: '[TheGoBlog] Migrating to Go Modules'
 date: "2019-09-26"
 brev: 发布时间2019-08-21，接着上一篇，讲一下如何将现有的项目迁移到GoModules中。
 tags: [Golang]

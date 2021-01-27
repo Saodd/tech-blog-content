@@ -1,5 +1,5 @@
 ```yaml lw-blog-meta
-title: '[官方] The Laws of Reflection'
+title: '[TheGoBlog] The Laws of Reflection'
 date: "2020-12-20"
 brev: "发布时间2011-9-6，官方对于反射包的解读。"
 tags: ["Golang"]

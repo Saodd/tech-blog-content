@@ -1,5 +1,5 @@
 ```yaml lw-blog-meta
-title: '[官方] Using Go Modules'
+title: '[TheGoBlog] Using Go Modules'
 date: "2019-09-25"
 brev: 发布时间2019-03-19，因为近期发布了一篇《Migrating to Go Modules》与之关联，所以找出来看一下。
 tags: [Golang]

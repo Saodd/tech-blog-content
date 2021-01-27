@@ -1,5 +1,5 @@
 ```yaml lw-blog-meta
-title: "[官方] Command PATH security in Go"
+title: "[TheGoBlog] Command PATH security in Go"
 date: "2021-01-25"
 brev: "发布时间2021-01-19，一个安全小知识get"
 tags: [Golang]
