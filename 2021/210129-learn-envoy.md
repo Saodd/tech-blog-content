@@ -245,6 +245,44 @@ rpc error: code = Unavailable desc = transport is closing
 
 > swarm提供的LB的确是L3/L4的，参考阅读： [stackoverflow](https://stackoverflow.com/questions/38717965/whats-the-mechanism-of-inner-load-balancing-along-with-docker-swarm-v1-12)
 
-## 基本操作4：gRPC代理
+## 基本操作4：gRPC代理与失败重试
+
+gRPC底层依然是HTTP/2，所以它的`listener`和`cluster`依然是HTTP的，跟刚才差不多，只要稍作修改：
+
+在`listener`这边要指定grpc过滤规则：
+
+```yaml
+routes:
+    - match:
+        prefix: "/"
+        grpc: {}  # 注意增加了这个
+```
+
+以及，在`cluster`这边要指定http2的处理规则：
+
+```yaml
+clusters:
+    - name: service_echo
+      connect_timeout: 0.25s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      http2_protocol_options: { }  # 注意增加了这个
+```
+
+至于失败重试，也可以继续沿用刚才HTTP的配置：
+
+```yaml
+route:
+    cluster: service_echo
+    retry_policy:
+      retry_on: connect-failure, 5xx
+      num_retries: 2
+```
+
+不过上面的 5xx 这个规则就不适用了，相应地，Envoy提供了针对gRPC响应状态码的处理规则。（网页一下子找不到了，自己去翻吧）
+
+在当前的配置下，我们用刚才启动的 swarm 集群的那个 echo 服务来进行测试，会发现一切正常运行，当强行杀掉服务中的一个容器，Envoy会妥善地处理重试，客户端也不会感知到错误。
+
+## 基本操作5：gRPC负载均衡
 
 TODO: 搞不定了，文档太难搞了，暂停一下，去其他项目找点灵感先……
