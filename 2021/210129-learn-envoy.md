@@ -25,7 +25,7 @@ docker pull envoyproxy/envoy
 
 ## 基本操作1：HTTP代理
 
-HTTP代理的部分，我体验下来，觉得跟前两天刚刚研究的 [Caddy](./210127-caddy-gin-jwt.md) 在功能上是高度重合的。也就是说Envoy可以胜任一个最前端（或者称为`边缘`）的代理职责的。
+HTTP代理的部分，我体验下来，觉得跟前两天刚刚研究的 [Caddy](../2021/210127-caddy-gin-jwt.md) 在功能上是高度重合的。也就是说Envoy可以胜任一个最前端（或者称为`边缘`）的代理职责的。
 
 所以偷个懒，继续沿用我在研究caddy时所写的 [两个服务](https://github.com/Saodd/learn-caddy) 。
 

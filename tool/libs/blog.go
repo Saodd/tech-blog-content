@@ -15,6 +15,8 @@ const blogExprPrefLen = 20
 const blogExprPostLen = 3
 const blogPicLocal = `](../pic/`
 const blogPicCloud = `](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-content@gh-pages/pic/`
+const blogMarkdownLocal = `](../20`
+const blogMarkdownCloud = `](/blog/page/20`
 
 var blogPattern, _ = regexp.Compile(blogInputExpr)
 
@@ -47,6 +49,7 @@ func ParseBlogFiles(filePaths []string) (blogs []*Blog, err error) {
 func parseBlogFile(text []byte) (*Blog, error) {
 	text = bytes.ReplaceAll(text, []byte("\r\n"), []byte("\n"))
 	text = bytes.ReplaceAll(text, []byte(blogPicLocal), []byte(blogPicCloud))
+	text = bytes.ReplaceAll(text, []byte(blogMarkdownLocal), []byte(blogMarkdownCloud))
 	meta := blogPattern.Find(text)
 	if len(meta) <= blogExprPrefLen {
 		return nil, errors.New("头部信息无效。")

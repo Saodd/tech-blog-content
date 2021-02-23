@@ -129,7 +129,7 @@ func init() {
 	if mode := os.Getenv("RUN_MODE"); mode == "gh-actions" {
 		ServerAddress = "https://api.lewinblog.com/blog"
 	} else {
-		ServerAddress = "http://localhost/blog"
+		ServerAddress = "http://localhost:7777/blog"
 	}
 	ServerToken = os.Getenv("JULIET_POST_TOKEN")
 }

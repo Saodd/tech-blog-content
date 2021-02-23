@@ -65,7 +65,7 @@ Please see https://linkerd.io/dns-rebinding for an explanation of what is happen
 
 ## 实践：给自己的服务mesh一下
 
-这里借用昨天 [学习k8s](./210206-learn-k8s.md) 时用到的一份caddy作为反向代理的 [代码](https://github.com/Saodd/learn-caddy) 继续改造一下。
+这里借用昨天 [学习k8s](../2021/210206-learn-k8s.md) 时用到的一份caddy作为反向代理的 [代码](https://github.com/Saodd/learn-caddy) 继续改造一下。
 
 由于我们今天要使用 linkerd 提供的 proxy 服务，因此我们要给3个服务分别建立 Service ，这里只贴前两个服务的配置：
 

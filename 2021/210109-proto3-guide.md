@@ -239,7 +239,7 @@ service SearchService {
 }
 ```
 
-详情请参考我的下一篇博客 [gRPC入门教程](./210110-gRPC-guide.md)
+详情请参考我的下一篇博客 [gRPC入门教程](../2021/210110-gRPC-guide.md)
 
 ## 转化为JSON
 
