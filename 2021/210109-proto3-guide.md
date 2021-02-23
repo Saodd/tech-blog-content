@@ -174,16 +174,18 @@ message Hello {
 
 ```protobuf
 // two.proto
-import pulic "one.proto"
-import "zero.proto"
+import pulic "one.proto";
+import "zero.proto";
 // 下面可以使用one.proto 中定义的 Hello 了
 ```
 
 ```protobuf
 // three.proto
-import "two.proto"
+import "two.proto";
 // 下面可以使用one.proto中的定义，但是不能使用`zero.proto`中的定义。
 ```
+
+> 这里踩一个坑，在JetBrains家的IDE中，对于proto文件一般使用`Protocol Buffer Editor`这个插件。但是，这个插件不能直接识别import的proto文件。需要手动将要import的目录标记为`Sources Root`即可正确解析文件路径并且跳转。
 
 ### 直接嵌套 Nested
 
