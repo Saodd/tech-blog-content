@@ -628,3 +628,27 @@ func (f *Font) ParseName(buf []byte) {
 总体来说，学这个学得挺累的，而且也没有什么成就感，算是最近我啃过的最硬的一个骨头了吧。
 
 下班。
+
+## 附：参考文献
+
+https://www.font.im/chinese 按字符切割的万恶之源
+
+https://markoskon.com/creating-font-subsets/ 字体文件原理&Python库用法
+
+https://my.oschina.net/colin86/blog/3015044 路人甲的Python库用法
+
+https://tool.chinaz.com/tools/unicode.aspx 站长工具Unicode转换工具
+
+https://home.unicode.org/ Unicode官方网址
+
+https://www.ssec.wisc.edu/~tomw/java/unicode.html#x0000 Unicode分布
+
+https://en.wikipedia.org/wiki/CJK_characters CJK定义
+
+http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html 阮一峰：字符编码问题
+
+https://zh.wikipedia.org/wiki/OpenType WIKI - OpenType
+
+https://www.jianshu.com/p/3fe21f3730b1 Linux中安装字体
+
+https://stackoverflow.com/questions/16788330/how-do-i-get-the-font-name-from-an-otf-or-ttf-file 如何从字体文件中扫描出FamilyName
