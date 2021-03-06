@@ -257,7 +257,7 @@ func (f *Font) initializeTables(offset int, isDfont bool) (buf1 []byte, isPostSc
 
 它负责记录 character -> glyph 的映射关系。它可能含有多个子表来支持多种编码模式。
 
-没有 glyph 的 character 必须指向 glyph0, 这个东西用来表示确实的字符，通常我们称其为`.notdef`。
+没有 glyph 的 character 必须指向 glyph0, 这个东西用来表示缺失的字符，通常我们称其为`.notdef`。
 
 首先，`cmap`表也有个头部，其中包含 2*2bytes 的字段，以及子表索引列表。第一个字段没用，直接取出第二个`numTables`即子表的数量，用于接下来的循环：
 
@@ -430,7 +430,7 @@ func (f *Font) makeCachedGlyphIndexFormat4(buf []byte, offset, length uint32) ([
 
 注意，`loca`仅仅记录了一个字段`offset`，因此要知道某个数据块的长度的话，必须要再查询下一个`glyph ID`的值来做减法。这个要求造成两个结果：第一，`loca`表的顺序必须按`glyph ID`的顺序来；第二，在最后一个数据块后面要再加一个特殊的记录，来处理最后一个数据块的位置。
 
-它的字段有两种版本，一种是段的，每个`offset`用2bytes记录，另一种长的用4bytes。这个版本号记录在`head`表的`indexToLocFormat`字段里。
+它的字段有两种版本，一种是短的，每个`offset`用2bytes记录，另一种长的用4bytes。这个版本号记录在`head`表的`indexToLocFormat`字段里。
 
 > 在 head表 里 indexToLocFormat 是个int16 ，但是在golang这个库的实现里是用的bool，这里埋下了一个也许永远都不会踩到的兼容性的坑呢。
 
