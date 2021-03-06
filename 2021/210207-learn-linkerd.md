@@ -1,5 +1,5 @@
 ```yaml lw-blog-meta
-title: 'linkerd 入坑日记'
+title: 'linkerd 尝鲜日记'
 date: "2021-02-07"
 brev: "有k8s了当然就要玩一下 Service Mesh 了"
 tags: ["DevOps"]
@@ -37,7 +37,7 @@ linkerd check --pre
 linkerd install > linkerd-install.yaml 
 ```
 
-然后控制台上就打印了几百行的yaml代码……把它copy出来，保存在一个文件里。然后apply：
+这里面是几百行的yaml代码……然后apply：
 
 ```shell
 kubectl apply -f linkerd-install.yaml 
@@ -45,7 +45,7 @@ kubectl apply -f linkerd-install.yaml
 
 这个过程大概需要一两分钟（取决于你的网速），稍作等待。可以用 `get pod -A` 等命令检查进度。
 
-接下来暴露 DashBoard 和 Grafana 。由于我这是一台Ubuntu Server，我是从另一台电脑（你用的桌面电脑）去访问这个页面，所以在暴露的时候要额外指定host：
+接下来暴露 DashBoard 和 Grafana 。由于我是从另一台电脑去访问这个页面，所以在暴露的时候要额外指定host：
 
 ```shell
 linkerd dashboard --address 0.0.0.0

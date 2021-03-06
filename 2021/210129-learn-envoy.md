@@ -1,5 +1,5 @@
 ```yaml lw-blog-meta
-title: 'Envoy入坑日记'
+title: 'Envoy 尝鲜日记'
 date: "2021-01-29"
 brev: "Envoy是集群间通讯代理工具。学过它之后，我好像知道为什么Caddy没有列入CNCF了。"
 tags: ["中间件"]
