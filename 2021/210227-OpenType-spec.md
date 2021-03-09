@@ -2,7 +2,7 @@
 title: "OpenType数据结构解读"
 date: "2021-03-03"
 brev: "既然要搞字体，那就好好搞一下。"
-tags: ["DevOps"]
+tags: ["DevOps","技术分享会"]
 ```
 
 ## 前言
