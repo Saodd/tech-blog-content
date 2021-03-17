@@ -2,7 +2,7 @@
 title: 'linkerd 尝鲜日记'
 date: "2021-02-07"
 brev: "有k8s了当然就要玩一下 Service Mesh 了"
-tags: ["DevOps"]
+tags: ["DevOps","中间件"]
 ```
 
 ## 安装linkerd

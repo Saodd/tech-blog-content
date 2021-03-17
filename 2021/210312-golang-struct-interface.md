@@ -1,5 +1,5 @@
 ```yaml lw-blog-meta
-title: "语法细节：struct与interface"
+title: "Go语法：struct与interface"
 date: "2021-03-12"
 brev: "好害怕哦"
 tags: ["Golang"]
@@ -249,6 +249,8 @@ func main() {
 	a.Stop()  // panic！（IDE会提示警告）
 }
 ```
+
+> 突然想起来，官方团队好像在某篇文章上说过，「隐式解指针引用」是一个特性，而且鼓励大家使用。（似乎是在新手教程里的某篇文章？）
 
 ## 小结
 
