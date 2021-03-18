@@ -14,7 +14,7 @@ const blogInputExpr = "(?s)^```yaml lw-blog-meta(.*?)```"
 const blogExprPrefLen = 20
 const blogExprPostLen = 3
 const blogPicLocal = `](../pic/`
-const blogPicCloud = `](https://cdn.jsdelivr.net/gh/Saodd/tech-blog-content@gh-pages/pic/`
+const blogPicCloud = `](https://cdn.jsdelivr.net/gh/saodd/tech-blog-content@gh-pages/pic/`
 const blogMarkdownLocal = `](../20`
 const blogMarkdownCloud = `](/blog/page/20`
 
