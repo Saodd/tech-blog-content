@@ -2,7 +2,7 @@
 title: "Golang入门 & 一万种Goroutine的泄漏姿势"
 date: "2021-04-13"
 brev: "谢邀，今天加班"
-tags: ["Golang"]
+tags: ["Golang","技术分享会"]
 ```
 
 ## 写在前面
