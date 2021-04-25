@@ -67,7 +67,7 @@ func BuildLoginUri() string {
 
 授权之后是一个跳转，跳转只能是GET，所以授权码是放在query参数里的，Golang实现：
 
-```golang
+```go
 func LoginGoogleCallback(c *gin.Context) {
     //error := c.Query("error")
     code := c.Query("code")
@@ -75,13 +75,13 @@ func LoginGoogleCallback(c *gin.Context) {
 }
 ```
 
-### 步骤三：交换访问码
+从链接中取得了`code`之后，接下来我们要用它去交换一个访问码。
 
 从你的应用服务器访问Google，这一步需要一点魔法，自己想办法。（~~我才不会告诉你可以用CF呢~~）
 
 请求地址 `https://oauth2.googleapis.com/token` ，方法POST，携带一个JSON：
 
-```golang
+```go
 type AccessTokenReq struct {
     Code         string `json:"code"`
     ClientId     string `json:"client_id"`
@@ -93,7 +93,7 @@ type AccessTokenReq struct {
 
 正常响应体：
 
-```golang
+```go
 type AccessTokenResp struct {
     AccessToken  string `json:"access_token"`
     ExpiresIn    int64  `json:"expires_in"`
@@ -106,7 +106,7 @@ type AccessTokenResp struct {
 
 异常响应体（可以用组合结构体）：
 
-```golang
+```go
 type AccessTokenError struct {
     Err              string `json:"error"`
     ErrorDescription string `json:"error_description"`
@@ -115,7 +115,7 @@ type AccessTokenError struct {
 
 用户信息是放在`id_token`这个字段里的，它是一个标准的JWT结构，其中的数据信息放在第二段（术语叫`Payload`），我们将其取出并用base64解码，即可获得我们所需的信息：
 
-```golang
+```go
 type UserInfo struct {
     Sub           string `json:"sub"`  // 用户在Google的唯一标识码
     Email         string `json:"email"`
@@ -180,7 +180,7 @@ func LoginGoogleCallback(c *gin.Context) {
 
 Golang用一个三方库的中间件实现：
 
-```golang
+```go
 import "github.com/gin-contrib/cors"
 
 func main() {
@@ -252,4 +252,4 @@ func RequireSessionMiddleware() func(*gin.Context) {
 
 Session和JWT的内容都写在Session里，然后写一个简单的gin中间件来进行判断。如果JWT过期，则fallback到Session并重新签发JWT。
 
-就是这么简单。
+用户系统认证设计就是这么简单。

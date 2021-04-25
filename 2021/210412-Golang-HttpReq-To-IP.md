@@ -23,7 +23,7 @@ tags: ["Golang"]
 
 参考文章: [stackoverflow - golang force http request to specific ip (similar to curl --resolve)](https://stackoverflow.com/questions/40624248/golang-force-http-request-to-specific-ip-similar-to-curl-resolve)
 
-```golang
+```go
 func newHttpClient() *http.Client {
 	// 1. 先准备一个Dialer对象
 	dialer := &net.Dialer{
