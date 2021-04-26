@@ -153,7 +153,7 @@ func parseUserInfo(c context.Context, idToken string) (*UserInfo, error) {
 
 ```go
 func LoginGoogleCallback(c *gin.Context) {
-    c.SetCookie("my-session", session, user.SessionMaxAge, "", "lewinblog.com", true, false)
+    c.SetCookie("my-session", session, user.SessionMaxAge, "", "lewinblog.com", true, true)
 }
 ```
 
@@ -162,20 +162,40 @@ func LoginGoogleCallback(c *gin.Context) {
 1. `MaxAge`会指定浏览器的行为，超过这个声明周期之后会被浏览器删除，因此可以用来做登录期限限制。（当然我们不能信任用户代理，真正的限制得靠后端）
 2. `Domain`用于跨域。不指定的话就仅限于颁发Cookie的域名才可用。由于我这里有多个子域名，颁发Cookie的是`api.lewinblog.com`，因此我要将domain设置为顶级域名，这样子域名才可用。
 3. `Secure`会指定浏览器仅在https的情况下使用这个Cookie。
-4. `HttpOnly`会指定浏览器仅在HTTP请求时使用，而在XHR请求中无法使用，因此我必须关闭。
+4. `HttpOnly`会指定浏览器仅在HTTP请求时使用。
 
-### 思考：CORS的安全
+### 思考：HttpOnly 的安全
 
-在下发Cookie的时候，我选择关闭`HttpOnly`，而，这个东西正是防御CORS攻击的有效手段。因此我必须重新审视一下CORS攻击过程。
+> 2021-04-26更新：CORS，CSRF，XSS，这几个概念缩写太多，之前有点搞混了，请以现在的内容为准。
 
-首先详细定义一下CORS，它是攻击者在用户访问其他域名网页时，**利用用户浏览器中储存的Cookie发起XHR请求**来实现攻击。因此它实质上是针对用户浏览器（用户代理）的攻击，因此我们只要针对浏览器规范来进行防御即可。
+`HttpOnly`禁止的是JS脚本通过`document.cookies`来访问 cookie 中的内容。这个特性会成为 XSS 攻击的目标。
 
-参考： [MDN规范: CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
+XSS实质是注入攻击。实践中，选择一个成熟的前端框架，不直接将用户输入在前端执行，中招的概率应该非常小。
 
-> 什么？你问那些用不规范浏览器的用户怎么办？那你告诉我我能咋办？那不规范的浏览器的HttpOnly的实现要不要信任呢？考虑这些问题，只会让我们失去讨论的基础罢了。恕我直言：过期技术活该去死。
+但是毕竟注入这种事情，对于脚本语言来说是无法完全避免的。为了安全考虑，打开`HttpOnly`，让JS无法接触到，那么就算注入了也无法获取到Cookie，增加一份安全性。
 
-- 浏览器（以下都指代那些符合规范的浏览器）在执行XHR请求时，都会附带一个`origin`头。
-- 因此服务端可以针对它做一个过滤，将来自白名单以外的域名的请求全部干掉，这样CORS就消失了。
+> 其实如果注入成功了，那就算不直接访问cookie，也可以做很多事情。所以还是要做好注入防御才行。
+
+### 思考：Domain 的安全
+
+`Domain`正是防御CSRF攻击的有效手段。我们来重新审视一下CSRF攻击过程。
+
+首先详细定义一下CSRF，它是攻击者在用户访问其他域名网页时，**利用用户浏览器中储存的Cookie发起请求**来实现攻击。因此它实质上是针对用户浏览器（用户代理）的攻击，因此我们只要针对浏览器规范来进行防御即可。
+
+- 参考： [MDN规范: CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
+- 参考： [Cross Site Request Forgery](https://guides.codepath.com/websecurity/Cross-Site-Request-Forgery)
+
+一种方式是基于GET请求的。花样比较多，例如伪造一个`<a>`标签，或者在`<img>`标签的`src`中置入链接，都会发起GET请求。应对这种攻击的方式，可以是让服务端只接受POST请求，或者，（因为攻击者只能发请求而拿不到返回数据）只将查询类的请求（不修改用户数据）放在GET上。
+
+一种方式是基于 [POST](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) 请求。原生的POST则是form，攻击者在攻击者的网页中置入指向被攻击者的`<form>`标签，诱导用户点击form来发送虚构的请求。应对这种攻击的方式是拒绝form请求（只接受json请求）。
+
+> 鉴别form请求的方式，一是检查`content-type`是否是`application/x-www-form-urlencoded`（还有 multipart 等类型）。二是直接读取请求的BODY，form会以`键=值&键=值`的形式排列，这与JSON是有根本上的不同的，因此直接丢给JSON解析，解析失败那就肯定不是JSON请求了对吧 :)
+
+在浏览器中要构造非form请求则必须通过 [XHR](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) 的方式，请求过程如下：
+
+- 浏览器（以下都指代那些符合规范的浏览器）对符合某些规则的请求，在发出请求之前会有个`preflight`去检查跨域规则。
+- 浏览器在执行XHR请求时，都会附带一个`origin`头。
+- 因此服务端可以针对它做一个过滤，将来自白名单以外的域名的请求全部干掉，这样CSRF就消失了。
 - 同时，浏览器也会检查每个跨域请求的响应头，检查其`access-control-allow-origin`和`access-control-allow-credentials`是否符合安全策略。
 
 Golang用一个三方库的中间件实现：
@@ -201,7 +221,9 @@ func CORS() gin.HandlerFunc {
 
 上面还提到`通配符`的概念。有一种情况，假如服务端程序员想要偷懒，可以设置一个`*`作为白名单（即允许所有域名）。在这种情况下，请求会被正常发出去，但是在返回时，如果浏览器发现响应头中包含`access-control-allow-origin: *`会自作主张地将请求拦下，不返回给前端js代码。这是一种额外的辅助安全策略。参考 [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSNotSupportingCredentials)
 
-总结：只要在服务端正确配置CORS各项参数，可以安全地关掉`HttpOnly`。
+总结：要在服务端正确配置CORS各项参数。
+
+> 什么？你问那些用不规范浏览器的用户怎么办？那你告诉我我能咋办？浏览器是用户的代理，如果浏览器都不能信任，只会让我们失去讨论的基础罢了。恕我直言：过期技术活该去死。
 
 ### 步骤二：前端使用 Cookie
 
