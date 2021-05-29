@@ -272,6 +272,6 @@ func RequireSessionMiddleware() func(*gin.Context) {
 
 简而言之，将接口访问权限分为三级：最高级要求Session，第二级要求JWT（我的变种JWT），第三级是公开。
 
-Session和JWT的内容都写在Session里，然后写一个简单的gin中间件来进行判断。如果JWT过期，则fallback到Session并重新签发JWT。
+Session和JWT的内容都写在Cookie里，然后写一个简单的gin中间件来进行判断。如果JWT过期，则fallback到Session并重新签发JWT。
 
 用户系统认证设计就是这么简单。
