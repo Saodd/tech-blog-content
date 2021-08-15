@@ -1,7 +1,7 @@
 ```yaml lw-blog-meta
 title: "[译] Redis Streams 介绍"
 date: "2021-08-09"
-brev: ""
+brev: "以前一直说不要用Redis做消息队列，这回它专门为这个功能做了一套数据结构"
 tags: ["中间件"]
 ```
 
