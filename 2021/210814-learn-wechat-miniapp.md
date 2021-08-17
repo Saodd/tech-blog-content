@@ -177,6 +177,8 @@ func init() {
 
 这样，一个全局的context就能自己维护自己了，所有进来的查询请求，获取当前context，检查hash，如果一致则表示没有新数据则阻塞等待（长连接），如果不一致则表示有新数据即可立即返回。
 
+> 注意，这里在单机缓存的情况下，可以只检查hash，因为web容器中的缓存一直是最新的。但是如果在分布式环境下，那么就要再加一个时间戳，避免客户端从某些未及时更新缓存的容器中拿到旧的数据。
+
 ```go
 func BlockGetListJson(c context.Context, hash string) (_json string, _hash string) {
 	ctx := currentCtx
