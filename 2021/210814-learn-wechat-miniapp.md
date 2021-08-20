@@ -179,6 +179,8 @@ func init() {
 
 > 注意，这里在单机缓存的情况下，可以只检查hash，因为web容器中的缓存一直是最新的。但是如果在分布式环境下，那么就要再加一个时间戳，避免客户端从某些未及时更新缓存的容器中拿到旧的数据。
 
+> 再提一个细节，`context.WithValue`这个方法中的key，最好不要提供string，因为不同的库之间可能会产生冲突（碰巧用到同一个名字）。最安全的办法是用指针，例如`new(int)`。再扯远一点，gin框架中的Keys却是限定了string类型。只能说，用string更方便，但是用指针更严谨。
+
 ```go
 func BlockGetListJson(c context.Context, hash string) (_json string, _hash string) {
 	ctx := currentCtx
