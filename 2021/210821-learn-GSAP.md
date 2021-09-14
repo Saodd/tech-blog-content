@@ -31,7 +31,7 @@ tags: ["前端"]
 
 先看一段入门代码：
 
-```typescript jsx
+```tsx
 import * as React from 'react';
 import gsap from 'gsap'
 import styles from './index.scss'
@@ -62,7 +62,7 @@ export function App(): JSX.Element {
 
 提供一种批量选择引用的思路。并且它不仅仅是选择，还能基于组内顺序来实现一些递增计算。
 
-```typescript jsx
+```tsx
 import * as React from 'react';
 import gsap from 'gsap'
 import styles from './index.scss'
@@ -111,7 +111,7 @@ export function App(): JSX.Element {
 
 在React中，`Ref`是独立于Render循环之外的，所以我们应当把时间线对象放进去。
 
-```typescript jsx
+```tsx
 import * as React from 'react';
 import gsap from 'gsap'
 import styles from './index.scss'
@@ -155,7 +155,7 @@ export function App(): JSX.Element {
 
 其实对React来说，只是函数触发的方式不同罢了。这里再展示一个与hover相关的动画：
 
-```typescript jsx
+```tsx
 export function App(): JSX.Element {
     const appRef = React.useRef();
     const q = gsap.utils.selector(appRef)
@@ -187,7 +187,7 @@ export function App(): JSX.Element {
 
 > 注：另一种思路是将css的状态设为与初始状态相同。
 
-```typescript jsx
+```tsx
 export function App(): JSX.Element {
     const appRef = React.useRef();
     const q = gsap.utils.selector(appRef)
@@ -217,7 +217,7 @@ export function App(): JSX.Element {
 
 gsap的动画对象是独立于React组件生命周期的，因此如果你的网页是个SPA，请务必记得回收资源。在React中，利用`useEffect`的返回值来做这个事情：
 
-```typescript jsx
+```tsx
 React.useLayoutEffect(() => {
     const animation1 = gsap.fromTo(q('.' + styles.box), {
         opacity: 0,
@@ -236,7 +236,7 @@ React.useLayoutEffect(() => {
 
 首先要明确，GSAP并不是一个UI动画库，它所做的仅仅只是「频繁地修改属性」这一件事情。因此，我们试着用它来修改一个自定义对象：
 
-```typescript jsx
+```tsx
 const objRef = React.useRef({count: 0});
 React.useEffect(() => {
     gsap.to(objRef.current, {
@@ -316,7 +316,7 @@ GSAP提供了一批内置设定，你也可以根据需求自己拟合一个。
 
 可以对创建动画时返回的对象进行操作：
 
-```typescript jsx
+```tsx
 //create a reference to the animation
 var tween = gsap.to("#logo", {duration: 1, x: 100});
 
@@ -415,7 +415,7 @@ Timeline对象的`.to()` `.from()` `.fromTo()` 三个动画方法，都接收一
 
 首先我们在某个顶层组件中，要同时摆上 loading图 和 开幕video ，这样后者才能开始加载。（当然也有其他的预加载方式，这里暂不深究。）所以我们的顶层组件大概长这样：
 
-```typescript jsx
+```tsx
 export function App(): JSX.Element {
     return (
         <div className={styles.app}>
@@ -431,7 +431,7 @@ export function App(): JSX.Element {
 
 然后我们要一个`loading`的state，然后监听`video`元素的数据加载完成事件，加载完成后设置loading为false，隐藏loading图并展示video元素。不要忘了还要开始播放哦。
 
-```typescript jsx
+```tsx
 export function App(): JSX.Element {
   const [loading, setLoading] = React.useState(true);
 
@@ -473,7 +473,7 @@ export function App(): JSX.Element {
 
 其中下面那个箭头，嗯，要写动画了，来现学现卖写个gsap：
 
-```typescript jsx
+```tsx
 React.useEffect(() => {
     const tween = gsap.to(ref.current, {
         y: '2vh',
@@ -507,7 +507,7 @@ img{
 
 我的思路，把两个屏视为两个独立的组件，然后通过状态提升，把他们的切换条件放在父组件中。这里由于需要淡出淡入，所以没有直接把组件干掉，而是传入`visible`让组件自己处理自己的动画。
 
-```typescript jsx
+```tsx
 function Main(props: { visible: boolean }): JSX.Element {
     const { visible } = props;
     const [page, setPage] = React.useState(1);
