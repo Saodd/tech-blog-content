@@ -32,7 +32,7 @@ tags: ["DevOps"]
 
 具体怎么做呢，简而言之，关键就是一个配置文件（这里我命名为`jenky-runner.service`）：
 
-```
+```ini
 [Unit]
 Description=Jenky Runner Service
 
