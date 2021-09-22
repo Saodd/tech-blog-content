@@ -48,7 +48,7 @@ tags: ["安全"]
 
 假如我是黑客，`http://localhost:8000`是我做的一个钓鱼网站，我在其中做了一个CSRF表单：
 
-```typescript jsx
+```html
 <form action="https://api.lewinblog.com/status" method="get">
     <button>Attack!!</button>
 </form>
@@ -62,7 +62,7 @@ tags: ["安全"]
 
 那么，攻击者可以去寻找那些有「副作用」的接口来进行攻击，典型的是`POST`请求。
 
-```typescript jsx
+```html
 <form action="https://api.lewinblog.com/test" method="post">
   <input name="data" value="给我打钱！"/>
   <button>Attack!!</button>
