@@ -19,18 +19,6 @@ tags: ["前端"]
 
 这里只记两个自己琢磨的比较有趣的逻辑实现。
 
-## 版本
-
-```json
-{
-  "mobx": "^6.0.4",
-  "mobx-react": "^7.0.5",
-  "mobx-react-lite": "^3.1.6",
-  "react": "^16.9.0",
-  "react-dom": "^16.9.0"
-}
-```
-
 ## Mobx基本用法
 
 它的官网也介绍道，Mobx是独立的，但是基本上大家会将它跟React一起用。在写法上：
@@ -52,27 +40,28 @@ export class ActStore {
 }
 ```
 
-一般通过`useContext`来传递Mobx对象。
+一般通过`useContext`来使用Mobx对象（即`store`）。
 
 ```typescript
-// 这里传入的 new ActStore() 只是充当一个默认值，实际上并不会用到
+// 这里传入的 new ActStore() 只是充当一个默认值，只会在忘记设置Provider的时候用到
 export const actStoreContext = React.createContext<ActStore>(new ActStore())
 ```
 
-```typescript
+```tsx
+const actStore = new ActStore();
+
 function ParentComponent() {
-    const actStore = React.useMemo(() => new ActStore(), [])
     return (
-        <actStoreContext.Provider value = {actStore} >
-            <ChildComponent / >
-            </actStoreContext.Provider>
-    )
+        <actStoreContext.Provider value={actStore}>
+            <ChildComponent />
+        </actStoreContext.Provider>
+    );
 }
 
-// 注：这里没有observer装饰，组件不会随数据变化。
+// 注：这里没有observer装饰，组件不会响应状态更新。
 function _ChildComponent() {
-    const actStore = React.useContext(actStoreContext)
-    return <p>{actStore.name} < /p>
+    const actStore = React.useContext(actStoreContext);
+    return <p>{actStore.name} </p>;
 }
 ```
 
@@ -84,9 +73,11 @@ import {observer} from "mobx-react-lite";
 const ChildComponent = observer(_ChildComponent)
 ```
 
-## 场景一：防抖
+## 两个真实业务场景
 
-业务需求是，有一个表单字段是选择时间，而不同的时间，会对应不同的计费额度。
+### 场景一：缓存
+
+业务需求是，有一个表单字段是选择时间，而不同的时间，会对应不同的计费额度。当时间变化时，计费额度要随之变化并且展示。
 
 ```typescript
 export class ActStore {
@@ -97,8 +88,6 @@ export class ActStore {
     count: number;
 }
 ```
-
-当时间变化时，计费额度要随之变化并且展示。
 
 同时考虑到web页面的生存时间较短，可以顺手做一个防抖+缓存优化。
 
@@ -129,7 +118,7 @@ export class ActStore {
 }
 ```
 
-## 需求二：节流
+### 需求二：防抖
 
 业务需求是，用户在表单上的任何操作都要保存下来，页面重载后也要能够恢复。
 
@@ -149,7 +138,7 @@ export class ActStore {
 
 但这样很容易造成性能问题。如果只是用户的手动操作还好，而如果是一些批量操作，那可能在短时间内触发多次保存，那就很麻烦。
 
-我们做一个节流，用户操作2秒之后才保存。
+我们做一个防抖，用户操作之后等待2秒之后才保存。
 
 这里用到「锁」的理念，而且考虑到js是基单线程运行（且是基于协作式的事件循环），我们用最简单的乐观锁就行。
 
@@ -169,7 +158,7 @@ async function saveStore(store: ActStore) {
 }
 ```
 
-如果只是这样还不行，因为如果有连续操作的话，那就一直无法执行到了。
+如果只是这样还不行，因为如果一直有连续操作的话，那就一直无法执行到了。
 
 接下来我们再增加一个保底机制，保证至少10秒执行一次。
 
@@ -216,11 +205,9 @@ export class ActStore {
 
 写前端，真TMD快乐！
 
-## 取舍
+## 取舍：Mobx vs Hooks
 
-这几天遇到一个比较典型的场景：之前写了一个组件时偷懒了，把几个可以拆分的组件写在一个function里。虽然也不大，也就一百多行，但是现在有需要的时候发现还是可以进行拆分的。
-
-拆分时发现，如果使用Mobx这种模式，将所有状态独立于组件之外了，那么拆分组件的工作将变得异常容易，只需要一个`useContext`就能把东西拿出来，太方便了。
+这几天遇到一个比较典型的场景：之前写了一个组件时偷懒了，把几个可以拆分的组件写在一个function里。虽然也不大，也就一百多行，但是现在有需要的时候发现还是可以进行拆分的。拆分时发现，如果使用Mobx这种模式，将所有状态独立于组件之外了，那么拆分组件的工作将变得异常容易，只需要一个`useContext`就能把东西拿出来，太方便了。（这实际上是Context提供的跨越空间的属性传递特性）
 
 作为对比，如果用Hooks来管理的状态，就会发现在父子之间必须要很啰嗦地去传递这些状态量。如果是一个比较复杂的业务组件，例如有几十个状态量，那么这样的逐级传递会变得几乎不可操作。
 
@@ -232,14 +219,30 @@ export class ActStore {
 
 在简单组件的场景下，Hooks胜出。
 
-## 后记(2021-08-28)
+另外，二者并不是对立的，在实践中往往要结合使用。对于一些局部的状态，例如 loading, visible 这种，就用Hooks/setState就好；对于那些跨组件的、需要被提升的状态，才放进Mobx里。
+
+## 后记：组合(2021-08-28)
 
 之前觉得Mobx封装的组件拓展性不好，是我姿势不对。
 
 后来我学会了使用多个mobx对象，用术语来说叫「用组合代替继承」，这种思路可以说彻底解决了灵活性的问题。我只需要在我需要用到的层级，声明创建任意个我所需要的Provider来组合，就能使得所有Mobx封装的组件正确运行。
 
-太完美了。我已经在把我所有组件都装进`observer`里面去了。
-
-我也已经准备抛弃Angular了哈哈哈哈哈。~~男人都是大猪蹄子~~
+太完美了。我已经在把我所有组件都装进`observer`里面去了。我也已经准备抛弃Angular了哈哈哈哈哈。
 
 顺便一提，IDEA是支持代码/文件模板的，我这里把 `const XX: FC = observer()` 和 Mobx Context的声明文件 都写进了模板中，这样在使用的时候能节省很多重复劳动。
+
+## 后记：关于继承(2021-10-14)
+
+参考：[官方文档](https://mobx.js.org/subclassing.html)
+
+简而言之，要在Mobx里使用继承的话，要么，别用装饰器、只能在`makeObservable`显式列举所有字段；要么，坚持使用装饰器的话，要对action改用`action.Bound`。
+
+Mobx官方自己是反复强调，继承有很多限制，我们在这方面做得不好。 [limitations](https://mobx.js.org/observable-state.html#limitations) 里说，使用Classes能够带来一些好处，但是复杂了之后很容易变得蛋疼，如果可以的话我们还是鼓励你别用Classes 。
+
+> 学一个英语单词：foot-guns ，字面含义是拿起枪射到自己的脚，比喻引入一个特性之后反而导致更大的麻烦。 [wiki](https://en.wiktionary.org/wiki/footgun)
+
+我个人观点，js的类，就像有人开玩笑说它是「原罪」，确实在实践中带来很多麻烦，能别用就尽量别用。
+
+那如何解决某些业务场景？我有尝试过用组合代替继承，但是实践下来感觉效果还是不好，主要表现在一些跨多个store的操作会写得很繁琐而且难以维护；对于这种场景，我想象了一下，可能还是用 基类实现基本功能+继承添加拓展功能 这种模式去实现会更清晰一些。
+
+但也仅仅是**可能会更好**，实际上，我有见过我们项目代码中有这种用法，但是无论是我自己看那些代码也好、还是听同事们讨论也好，目前看来这个方案也并不是完美的。
