@@ -2,7 +2,7 @@
 title: "[译] Redis Streams 介绍"
 date: "2021-08-09"
 brev: "以前一直说不要用Redis做消息队列，这回它专门为这个功能做了一套数据结构"
-tags: ["中间件"]
+tags: ["中间件","技术分享会"]
 ```
 
 ## 背景
@@ -15,7 +15,9 @@ tags: ["中间件"]
 
 其实我个人心里头还有个阳春白雪 etcd ，但是这玩意肯定比RabbitMQ还更不受世俗待见，也就想一想罢了，提都不敢提。
 
-本文翻译自 Redis官网的 [Introduction to Redis Streams](https://redis.io/topics/streams-intro)
+本文翻译自 Redis官网的 [Introduction to Redis Streams](https://redis.io/topics/streams-intro) 并添加了自己的Demo (Golang版本) 。
+
+在美登技术分享会上，我将所有Demo都重写为Node.ts版本了，用法其实很简单就是简单地把参数以字符串的形式罗列上去就行了，不再重复贴出。
 
 ## Introduction to Redis Streams
 
