@@ -2,7 +2,7 @@
 title: 使用Docker部署MongoDB
 date: "2019-05-09"
 brev: 用过Mysql，了解了Postgres，但归根结底二者都是关系型数据库。所以今天选择MongoDB作为Nosql的一次尝试。
-tags: [Docker, DB]
+tags: ["运维", "中间件"]
 ```
 
 

@@ -2,7 +2,7 @@
 title: '个人网站升级日记'
 date: "2021-02-08"
 brev: "k8s, caddy+HTTP3, 把牛刀升级成屠龙刀。"
-tags: ["DevOps"]
+tags: ["运维","架构"]
 ```
 
 ## 前言

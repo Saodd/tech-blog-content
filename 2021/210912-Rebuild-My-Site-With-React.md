@@ -2,7 +2,7 @@
 title: "用React重构我的网站"
 date: "2021-09-12"
 brev: "确实比Angular快乐"
-tags: ["前端"]
+tags: ["前端","架构"]
 ```
 
 ## 背景

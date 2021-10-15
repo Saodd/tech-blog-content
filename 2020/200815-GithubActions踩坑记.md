@@ -2,7 +2,7 @@
 title: Github Actions 踩坑记
 date: "2020-08-15"
 brev: 我的个人博客网站从Gitlab迁移到Github过程中遇到的一些坑。
-tags: [DevOps]
+tags: [运维]
 ```
 
 ## 以前的运维架构

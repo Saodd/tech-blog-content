@@ -2,7 +2,7 @@
 title: "搭建一个自动部署(CD)系统-优化篇"
 date: "2021-09-19"
 brev: "关键词：systemd websocket"
-tags: ["DevOps"]
+tags: ["运维"]
 ```
 
 ## 背景

@@ -2,7 +2,7 @@
 title: Gitlab-CE 设置SMTP邮箱服务
 date: "2020-03-13"
 brev: 在内网快速搭建了一个Gitlab平台。很多功能都依赖于电子邮箱，所以内建的Gitlab必须要能够发送邮件。选择外部的免费邮箱并在本地配置SMTP是一种比较稳妥的选择。
-tags: [DevOps]
+tags: [运维]
 ```
 
 

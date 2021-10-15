@@ -2,7 +2,7 @@
 title: "搭建一个自动部署(CD)系统"
 date: "2021-09-05"
 brev: "关键词：Gitea Golang React shell docker k8s. 从前端写到后端写到运维，害，怎么就没有一个环节能难住我呢？？"
-tags: ["DevOps"]
+tags: ["运维"]
 ```
 
 哎呀，这个副标题太招人嫌了，忘记加狗头了！ :)

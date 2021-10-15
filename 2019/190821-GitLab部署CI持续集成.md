@@ -2,7 +2,7 @@
 title: GitLab配置CI环境
 date: "2019-08-21"
 brev: CI/CD应该是DevOps的关键内容之一吧。本文以Python项目为例，简述GitLab-CI的安装和运行。
-tags: [DevOps]
+tags: [运维]
 ```
 
 
