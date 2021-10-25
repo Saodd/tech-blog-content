@@ -13,7 +13,7 @@ tags: ["前端"]
 
 本文翻译、摘录自 [MDN文档](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial) ，并结合自己的理解做了改进。
 
-代码实现可以参考 [我的github仓库](https://github.com/Saodd/learn-canvas)
+代码实现可以参考 [我的github仓库](https://github.com/Saodd/learn-canvas) 。如果你打算以本文作为教程来入门，强烈建议你clone这个代码仓库并跟着进度切换代码去理解。
 
 ## Step1: 基本用法
 
@@ -53,7 +53,7 @@ canvas元素提供了一个固定标准的接口来暴露「渲染上下文`rend
 
 ## Step2: 绘制形状 Drawing shapes with canvas
 
-上面`filrRect()`方法的四个参数分别是 x, y, height, width, 这就涉及到坐标系：
+上面`fillRect()`方法的四个参数分别是 x, y, height, width, 这就涉及到坐标系：
 
 ![canvas_default_grid](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes/canvas_default_grid.png)
 
@@ -373,4 +373,128 @@ for (let i = 0; i < 12; i++) {
 
 ## Step7: 合成与剪辑 Compositing and Clipping
 
-(TODO)
+### 合成
+
+`globalCompositeOperation` 这个属性决定了新的图像合成进来的方式。（译者注：在Photoshop里是叫图像混合啥的来着）
+
+具体的可选项以及相应的效果预览请前往MDN页面。核心代码如下：
+
+```tsx
+// step7-1
+ctx2.drawImage(canvas0, 0, 0);
+ctx2.globalCompositeOperation = 'screen'; // 调整这里，观察效果
+ctx2.drawImage(canvas1, 0, 0);
+```
+
+### 剪辑路径 Clipping paths
+
+一个剪辑路径就像是一个普通的图形(shape)，但是它起到的作用是作为一个蒙版(mask)去从另一个图形（图层）上选出部分区域。（译者注：在Photoshop里是叫图层蒙版，套索，选区之类的概念）
+
+表面上看起来可能跟前一节的`composite`的`source-in`模式类似，但区别是，剪辑路径并没有真的画在canvas上，并且它也不受下面的图形的影响。
+
+在前面的章节中我们介绍过使用路径(path)的函数`stroke()`和`fill()`，现在介绍第三个函数`clip()`。你用它代替`closePath()`去闭合一个路径并将其转化为一个剪切路径。
+
+默认情况下，canvas上已经有一个剪切路径，它就是canvas本身当前的形状（译者注：大概就是视窗的意思）。
+
+```tsx
+// step7-2
+
+// 先画剪辑路径
+ctx.beginPath();
+ctx.arc(100, 100, 60, 0, Math.PI * 2, true);
+ctx.clip();
+// 再画被剪辑的图形
+ctx.fillStyle = 'red';
+ctx.fillRect(10, 10, 120, 120);
+```
+
+> 在我的代码仓库的 「step7-2-extra: 星空」 这个commit里，画出来的效果，有点好看。
+
+## Step8: 基础动画 Basic animations
+
+既然我们可以通过JS来控制`<canvas>`元素，那么也就能够很轻易地实现（交互式）动画效果。
+
+不过最大的问题在于，（canvas本身只是一个简单的画板），上面画了什么就是什么，如果你想要移动一个元素，对不起，你必须重新绘制整个画板上的所有东西，所以它对电脑性能要求很高。
+
+代码「step8-1」中绘制了一个简易的太阳、地球、月球绕轨道旋转的动画，其核心逻辑如下：
+
+```tsx
+// step8-1 核心逻辑
+let ctx: CanvasRenderingContext2D = canvas.getContext('2d');
+function draw() {
+  // ctx.drawImage(...)
+  window.requestAnimationFrame(draw)
+}
+draw()
+```
+
+如果有一点点动画基础（小时候应该都学过Flash吧），应该知道「帧 frame」这个概念。
+
+`window.requestAnimationFrame`这个函数，顾名思义就是针对动画设置的，就是在浏览器准备好、有空渲染下一帧动画的时候，执行其中的回调函数，也就是我们定义好的绘图函数draw，它会有一些优化，例如最多每秒60帧，例如页面切到后台的时候停止执行等。其他需求场景也可以用`setInterval`或者`setTimeout`。
+
+代码「step8-2」中实现了一个简陋的鼠标轨迹。
+
+核心原理就是，在每一帧都在整个画面上盖一层`rgba(0,0,0,0.05)`的图层，这样就模拟了逐渐消失的效果，然后再绘制当前帧对应的新的轨迹。另一种思路是保存一定数量的历史坐标，每次都重新绘制。
+
+```tsx
+function init() {
+  window.addEventListener('mousemove', (e) => {
+    x = e.clientX;
+    y = e.clientY;
+  });
+}
+
+function draw() {
+  ctx.save();
+  {
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0, 0, 800, 800);
+    ctx.fillStyle = 'white';
+    ctx.translate(x, y);
+    ctx.fillRect(-5, -5, 5, 5);
+  }
+  ctx.restore();
+  window.requestAnimationFrame(draw);
+}
+```
+
+最后还展示了一个贪吃蛇的例子，实现得比较原始，没有太大参考价值吧，反正我学过PIXI之后我觉得没必要用canvas去撸游戏。
+
+## Step9: 高级动画
+
+正如前面说的，有了PIXI这类框架，我们不需要用原始的手段去模拟。一定要模拟的话，也要添加抽象，~~然后做着做着就做成另一个PIXI了~~
+
+一些常见的抽象：速度、边界（及碰撞检测）、加速度、轨迹、键鼠交互等。
+
+## Step10: 像素操作
+
+`ImageData` 借助它，可以设置/读取底层的像素数据。
+
+然后可以实现一些高级功能，例如「拾取颜色 color picker」、「灰度 Grayscale」、「反相 Inverted」、「缩放 Zoom」等等。（看了下灰度和反相这些颜色算法，其实还意外地简单）
+
+最后有个很实用的功能是导出图片，用`toDataURL('image/png')`和`toDataURL('image/jpeg', quality)`支持两种格式。还有`toBlob()`。
+
+## Step11: 优化
+
+这里有些针对web游戏的 [优化建议](https://developer.mozilla.org/en-US/docs/Games/Techniques/Efficient_animation_for_web_games)
+
+然后对于canvas本身，有如下建议：
+
+1. 对于一些反复渲染且不太变化的图像，可以考虑渲染在一个单独的（不在屏幕内的）canvas中，然后每次drawImage进来。
+2. 避免浮点数，尽量用整数。（这可以让浏览器不用处理抗锯齿，而且也有利于提升清晰度）
+3. 不要在`drawImage`里缩放图像（参考第1条的缓存方式）
+4. 考虑使用多层canvas，典型场景是在游戏中你可能需要背景、舞台、UI三层，你只需要三个绝对定位的canvas叠在一起就可以做到"动静分离"。
+5. 如果背景是静态的，可以考虑放在底层的一个div标签中。
+6. 如果要缩放整个canvas，借助css去做，因为css使用GPU。
+7. 可以考虑关闭透明度。
+8. 减少文字渲染。
+
+（简而言之，就是要清楚，对于动画来说，每一个tick都需要重新渲染整个canvas，所以就要做好动静分离，然后尽量关掉那些用不着的特性。）
+
+## 总结
+
+目前能够想到canvas应该就是两个应用，一是网页游戏，二是图像编辑器（类Photoshop）。
+
+但其实也并不是只能用canvas，直接操作DOM也不是不可以。值得一提的是，二者之间的转换兼容性很不好，所以要做项目的话可能要在一开始就决定一条路线，别想脚踏两条船。
+
+根据我的认知、以及对一些产品的观察来看，目前基本上还是以canvas为主流。
