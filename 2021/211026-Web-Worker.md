@@ -146,3 +146,7 @@ self.onmessage = function ({ data: { question } }) {
 我尝试了一下，但是发现 IDE(Goland) 、ts、webpack 的支持都大有问题，困难重重，而且可能应用场景也十分有限，所以不再继续深入研究。
 
 大概感觉就跟浏览器插件的 background-script 的工作方式几乎一样。总之就是要像TCP一样先建立连接，然后通过连接去进行通信，然后传递消息过程都是拷贝数据。
+
+## Service Worker
+
+它是 WebWorker 的一种特殊类型。也略过。
