@@ -151,4 +151,116 @@ console.log(String(a32), String(a8));  // 270544960,0  0,0   复制后创建了�
 
 ## Blob家族
 
-(TODO)
+### Blob
+
+> 参考 [Blob - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
+
+「blob」这个单词本意是"一团"，在计算机领域中就是"二进制大对象"。注意这个"一团"，其实就隐含了"不可变"的意思。
+
+`Blob`就是代表一个二进制对象，它是不可变的、原始的数据。它可以以文本或者二进制或者`ReadableStream`的形式去读取。它也可以代表一些非JS原生的数据格式，例如`File`。
+
+Blob是个比较底层的东西，它的API也总共只有6个而已。我们直接来看一下用法。
+
+从JS中手动创建Blob意义不大，我这里借助`xhr`下载一张图片来看看：
+
+```javascript
+async function main() {
+  const req = new XMLHttpRequest();
+  req.onload = function () {
+    console.log(this.response instanceof Blob); // true
+    const resp: Blob = this.response;
+    console.log(resp); // Blob {size: 1901, type: 'image/vnd.microsoft.icon'}
+  };
+  req.responseType = 'blob';
+  req.open('GET', '/favicon.ico');  // 图片地址
+  req.send();
+}
+```
+
+或者用`fetch`会清爽很多，效果一样：
+
+```javascript
+async function main() {
+  const resp = await fetch('/favicon.ico');
+  console.log(await resp.blob());
+}
+```
+
+在上面的代码中，`resp`是一个Blob对象，它保存着一张图片的原始二进制数据。
+
+它还有两个属性，`size`表示二进制数据的字节数，`type`表示它被标记的MIME类型。
+
+它有四个方法：可以尝试`await resp.text()`会发现得到一堆乱码，因为这个方法尝试用`utf-8`去解析二进制数据。`arrayBuffer()`方法可以导出一个新的`ArrayBuffer`对象，`slice()`则是切片（并复制）一个新的`Blob`对象，`stream()`则是导出为一个`ReadableStream`对象。注意Promise哦。
+
+### URL.createObjectURL
+
+之前我稍微研究了一下B站的Web端实现，其中发现它的视频资源地址都是`blob:http`协议。经过我的一番研究（ [参考](https://segmentfault.com/a/1190000021724570) ），明确了，它就是利用`URL.createObjectURL`这个功能，先从某种渠道获取了`Blob`数据，然后转化为一个url塞到`<video>`里去就行了。
+
+这个函数只能接受`Blob`和`File`，以及不太兼容的`MediaSource`。我们知道File就是Blob是吧，所以可以说这个方法就是Blob专用的。
+
+简单看一下用法：
+
+```javascript
+async function main() {
+  const resp = await fetch('/favicon.ico');
+
+  const u = URL.createObjectURL(await resp.blob());
+  console.log(u); // blob:http://localhost:7000/98774777-6714-4606-9144-c3918fa95625
+
+  const img = new Image();
+  img.src = u;
+  document.body.appendChild(img);
+}
+```
+
+### File
+
+> [MDN](https://developer.mozilla.org/en-US/docs/Web/API/File)
+
+它是一种特殊的`Blob`。它一般产生于用户在`<input>`标签中选择文件得到的`FileList`对象，或者drag/drop操作的`DataTransfer`对象，或者Canvas的某个方法。
+
+它基本上没有什么额外的属性和方法。唯一比较有用的是`name`这个字段，顾名思义——文件的名字。
+
+在业务上经常会用到这个东西，不过用来用去也就那么一个套路，到处复制罢了……等下次我做拖拽专题的时候再提一下吧。
+
+### FileReader
+
+> [MDN](https://developer.mozilla.org/en-US/docs/Web/API/FileReader)
+
+它是用来读取`Blob`（包括`File`）的方式之一。用法基本上与xhr差不多，通过处理事件来完成功能：
+
+```javascript
+async function main(file: File) {
+  const reader = new FileReader();
+  reader.onload = (e: ProgressEvent<FileReader>) => {
+    const res: string|ArrayBuffer = e.target.result;
+  };
+  reader.readAsArrayBuffer(file);
+}
+```
+
+它的`.target.result`的类型，会根据下面具体的执行函数（这里是`.readAsArrayBuffer()`）而发生变化。
+
+其实吧，如果有了`File`对象，直接调用它自己的API就能达到一样的效果……：
+
+```javascript
+async function main(file: File) {
+  const res: ArrayBuffer = await file.arrayBuffer();
+}
+```
+
+## Streams家族
+
+> [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API)
+
+「Stream」这个单词就是"流"的意思。大家一定都听说过"流式数据处理"这样的术语吧。它的核心理念就是，接受到部分数据就可以立刻开始处理（有时候是网络波动导致的延迟，有时候可能是故意的——即KeepAlive的思路），而不是等待所有数据都加载完成再处理。
+
+其实浏览器就是这样工作的，例如图片、视频我们可以看到它们一点一点地加载出来。只是之前没有在JS里暴露出来给开发者使用而已。
+
+（大概看了一下，感觉意义不大，先放着，以后遇到使用场景了再回来补充吧）
+
+## 小结
+
+整体梳理了一遍，然后对照一下自己在公司项目上写的代码，发现我之前的用法挺丑的，绕了一些弯路。嗯，不过以后我可以以最优雅的方式去实现了。
+
+所以这次收获也是不小的。
