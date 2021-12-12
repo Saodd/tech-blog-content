@@ -1,16 +1,39 @@
 package main
 
 import (
-	"log"
+	"context"
+	"github.com/saodd/alog"
+	"os"
 	"tech-blog-content/tool/libs"
+	"time"
 )
 
 func main() {
-	libs.CheckWorkDir()
-	files := libs.RecurListMds(".")
+	if err := run(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func run() (err error) {
+	c, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+	ctx, cancel := alog.WithTracker(c)
+	defer cancel()
+	defer alog.CERecoverError(ctx, &err)
+
+	if err := libs.CheckWorkDir(ctx); err != nil {
+		alog.CE(ctx, err)
+		return err
+	}
+	files, err := libs.RecurListMds(ctx, ".")
+	if err != nil {
+		alog.CE(ctx, err)
+		return err
+	}
 	blogs, err := libs.ParseBlogFiles(files)
 	if err != nil {
-		log.Fatalln(err)
+		alog.CE(ctx, err)
+		return err
 	}
-	libs.SyncServer(blogs)
+	return libs.SyncServer(ctx, blogs)
 }

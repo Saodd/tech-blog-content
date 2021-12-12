@@ -1,8 +1,10 @@
 package libs
 
 import (
+	"context"
+	"errors"
+	"github.com/saodd/alog"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,18 +13,22 @@ import (
 const ProjectDirname = "tech-blog-content"
 
 // CheckWorkDir 检查当前工作目录是否是项目根目录，不是的话就退出
-func CheckWorkDir() {
+func CheckWorkDir(c context.Context) error {
 	workDir, err := os.Getwd()
 	if err != nil {
-		log.Fatalln(err)
+		alog.CE(c, err)
+		return err
 	}
 	if filepath.Base(workDir) != ProjectDirname {
-		log.Fatalf("当前路径不是项目根目录(%s)！\n", ProjectDirname)
+		err := errors.New("当前路径不是项目根目录(%s)！\n")
+		alog.CE(c, err, alog.V{"Dir": ProjectDirname})
+		return err
 	}
+	return nil
 }
 
 // RecurListMds 将递归遍历指定目录，返回所有 .md 文件的路径。
-func RecurListMds(folder string) (mds []string) {
+func RecurListMds(c context.Context, folder string) (mds []string, err error) {
 	files, _ := ioutil.ReadDir(folder)
 	for _, file := range files {
 		if file.IsDir() {
@@ -31,7 +37,12 @@ func RecurListMds(folder string) (mds []string) {
 				continue
 			}
 			subFolder := filepath.Join(folder, file.Name())
-			mds = append(mds, RecurListMds(subFolder)...)
+			subMds, err := RecurListMds(c, subFolder)
+			if err != nil {
+				alog.CE(c, err, alog.V{"Dir": folder})
+				return nil, err
+			}
+			mds = append(mds, subMds...)
 		} else {
 			if name := file.Name(); len(name) > 3 && name[len(name)-3:] == ".md" {
 				mds = append(mds, filepath.ToSlash(filepath.Join(folder, file.Name())))

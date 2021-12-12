@@ -2,8 +2,10 @@ package libs
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"github.com/saodd/alog"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -23,25 +25,29 @@ var httpClient = &http.Client{
 	Timeout: time.Second * 10,
 }
 
-func SyncServer(blogs []*Blog) {
-	toPut, toDel, err := CheckServerBlogs(blogs)
+func SyncServer(c context.Context, blogs []*Blog) error {
+	toPut, toDel, err := CheckServerBlogs(c, blogs)
 	if err != nil {
-		log.Fatal(err)
+		alog.CE(c, err)
+		return err
 	}
 	for _, blog := range toPut {
 		if err := PutBlog(blog); err != nil {
-			log.Println(err)
+			alog.CE(c, err)
+			return err
 		}
 	}
 	for _, blog := range toDel {
 		if err := DeleteBlog(blog); err != nil {
-			log.Println(err)
+			alog.CE(c, err)
+			return err
 		}
 	}
+	return nil
 }
 
-func CheckServerBlogs(blogs []*Blog) (toPut, toDel []*Blog, err error) {
-	serverBlogs, err := GetServerBlogs()
+func CheckServerBlogs(c context.Context, blogs []*Blog) (toPut, toDel []*Blog, err error) {
+	serverBlogs, err := GetServerBlogs(c)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -66,25 +72,30 @@ func CheckServerBlogs(blogs []*Blog) (toPut, toDel []*Blog, err error) {
 	return toPut, toDel, nil
 }
 
-func GetServerBlogs() ([]*Blog, error) {
+func GetServerBlogs(c context.Context) ([]*Blog, error) {
 	u := ServerAddress + "/all-hash"
-	req, _ := http.NewRequest("GET", u, nil)
-	req.Header.Set("X-Github-PostToken", ServerToken)
+	req, _ := http.NewRequestWithContext(c, "GET", u, nil)
+	req.Header.Set("X-STAFF-TOKEN", ServerToken)
 	resp, err := httpClient.Do(req)
 	if err != nil {
+		alog.CE(c, err, alog.V{"u": u})
 		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return nil, errors.New("推送数据失败：" + resp.Status)
+		err := errors.New("推送数据失败：" + resp.Status)
+		alog.CE(c, err)
+		return nil, err
 	}
 
 	var serverBlogs []*Blog
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		alog.CE(c, err)
 		return nil, err
 	}
 	if err := json.Unmarshal(body, &serverBlogs); err != nil {
+		alog.CE(c, err, alog.V{"resp": string(body)})
 		return nil, err
 	}
 	return serverBlogs, nil
@@ -94,7 +105,7 @@ func PutBlog(blog *Blog) error {
 	u := ServerAddress + "/content"
 	reqBody, _ := json.Marshal(blog)
 	req, _ := http.NewRequest("PUT", u, bytes.NewReader(reqBody))
-	req.Header.Set("X-Github-PostToken", ServerToken)
+	req.Header.Set("X-STAFF-TOKEN", ServerToken)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
@@ -111,7 +122,7 @@ func PutBlog(blog *Blog) error {
 func DeleteBlog(blog *Blog) error {
 	u := ServerAddress + "/content/" + blog.Path
 	req, _ := http.NewRequest("DELETE", u, nil)
-	req.Header.Set("X-Github-PostToken", ServerToken)
+	req.Header.Set("X-STAFF-TOKEN", ServerToken)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
