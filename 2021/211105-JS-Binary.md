@@ -249,6 +249,9 @@ async function main(file: File) {
 }
 ```
 
+> 2021年12月17日踩坑记：这个`file.arrayBuffer`方法兼容版本是chrome76+，第一次用这个API就被反馈说没反应，好尴尬……  
+> 吃一堑长一智，以后学新东西学归学，到线上使用的时候还是要谨慎一些。
+
 ## Streams家族
 
 > [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API)
