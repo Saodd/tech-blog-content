@@ -239,11 +239,11 @@ func Test1FindOne(c context.Context, db *sql.DB, name string) (*Test1Model, erro
 
 ### 改删数据
 
-```mysql
+```sql
 update test1 set name='updated-name' where id=2;
 ```
 
-```mysql
+```sql
 delete from test1 where id=2;
 ```
 
@@ -253,7 +253,7 @@ delete from test1 where id=2;
 
 [参考](https://www.runoob.com/mysql/mysql-like-clause.html) `LIKE`实质上是一个简化版本的正则表达式
 
-```mysql
+```sql
 # 查询name中含有 an 的行
 SELECT * FROM test1 WHERE name LIKE '%an%';
 ```
@@ -281,7 +281,7 @@ mysql> SELECT * FROM student WHERE status=1;
 
 我们写一个UNION查询，注意我们从学生表里查的是`nick`，但是最后结果被放在了`name`这一列里：
 
-```mysql
+```sql
 SELECT id,name,'class' as table_name FROM class WHERE status=1
 UNION
 SELECT id,nick,'student' as table_name FROM student WHERE status=1;
@@ -325,7 +325,7 @@ SELECT id,nick,'student' as table_name FROM student WHERE status=1;
 
 然后写一个查询，将学生姓名和匹配的班级名称一起查出来：
 
-```mysql
+```sql
 SELECT s.name AS student_name, c.name AS class_name FROM student s
 INNER JOIN class c on s.class_id = c.id;
 ```
@@ -361,7 +361,7 @@ INNER JOIN class c on s.class_id = c.id;
 
 例如我们把前一节中查询学生名字+班级名字的查询条件 复制过来就可以创建一个VIEW：
 
-```mysql
+```sql
 create view student_class as
     SELECT s.name AS student_name, c.name AS class_name FROM student s
     LEFT JOIN class c on s.class_id = c.id;
@@ -491,7 +491,7 @@ func BalanceDirtyRead(db *sql.DB) {
 
 然后我们通过另一个连接，也就是直接从mysql命令行客户端起一个修改数据的事务：
 
-```mysql
+```sql
 begin;
 update balance set balance=99 where user_id=10000233;
 # 稍后执行 rollback;
@@ -528,7 +528,7 @@ func BalanceNonRepeatableRead(db *sql.DB) {
 
 在sleep的时候快速地通过另一个终端去修改这个数据：
 
-```mysql
+```sql
 UPDATE LearnMysql.balance t SET t.balance = 98 WHERE t.user_id = 10000233;
 ```
 
