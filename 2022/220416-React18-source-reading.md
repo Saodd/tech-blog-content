@@ -68,6 +68,8 @@ git clone https://github.com/facebook/react --depth=1
 
 主要流程是，先在`react`代码仓库里构建，然后使用`yarn link`命令，把其他项目里对react的依赖替换为本地刚刚构建出来的版本（类似于`go.mod`里的`replace`用法）。
 
+注意要link至少3个包：`react`, `react-dom`, `scheduler`
+
 这个过程我要吐槽一下，构建react居然需要安装java，也是匪夷所思……
 
 ## 1. JSX
@@ -256,11 +258,11 @@ function legacyCreateRootFromDOMContainer(
 }
 ```
 
-`flushSync`这个函数会在它里面再次调用传入的箭头函数，我们先暂时不管它的细节，继续看……
+`flushSync`这个函数会在它里面再次调用传入的箭头函数，它的作用是立即（同步地）刷新整颗树 [参考](https://github.com/facebook/react/issues/11527#issuecomment-360199710)
 
-`createContainer`这个函数最主要的就是做了`new FiberRootNode()`这个事情，我们也先暂时不管它的细节，继续看……
+`createContainer`这个函数最主要的就是做了`new FiberRootNode()`这个事情。
 
-`updateContainer`这个函数再次出现了！它的功能就是（），来看看：
+`updateContainer`这个函数再次出现了！它的功能就是创建"任务"，并把任务添加到任务队列中去，来看看：
 
 ```flow js
 export function updateContainer(
@@ -296,21 +298,117 @@ export function updateContainer(
 
 上面这个函数，首先注意到它的返回值是`Lane`，它是一个`number`类型，实质上是一些位掩码(bit mask)，用于区分fiber任务的种类以及在此基础上的优先级。 [参考](https://dev.to/okmttdhr/what-is-lane-in-react-4np7)
 
-非常值得一提的是，在`scheduleUpdateOnFiber()`中的`markUpdateLaneFromFiberToRoot()`函数会将当前fiber的`Lane`一直同步到`FiberRoot`上去，（通过`fiber.return`向上回溯），这个过程很疑惑。
+非常值得一提的是，在`scheduleUpdateOnFiber()`中的`markUpdateLaneFromFiberToRoot()`函数会将当前fiber的`Lane`一直同步到`FiberRoot`上去，（通过`fiber.return`向上回溯）。
 
 ### 小结
 
 在这一步中，我们传入了一个`element`（即VDOM树），然后生成了一个`FiberRoot`（同样也是树形结构），还看到它加入了某个队列中（`enqueueUpdate`）。
 
-接下来需要解决的疑问：
+接下来需要解决的疑问：队列里的任务是如何调度的？
 
-1. Fiber是在什么时候渲染成为DOM的？
-2. Fiber的调度逻辑是怎样的？
-
-## 4. MessageChannel
+## 4. scheduler.workLoop
 
 回忆一下，Fiber诞生的初衷，就是为了防止掉帧。所以它的核心逻辑就是当判断到时间不够之后主动让出线程，等浏览器渲染完毕后再继续之前的任务。
 
-如何继续，或者说，该等到什么时候才可以继续下一步呢？所有的调度逻辑都在`Scheduler`这个模块里，以前的很经典的实现是使用`requestIdleCallback`那一套，从19年开始使用了`MessageChannel`，详细内容可以参考 [这篇](https://segmentfault.com/a/1190000022942008) 或者[这篇](https://juejin.cn/post/7020220688719937573#heading-4) （感觉讲的比我好多了……）
+> 所有的调度逻辑都在`Scheduler`这个模块里，详细内容可以参考 [这篇](https://segmentfault.com/a/1190000022942008) 或者[这篇](https://juejin.cn/post/7020220688719937573#heading-4) （感觉讲的比我好多了……）
+
+> 顺便一提，Scheduler看起来并不是专为react设计的，目前它的逻辑是独立出来作为一个独立的包而存在的。
+
+如何判断“当前剩余时间不够”了？
+
+```js
+function workLoop(hasTimeRemaining, initialTime) {
+  var currentTime = initialTime;
+  advanceTimers(currentTime);
+  currentTask = peek(taskQueue);  // 从任务队列中取出第一项
+
+  while (currentTask !== null && !(enableSchedulerDebugging )) {
+    if (currentTask.expirationTime > currentTime && (!hasTimeRemaining || shouldYieldToHost())) {
+      break;  // 到时间了，不再处理队列中后续的任务
+    }
+    
+    // ...执行任务的步骤，主要就是执行task.callback
+    pop(taskQueue);  // 执行完毕后丢掉任务
+
+    currentTask = peek(taskQueue);  // 取出下一项任务
+  }
+  
+  if (currentTask !== null) {
+    return true;  // 这里的返回值给回hasMoreWork
+  } else {
+    return false;
+  }
+}
+```
+
+上面代码的核心逻辑是，从队列里取一个任务，执行，然后检查是否还有剩余时间。
+
+上面的代码中省略了`timerQueue`相关的逻辑，它的作用相当于是`taskQueue`的延迟队列，每次从`taskQueue`里执行一个任务之后，都会检查一下是否有到期的递延任务，如果有，则从`timerQueue`里取出并推入`taskQueue`。
+
+值得一提的是，这两个Queue的数据结构都是`最小堆`。
+
+这个函数的返回值会赋给`hasMoreWork`这个变量里：
+
+```js
+var performWorkUntilDeadline = function () {
+    var hasMoreWork = true;
+
+    try {
+      hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);  // workLoop的返回值在这里
+    } finally {
+      if (hasMoreWork) {
+        schedulePerformWorkUntilDeadline();  // 如果还有剩余工作，则留下一个小尾巴，等待下一次调度
+      } else {
+          // ...
+      }
+    }
+};
+```
+
+如果还有剩余工作，那么会再次调用一次`schedulePerformWorkUntilDeadline()`函数，顾名思义："调度下一次工作"。
+
+```js
+if (typeof MessageChannel !== 'undefined') {
+  var channel = new MessageChannel();
+  var port = channel.port2;
+  channel.port1.onmessage = function () {
+    performWorkUntilDeadline(arguments)
+  };
+
+  schedulePerformWorkUntilDeadline = function () {
+    port.postMessage(null);
+  };
+}
+```
+
+关于"调度"这件事情的具体逻辑，以前的很经典的实现是使用`requestIdleCallback`那一套，从19年开始使用了`MessageChannel`，创建过程就如上面所示。
+
+> 放弃`requestIdleCallback`是因为兼容性问题，而且它的标准执行间隔是50ms太慢了；放弃`requestAnimationFrame`是因为它可能受到硬件屏幕刷新率的影响，而且执行顺序不对；放弃`setImmediet`是因为它会浪费4ms；最终`MessageChannel`可以提供更加稳定的机制。 [参考](https://juejin.cn/post/6953804914715803678)
+
+所以调用它一次的效果，实质上就是创建了一个`宏任务`，从而创造一次"将控制权交回浏览器"的机会。
+
+### task的缺陷
+
+听起来一切都很完美，每次完成一个fiber任务都会检查是否跳出循环，掉帧的问题似乎解决了呢？可是"频繁地比较时间"这件事难道不会对性能造成影响吗？
+
+实际上：**一个"任务"并不是一个react节点的更新，而是发生状态变化的节点下面整棵树的更新**。
+
+所以如果一次状态更新就导致了严重的延迟，那么fiber也救不了你（不过我感觉这个应该只是个理论极端情况，不太可能出现在生产环境下）。
+
+> 我借助斐波那契函数来人为制造工作量并发现了上述这个问题。在实验过程中，我发现似乎react对某些简单的状态更新是有优化的，根本不会进入workLoop这个逻辑里（具体优化策略暂不清楚）。
+
+### 小结
+
+现在我们知道了Scheduler是如何在多个任务之间检查并让出主线程的，接下来我们需要知道在单次执行任务的过程中发生了什么。
+
+## 5. ReactDOM.performUnitOfWork
+
+接下来我们需要回到`ReactDOM`的领域内。（可以继续参考[这篇文章](https://indepth.dev/posts/1008/inside-fiber-in-depth-overview-of-the-new-reconciliation-algorithm-in-react#main-steps-of-the-work-loop) ）
+
+我们需要看的是`performUnitOfWork()`这个函数。
+
+如果从它开始向上追溯，可以追到`ensureRootIsScheduled`这里，这个我们在第3步探索`ReactDOM.render`的时候已经见到过了（虽然我没有在本文中贴出相关代码）。
+
+看看代码：
 
 （未完待续）
