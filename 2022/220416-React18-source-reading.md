@@ -9,7 +9,7 @@ tags: ["前端","源码"]
 
 我们都知道，React的核心原理是构建了一个虚拟元素树，即Virtual Dom Tree。那么，当某个组件的状态发生改变的时候，整个树里到底发生了什么？
 
-以前，有很多文章都介绍过：一方面，~~只有状态更新过的组件，或者~~准确地说应该叫做元素(`elements`)，只有更新过的元素才会被标记为脏，然后重新运行它的`render()`得到一个新的子元素树，这个标记为脏的过程剪去了父节点及以上的不必要更新；然后新旧子树再做diff，最后反应到DOM上去，这个diff的过程就是剪去了子节点的不必要更新。看起来很完美，效率很高。
+以前，有很多文章都介绍过：一方面，只有更新过的元素(`elements`)才会被标记为脏，然后重新运行它的`render()`得到一个新的子元素树，这个标记为脏的过程剪去了父节点及以上的不必要更新；然后新旧子树再做diff，最后反应到DOM上去，这个diff的过程就是剪去了子节点的不必要更新。看起来很完美，效率很高。
 
 然而，在 React fiber 出现之后，似乎有了一些分歧。小伙伴截了个网络博客文章告诉我说，fiber为了保证"优先级"属性能同步到父节点，会从当前脏节点向上回溯直到root，再从root向下遍历。
 
@@ -42,13 +42,13 @@ react每次会比较整个组件树吗？
 
 但是上面的文章有一个问题在于，它们都是在`React Fiber`这个架构之前的文章，并不适用于从v16以后的实际情况。
 
-接下来再看一篇 [解析](https://indepth.dev/posts/1008/inside-fiber-in-depth-overview-of-the-new-reconciliation-algorithm-in-react#render-phase) 大概意思是：reconcile的时候确实从根节点开始，但是会快速跳过那些没有状态改变过的父节点，直到那个改变了状态的子节点。 （话说这篇文章讲得真的非常详细且深入，下次我要把它完整翻译一遍。）
+接下来再看一篇v16之后的 [解析](https://indepth.dev/posts/1008/inside-fiber-in-depth-overview-of-the-new-reconciliation-algorithm-in-react#render-phase) 它的大概意思是：reconcile的时候确实从根节点开始，但是会快速跳过那些没有状态改变过的父节点，直到那个改变了状态的子节点。 
 
 ## 获得源码
 
 通过查看`node_modules/react/package.json`中的配置，得知原始仓库在`https://github.com/facebook/react`。
 
-> 这里有两个槽点，第一，直接在github上搜索"reactjs"，会搜出一个`react community`的组织，而不是`facebook`；第二，Facebook 公司早已改名为 Meta，然而仓库地址依然是`facebook/...`，这个东西确实不能随随便便改的啊。我一直想吐槽Facebook改名改得太快太冲动了……
+> 这里有两个槽点，第一，直接在github上搜索"reactjs"，会搜出一个`react community`的组织，而不是`facebook`；第二，Facebook 公司早已改名为 Meta，然而仓库地址依然是`facebook/...`，这个东西确实不能随随便便改的啊。我一直想吐槽Facebook改名改得太快太冲动了的……
 
 ```shell
 git clone https://github.com/facebook/react --depth=1
@@ -127,7 +127,7 @@ export function createElement(type, config, children) {
 }
 ```
 
-> 再稍微解释一下，在`<App size={1} />`这个元素中，type是`'App'`，config是`{size:1}`
+> 再稍微解释一下，在`<App size={1} />`这个元素中，type是`App`，config是`{size:1}`
 
 所以这一步的作用其实就是处理参数，做一些防御和警告，没有其他实际意义。
 
@@ -158,13 +158,13 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
 
 所以这一步实际上也就仅仅是把前面传入的属性封装成了一个`element`对象返回。
 
-也就是说，整个`createElement()`做的事情也就仅仅是构造了一个`element`（元素），或者准确地说是通过`children`属性从上到下组织起来的一颗元素树，也就是我们所说的 V-DOM 树。
+也就是说，**整个`createElement()`做的事情也就仅仅是构造了一个`element`（元素）**，或者准确地说是通过`children`属性从上到下组织起来的一颗元素树，也就是我们所说的 V-DOM 树。
 
 接下来，这颗VDOM树要交给底层的渲染库（在web中就是`ReactDOM`）去将其映射到HTML中去。
 
 ## 3. ReactDOM.render
 
-晴天霹雳，`v18`开始，`render()`方法将被逐步废弃，继续使用则保持`v17`的特性；如果要体验`v18`的特性（例如并发），则需要切换到`createRoot()`方法去。
+> 惊了，从`v18`开始，`render()`方法将被逐步废弃，继续使用则保持`v17`的特性；如果要体验`v18`的特性（例如并发），则需要切换到`createRoot()`方法去。
 
 OK我们先继续看下去：
 
@@ -174,9 +174,7 @@ export function render(
   container: Container,  // 一个HTML标签
   callback: ?Function,  // 回调函数，首次渲染完成时调用，很少用到
 ) {
-  // ...警告提示
-
-  // 这里通过nodeType来检查HTML标签是否合法
+  // 这里通过nodeType来检查HTML标签是否合法，nodeType是一个原生的HTML属性
   if (!isValidContainerLegacy(container)) {
     throw new Error('Target container is not a DOM element.');
   }
@@ -191,7 +189,7 @@ export function render(
 }
 ```
 
-`legacy`这个单词可以理解为是“旧的、传统的、以前的”，接下来调用的这个函数会创建（或获取）一个`FiberRoot`：
+`legacy`这个单词的意思是“旧的、传统的、以前的”，接下来调用的这个函数会创建（或获取）一个`FiberRoot`：
 
 ```flow js
 function legacyRenderSubtreeIntoContainer(
@@ -258,7 +256,7 @@ function legacyCreateRootFromDOMContainer(
 }
 ```
 
-`flushSync`这个函数会在它里面再次调用传入的箭头函数，它的作用是立即（同步地）刷新整颗树 [参考](https://github.com/facebook/react/issues/11527#issuecomment-360199710)
+`flushSync`这个函数会在它里面再次调用传入的箭头函数，它的作用是立即同步地刷新整颗树 [参考](https://github.com/facebook/react/issues/11527#issuecomment-360199710) ，而不是等到下一个宏任务。
 
 `createContainer`这个函数最主要的就是做了`new FiberRootNode()`这个事情。
 
@@ -280,7 +278,7 @@ export function updateContainer(
   
   // 这里创建了一个“任务”对象
   const update = createUpdate(eventTime, lane);
-  update.payload = {element};
+  update.payload = {element};  // 工作载荷是element元素树
 
   // 随后把“任务”对象丢进队列里统一处理
   // 这个队列是current的队列，但是队列下面又有一个shared共享队列
@@ -300,15 +298,15 @@ export function updateContainer(
 
 非常值得一提的是，在`scheduleUpdateOnFiber()`中的`markUpdateLaneFromFiberToRoot()`函数会将当前fiber的`Lane`一直同步到`FiberRoot`上去，（通过`fiber.return`向上回溯）。
 
-### 小结
+### 3- 小结
 
-在这一步中，我们传入了一个`element`（即VDOM树），然后生成了一个`FiberRoot`（同样也是树形结构），还看到它加入了某个队列中（`enqueueUpdate`）。
+在这一步中，我们**传入了一个`element`（即VDOM树），然后生成了一个`FiberRoot`（同样也是树形结构）**，还看到它加入了某个队列中（`enqueueUpdate`）。
 
 接下来需要解决的疑问：队列里的任务是如何调度的？
 
 ## 4. scheduler.workLoop
 
-回忆一下，Fiber诞生的初衷，就是为了防止掉帧。所以它的核心逻辑就是当判断到时间不够之后主动让出线程，等浏览器渲染完毕后再继续之前的任务。
+回忆一下，Fiber诞生的初衷，**就是为了防止掉帧**。所以它的核心逻辑就是当判断到时间不够之后主动让出线程，等浏览器渲染完毕后再继续之前的任务。
 
 > 所有的调度逻辑都在`Scheduler`这个模块里，详细内容可以参考 [这篇](https://segmentfault.com/a/1190000022942008) 或者[这篇](https://juejin.cn/post/7020220688719937573#heading-4) （感觉讲的比我好多了……）
 
@@ -385,30 +383,363 @@ if (typeof MessageChannel !== 'undefined') {
 
 > 放弃`requestIdleCallback`是因为兼容性问题，而且它的标准执行间隔是50ms太慢了；放弃`requestAnimationFrame`是因为它可能受到硬件屏幕刷新率的影响，而且执行顺序不对；放弃`setImmediet`是因为它会浪费4ms；最终`MessageChannel`可以提供更加稳定的机制。 [参考](https://juejin.cn/post/6953804914715803678)
 
-所以调用它一次的效果，实质上就是创建了一个`宏任务`，从而创造一次"将控制权交回浏览器"的机会。
+所以调用它一次的效果，实质上就是借助`postMessage`创建了一个`宏任务`，从而创造一次"将控制权交回浏览器"的机会。
 
 ### task的缺陷
 
 听起来一切都很完美，每次完成一个fiber任务都会检查是否跳出循环，掉帧的问题似乎解决了呢？可是"频繁地比较时间"这件事难道不会对性能造成影响吗？
 
-实际上：**一个"任务"并不是一个react节点的更新，而是发生状态变化的节点下面整棵树的更新**。
+实际上：**一个"任务"并不是一个react节点的更新，而是发生状态变化的节点下面整棵树的更新**。（可以类比js微任务和宏任务，scheduler调度的是"宏"任务）
 
 所以如果一次状态更新就导致了严重的延迟，那么fiber也救不了你（不过我感觉这个应该只是个理论极端情况，不太可能出现在生产环境下）。
 
 > 我借助斐波那契函数来人为制造工作量并发现了上述这个问题。在实验过程中，我发现似乎react对某些简单的状态更新是有优化的，根本不会进入workLoop这个逻辑里（具体优化策略暂不清楚）。
 
-### 小结
+### 4- 小结
 
 现在我们知道了Scheduler是如何在多个任务之间检查并让出主线程的，接下来我们需要知道在单次执行任务的过程中发生了什么。
 
 ## 5. ReactDOM.performUnitOfWork
 
-接下来我们需要回到`ReactDOM`的领域内。（可以继续参考[这篇文章](https://indepth.dev/posts/1008/inside-fiber-in-depth-overview-of-the-new-reconciliation-algorithm-in-react#main-steps-of-the-work-loop) ）
+接下来我们需要回到`ReactDOM`的领域内，或者更准确地说，虽然打包在ReactDOM包里，但是代码实际上是在`react-reconciler`包里的。（可以继续参考[这篇文章](https://indepth.dev/posts/1008/inside-fiber-in-depth-overview-of-the-new-reconciliation-algorithm-in-react#main-steps-of-the-work-loop) ）
 
 我们需要看的是`performUnitOfWork()`这个函数。
 
-如果从它开始向上追溯，可以追到`ensureRootIsScheduled`这里，这个我们在第3步探索`ReactDOM.render`的时候已经见到过了（虽然我没有在本文中贴出相关代码）。
+> 如果从它开始向上追溯，可以追到`ensureRootIsScheduled`这里，这与我们在第3步探索的`ReactDOM.render`关联起来了（虽然我没有在本文中贴出相关代码，有兴趣自行查看）。
 
-看看代码：
+先有一个无限渲染循环（这个函数有两个版本，另一个版本带`shouldYield`逻辑）：
 
-（未完待续）
+```js
+function workLoopSync() {
+  // Already timed out, so perform work without checking if we need to yield.
+  while (workInProgress !== null) {
+    performUnitOfWork(workInProgress);
+  }
+}
+```
+
+每次循环的时候执行一个单位任务，也就是一个fiber，执行逻辑很简单：
+
+```flow js
+function performUnitOfWork(unitOfWork: Fiber): void {
+  const current = unitOfWork.alternate;  // alternate的目的是优化GC
+
+  let next = beginWork(current, unitOfWork, subtreeRenderLanes);  // 这个返回值是当前fiber返回的下一个fiber（child或者sibling）
+
+  unitOfWork.memoizedProps = unitOfWork.pendingProps;
+  if (next === null) {
+    completeUnitOfWork(unitOfWork);  // 如果这个fiber没有产生新的work，那么就结束当前的fiber
+  } else {
+    workInProgress = next;  // 否则继续处理它产生的新的work
+  }
+}
+```
+
+### 5.1 beginWork
+
+这个函数有点长，看看：
+
+```flow js
+function beginWork(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+): Fiber | null {
+  if (current !== null) {
+    // ...current是fiber.alternate，一般在第一次render的时候进入这个分支
+  } else {
+    didReceiveUpdate = false;
+  }
+  
+  workInProgress.lanes = NoLanes;  // 重置当前fiber的Lane
+
+  switch (workInProgress.tag) {  // 根据Fiber的tag来决定做什么操作
+    case FunctionComponent: {  // 0
+      // ...省略：判断一下type和props
+      return updateFunctionComponent(
+        current,
+        workInProgress,
+        Component,
+        resolvedProps,
+        renderLanes,
+      );
+    }
+    case ClassComponent: {  // 1
+      // ...省略：判断一下type和props
+      return updateClassComponent(
+        current,
+        workInProgress,
+        Component,
+        resolvedProps,
+        renderLanes,
+      );
+    }
+    case HostText:
+      return updateHostText(current, workInProgress);
+    // ...省略其他22个case
+  }
+
+  // ...throw
+}
+```
+
+`Fiber.tag`的类型是一个叫做`WorkTag`的枚举值，取值范围0~25，每个不同的类型都会选择不同的处理逻辑。
+
+### 5.1.1 FunctionComponent
+
+接下来我们重点看看最常用的`FunctionComponent`是怎么处理的：
+
+```flow js
+function updateFunctionComponent(
+  current,
+  workInProgress,
+  Component,
+  nextProps: any,
+  renderLanes,
+) {
+  let nextChildren;
+  nextChildren = renderWithHooks(
+    current,
+    workInProgress,
+    Component,
+    nextProps,
+    context,
+    renderLanes,
+  );
+
+  if (current !== null && !didReceiveUpdate) {  // 判断是否进入bailout模式
+    bailoutHooks(current, workInProgress, renderLanes);
+    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+  }
+  
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);  // 处理children
+  return workInProgress.child;
+}
+```
+
+第一步，执行`renderWithHooks`，这里面最核心的语句就是`children = Component(props, secondArg)`，也就是把整个函数组件重新执行了一遍，最后把`children`作为返回值丢回来。
+
+在这个过程中其实完全没有看到`Hooks`相关的逻辑，应该是他们全部都已经封装在`Compenent`里面了，这里只对函数组件运行过程中产生的一些副作用进行了判断。Hooks本身也是一个非常庞大的话题，其原理简单说就是利用闭包+链表来实现状态的储存，详细可以参考 [React Hooks 实现原理](https://segmentfault.com/a/1190000040887783) 或者 [React hooks: not magic, just arrays](https://medium.com/@ryardley/react-hooks-not-magic-just-arrays-cd4f1857236e)
+
+此外对于children的情况判断其实也非常复杂，例如有时中间层的父组件并没有变化但是顶层的`Context`变了，这种情况就不能简单地直接跳过这个元素的更新，而是需要向下传播一些变化。（传播过程靠的是`Lane`的位运算）。
+
+第二步，判断是否需要`bail out`（意思是"放弃、跳过"），也基本上就是对于`Lane`的操作。
+
+第三步，处理`children`，这里又有一个非常庞大的分支选择，我没仔细看，跳过。
+
+### 5.1.2 ClassComponent
+
+`类组件`与`函数组件`的区别，核心就是前者拥有更多的生命周期函数；后者通过Hooks可以实现大部分的生命周期，但是在少数场景下还是必须用到前者。
+
+```flow js
+function updateClassComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  renderLanes: Lanes,
+) {
+  prepareToReadContext(workInProgress, renderLanes);
+
+  const instance = workInProgress.stateNode;  // 与函数组件的区别：它一直维护着一个对象实例
+  let shouldUpdate;
+  if (instance === null) {
+    mountClassInstance(workInProgress, Component, nextProps, renderLanes);  // 首次渲染，创建对象实例
+    shouldUpdate = true;
+  } else if (current === null) {
+    // ...
+  } else {
+    shouldUpdate = updateClassInstance(current, workInProgress, Component, nextProps, renderLanes);
+  }
+  const nextUnitOfWork = finishClassComponent(current, workInProgress, Component, nextProps, renderLanes);
+  return nextUnitOfWork;
+}
+```
+
+首先，一直在刷存在感的就是这个`instance`变量，它是类组件的实例化后的一个对象。
+
+然后在`updateClassInstance()`这个分支中，我们可以看到很多很眼熟的生命周期函数，例如`callComponentWillReceiveProps`, `checkShouldComponentUpdate`, `componentWillUpdate`
+
+最后在`finishClassComponent()`这个步骤中，我们可以看到与函数组件类似的`bail out`逻辑，以及`reconcileChildren()`的调用。
+
+总体来说，基本上除了各种生命周期函数是以显式方式调用的，其他逻辑基本上与函数组件是一致的。
+
+### 5.1.3 HostText
+
+特别一提，名称以`Host`开头的都是原生DOM标签了，也就是说VDOM树到这里已经是达到了叶子节点。
+
+在目前`beginWork()`这个环节，是不会对叶子节点再做什么操作了，接下来要看`completeUnitOfWork()`这个环节里的操作.
+
+### 5.1- 小结
+
+`beginWork()`会不断返回child和sibling作为`next`，直到返回null时，意味着已经到达了某条分支的终点。
+
+接下来要对sibling和parent去执行`complete()`操作
+
+### 5.2 completeUnitOfWork
+
+```flow js
+function completeUnitOfWork(unitOfWork: Fiber): void {
+  // current -> sibling -> return parent
+  let completedWork = unitOfWork;
+  do {
+    const current = completedWork.alternate;
+    const returnFiber = completedWork.return;
+
+    // Check if the work completed or if something threw.
+    if ((completedWork.flags & Incomplete) === NoFlags) {
+      setCurrentDebugFiberInDEV(completedWork);
+      let next = completeWork(current, completedWork, subtreeRenderLanes);
+
+      if (next !== null) {
+        workInProgress = next;  // 发现了新任务，那么返回并在下一个workLoop里处理它
+        return;
+      }
+    } else {
+      // ...任务没有完成的情况（异常情况）的处理
+    }
+
+    const siblingFiber = completedWork.sibling;
+    if (siblingFiber !== null) {
+      workInProgress = siblingFiber;  // 返回sibling
+      return;
+    }
+    completedWork = returnFiber;
+    workInProgress = completedWork;  // 返回parent
+  } while (completedWork !== null)
+
+  // 没有next了，（也就是没有parent了），说明我们回到了root，complete工作执行完毕了
+  if (workInProgressRootExitStatus === RootInProgress) {
+    workInProgressRootExitStatus = RootCompleted;
+  }
+}
+```
+
+这个过程与`beginWork()`是相反的，它从根部向上回归，直到root结束。
+
+其中执行的逻辑主体是在`completeWork()`函数里的，看看：
+
+```flow js
+function completeWork(
+        current: Fiber | null,
+        workInProgress: Fiber,
+        renderLanes: Lanes,
+): Fiber | null {
+  const newProps = workInProgress.pendingProps;
+  popTreeContext(workInProgress);
+  switch (workInProgress.tag) {
+    case FunctionComponent:
+      bubbleProperties(workInProgress);
+      return null;
+    case HostText: {
+      const newText = newProps;
+      if (current && workInProgress.stateNode != null) {
+        const oldText = current.memoizedProps;
+        updateHostText(current, workInProgress, oldText, newText);
+      }
+      bubbleProperties(workInProgress);
+      return null;
+    }
+  }
+
+  // ...throw
+}
+```
+
+首先我们关注一下之前看过的`HostText`，因为它是最简单的元素之一了：
+
+```flow js
+updateHostText = function(
+  current: Fiber,
+  workInProgress: Fiber,
+  oldText: string,
+  newText: string,
+) {
+  // If the text differs, mark it as an update. All the work in done in commitWork.
+  if (oldText !== newText) {
+    markUpdate(workInProgress);
+  }
+};
+
+function markUpdate(workInProgress: Fiber) {
+  workInProgress.flags |= Update;
+}
+```
+
+从上面的代码可以很容易看出，这里它只做了一件事，就是把`flags`标记为"脏"。
+
+其他类型的fiber，绝大多数都会做`bubbleProperties()`这个动作，里面基本上也都是对`flags`属性的操作。
+
+### 5.- 小结
+
+整个第5章说的都是`Render Phase`，即render阶段；在这一步，我们通过对比了新旧两个fiber树，标记出了所有脏节点。
+
+接下来，我们需要将fiber上的脏数据反映到DOM上去，也就是`Commit Phase`。
+
+> beginWork 与 completeRoot 两个部分是在 performSyncWorkOnRoot 这里面串联起来的。
+
+## 6. ReactDOM.completeRoot
+
+参考阅读： [Commit Phase](https://indepth.dev/posts/1008/inside-fiber-in-depth-overview-of-the-new-reconciliation-algorithm-in-react#commit-phase)
+
+进入这个阶段的时候，我们有新旧两颗fiber树。旧树与当前DOM的状态是相符的，新树则代表了新的状态，它目前可以通过`finishedWork`或者`workInProgress`访问到。除此之外还有一个`effects list`（副作用列表），它是新fiber树的子集，仅仅将那些"脏"的节点串联起来（通过`nextEffect`访问），有这个链表就可以方便后续的更新动作，不再需要遍历整棵树了。
+
+它主要干了这几件事：
+
+```flow js
+function commitRootImpl(
+  root: FiberRoot,
+  recoverableErrors: null | Array<mixed>,
+  transitions: Array<Transition> | null,
+  renderPriorityLevel: EventPriority,
+) {
+  do {
+    flushPassiveEffects();  // 会处理所有的 effects list
+  } while (rootWithPendingPassiveEffects !== null);
+
+  commitBeforeMutationEffects(root, finishedWork);
+  commitMutationEffects(root, finishedWork, lanes); // 会执行生命周期函数 componentWillUnmount
+  commitLayoutEffects(finishedWork, root, lanes);  // 会执行生命周期函数 componentDidUpdate componentDidMount
+  requestPaint();  // 告诉scheduler下次需要让出线程控制权，给浏览器去绘制DOM
+  ensureRootIsScheduled(root, now());  // 确保下一次的调度
+}
+```
+
+通过 `commitMutationEffects` -> `commitMutationEffectsOnFiber` ->  `commitUpdate` ->  `updateProperties` -> `updateDOMProperties`如此深入地追踪，终于找到了ReactDOM真正负责操作DOM的地方：
+
+```js
+function updateDOMProperties(domElement, updatePayload, wasCustomComponentTag, isCustomComponentTag) {
+  for (var i = 0; i < updatePayload.length; i += 2) {
+    var propKey = updatePayload[i];
+    var propValue = updatePayload[i + 1];
+
+    if (propKey === STYLE) {
+      setValueForStyles(domElement, propValue);
+    } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
+      setInnerHTML(domElement, propValue);
+    } else if (propKey === CHILDREN) {
+      setTextContent(domElement, propValue);
+    } else {
+      setValueForProperty(domElement, propKey, propValue, isCustomComponentTag);
+    }
+  }
+}
+```
+
+非常地朴实无华，就是遍历`updatePayload`数组（实际上是`finishedWork.updateQueue`），将其设置到DOM标签上去。
+
+## 总结
+
+本文的六个章节简单分析了：JSX如何转化为component、component转化为element、element转化为fiber、scheduler是如何让出线程的、fiber更新后如何reconcile、脏节点如何渲染到DOM上去。
+
+应该可以说，把react的核心流程非常简单快速地走了一遍，有了一个大概的印象。
+
+那么收获是什么呢？或者确切一点说，这次阅读源码，对实际开发工作有何意义？
+
+我感觉，**阅读react源码这件事本身并没有太大意义**。说实话，从我的眼光看来，我觉得react的源代码是算不上优秀的，我没有看到任何令我耳目一新的好设计或者好的实现细节，到处充斥着全局变量的读写、不自然的版本过渡、各种边角情况的填坑等等；总体给我的感觉更像是东拼西凑搞出来的一个庞然大物，能跑起来简直是个奇迹。
+
+实际上给我收获最大的，是**我在阅读源码过程中，为了理解源码而去看别人的文章并理解的那些抽象的概念和设计理念，以及学到的前端代码的调试方法**。
+
+这篇文章从4月16日开始动笔，到今天4月24日终于算是草草结束，花费时间大约20~30个小时。功利地说，性价比并不算高，但它确实是我前端发展路径上不可缺少的一环。
+
+心理包袱又少了一个~ 今天可以歇歇了~
