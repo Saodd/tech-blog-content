@@ -1,6 +1,6 @@
 ```yaml lw-blog-meta
 title: "Redis知识点总结"
-date: "2021-05-17"
+date: "2022-05-17"
 brev: "整理一遍之后，确实有不少收获，八股不仅仅是八股"
 tags: ["中间件"]
 ```
