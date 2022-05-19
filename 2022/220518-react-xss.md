@@ -15,7 +15,7 @@ tags: ["安全"]
 
 目前我所知，在正确使用React的情况下，唯一的隐患就在于`dangerouslySetInnerHTML`这个属性。
 
-一个典型例子：
+一个典型例子（[来源](https://stackoverflow.com/questions/33644499/what-does-it-mean-when-they-say-react-is-xss-protected) ）：
 
 ```tsx
 const xss = `
@@ -31,7 +31,7 @@ export const UserContent = () => {
 };
 ```
 
-上面代码的意思是，插入了一个`img`标签，由于它的`src`属性是非法的，因此一定会执行`onerror`中所声明的代码。因此攻击者可以在这里为所欲为。XSS攻击的权限等同于网站所有者所拥有的权限，与CSRF完全不同。
+上面代码的意思是，XSS插入了一个`img`标签，由于它的`src`属性是非法的，因此一定会执行`onerror`中所声明的代码。因此攻击者可以在这里为所欲为。XSS攻击的权限等同于网站所有者所拥有的权限，与CSRF完全不同。
 
 ## 在SQL中
 
