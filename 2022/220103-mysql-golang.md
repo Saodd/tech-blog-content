@@ -431,7 +431,7 @@ mysql> select * from student_class where class_name IS NOT NULL;
 
 然后还有`grant`权限视角、密码与安全(TLS)、管理事件（定时任务）、日志监控等等比较冷门的知识。
 
-另开一篇文章研究。
+另开一篇文章：[MySQL基本用法——运维篇](../2022/220520-mysql-ops.md)
 
 ## 专题：TRANSACTION事务
 
