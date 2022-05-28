@@ -5,9 +5,7 @@ brev: "点亮你的绿色标志"
 tags: ["安全"]
 ```
 
-## 配置命令
-
-参考命令：
+## 配置过程
 
 - [Github docs](https://docs.github.com/cn/authentication/managing-commit-signature-verification/checking-for-existing-gpg-keys)
 - [Jetbrains](https://www.jetbrains.com/help/webstorm/2022.1/set-up-GPG-commit-signing.html#set-up-gpg-keys)
@@ -28,6 +26,20 @@ tags: ["安全"]
 > 其实ssh证书也是这样，在不同的命令行工具里配置都不同，不知道我哪里配置错了。这次的gpg证书，在 Powershell/GUI, GitBash, WSL 三个环境里分别是三套数据，因此我需要将一个证书导入导出才能在多个环境中复用。
 
 > gpg客户端有个GUI界面，叫做`Kleopatra`，它的数据环境是与Powershell一致的，可以稍微简化一些操作。也许正是因为带了一个GUI，所以安装包体积才会达到20+MB，因此建议考虑安装那个4MB简化版本。
+
+## gpg常用命令
+
+```shell
+gpg --list-secret-keys --keyid-format=long
+
+gpg --full-generate-key
+
+gpg --delete-secret-keys xxxx
+gpg --delete-key xxxx
+
+gpg --output private.pgp --export-secret-keys xxxx
+gpg --armor --output public.pgp --export xxxx
+```
 
 ## Signature与Sign-off
 
@@ -61,3 +73,15 @@ tags: ["安全"]
 
 - 个人识别"这个提交到底是不是我提交的"
 - 配合平台认证（用户上传公钥），以平台的名义证明签名的有效性。
+
+## 密钥管理实践
+
+如果要按最严谨的安全级别，那就得参考HTTPS的体系，我们每个人都需要准备一个根证书，以根证书为基础签发出日常使用的证书，每个证书还要配备撤销证书。
+
+想来想去，我个人还是不需要这么高的安全级别吧，先简单点。目前我个人的思路是，直接使用一级证书，设定一个有效期，每两年换一次。
+
+私钥管理方案：
+
+- 通过 对称加密算法+人肉记忆密码+传后即删 的思路来拷贝。（简单可行）
+- ssh，不过在现实中会有网络连通性问题。（现实中有网络连通性问题）
+- 不拷贝，每个机器使用独立的密钥。（那么密钥数量会翻几倍）
