@@ -117,7 +117,7 @@ func play() {
 
 前端代码很简单，建立一个`Websocket`对象，监听`message`事件就可以了，错误处理都可以不要（不过还是要考虑一下创建新的部署之后的处理）。
 
-```typescript jsx
+```tsx
   useEffect(() => {
     const ws = new WebSocket(WEBSOCKET_HOST + '/ws/taowai/watch-log');
     ws.addEventListener('message', (e) => {

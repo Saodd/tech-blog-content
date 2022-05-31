@@ -59,7 +59,7 @@ function getSomeCategory(): GetSomeCategoryResponse {
 
 然后就可以把重点放回到UI上了。我们在顶层容器上用Hooks来获取这个接口的数据：
 
-```typescript jsx
+```tsx
 function MyList() {
   const [cats, setCats] = React.useState<SomeCategory[]>([]);
   React.useEffect(() => {
@@ -111,7 +111,7 @@ export type ExpandableListNode<T> = {
 
 然后以上面的节点结构为基准，写一个泛型组件：
 
-```typescript jsx
+```tsx
 interface ExpandableListProps<T> {
   root: ExpandableListNode<T>;
   render?: (root: ExpandableListNode<T>) => ReactNode;

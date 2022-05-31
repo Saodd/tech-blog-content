@@ -1,15 +1,15 @@
 ```yaml lw-blog-meta
 title: "CSS: 从轮播图到老虎机"
 date: "2022-05-30"
-brev: ""
+brev: "动画也还挺好玩的"
 tags: ["前端"]
 ```
 
 ## 轮播图
 
-众所周知：『一个合格的前端至少也要能够达到会写轮播图的水平吧！』同时它也是前端应用中非常常见的展示组件。
+众所周知：『一个合格的前端至少也要能够达到会写轮播图的水平吧！』
 
-在ant中这个组件的名字叫做[走马灯(carousel)](https://ant.design/components/carousel-cn/) ，虽然听着有点毛骨悚然，不过还是很形象的。
+同时它也是前端应用中非常常见的展示组件。在ant中这个组件的名字叫做[走马灯(carousel)](https://ant.design/components/carousel-cn/) ，虽然听着有点毛骨悚然，不过还是很形象的。
 
 接下来，从简单的架构开始，逐步优化一个轮播图组件吧：
 
@@ -19,7 +19,7 @@ tags: ["前端"]
 
 其次，既然要"轮"而且还要能控制、切换，那就需要一个状态量来记录当前展示到哪个元素了。
 
-```typescript jsx
+```tsx
 const Gallery: FC<{ urls: string[] }> = ({ urls }) => {
   const [current, setCurrent] = useState(0);
 
@@ -37,11 +37,9 @@ const Gallery: FC<{ urls: string[] }> = ({ urls }) => {
 
 ### 2. 图片的移动
 
-要让多个图片左右切换，很容易能够想到，我们需要`transform`属性来控制图片的相对位置，然后用`overflow: hidden`来隐藏那些不需要的图片。
+要让多个图片左右切换，很容易能够想到，我们需要`transform`属性来控制图片的相对位置，然后用`overflow: hidden`来隐藏那些不需要的图片。如果再加上一些`transition`属性的话，滑动就可以变得更加丝滑。
 
-如果再加上一些`transition`属性的话，滑动就可以变得更加丝滑。
-
-```typescript jsx
+```tsx
 <div className={styles.GalleryWrapper}>
   <div
     className={styles.GalleryImages}
@@ -54,7 +52,7 @@ const Gallery: FC<{ urls: string[] }> = ({ urls }) => {
 </div>;
 ```
 
-```sass
+```scss
 .GalleryWrapper {
   width: 90px;
   height: 120px;
@@ -112,7 +110,7 @@ const moveRight = useCallback(() => {
 
 如果希望提升加载速度，懒加载可能是一个很常见的选择。即，只加载当前可见的元素和它前后两个元素（为了动画效果），其他元素不加载。
 
-```typescript jsx
+```tsx
 const Gallery: FC<{ urls: string[] }> = ({ urls }) => {
   const [current, setCurrent] = useState(urls.length - 1);
 
@@ -143,7 +141,7 @@ const Gallery: FC<{ urls: string[] }> = ({ urls }) => {
 
 上面的代码里，要特别注意img标签的`key`属性，必须要有它，React才会帮我们复用同一个DOM、在同一个src上替换它的class以形成动画效果。如果不写的话，那就是只改src而不改class，这将毫无意义。
 
-```sass
+```scss
 .GalleryImages {
   width: 90px;
   height: 120px;
@@ -191,7 +189,7 @@ const Gallery: FC<{ urls: string[] }> = ({ urls }) => {
 
 因此一个最基本的框架如下：
 
-```typescript jsx
+```tsx
 const Tiger: FC = () => {
   return (
     <div className={styles.Tiger}>
@@ -213,7 +211,7 @@ const Tiger: FC = () => {
 };
 ```
 
-```sass
+```scss
 .Tiger {
   width: 1em;
   height: 1.5em;
@@ -247,7 +245,7 @@ const Tiger: FC = () => {
 
 很简单来一个回弹动作：
 
-```sass
+```scss
 @keyframes NumberStop {
   0% {
     transform: translate3d(0, -1.5em, 0);
@@ -274,13 +272,13 @@ const Tiger: FC = () => {
 
 我们借助css变量来实现前一小节提到的"偏移量"的概念。我将其命名为`--num`，它的计算方式很简单：当我们最后需要停在数字`n`，我们就从底部向上偏移`n`个行高即可。
 
-```jsx
+```tsx
 <div style={{ '--num': `${((num || 10) - 10) * 1.5}em` }} />
 ```
 
 与前面的`NumberStop`动画结合，最后我们得到它的终极样式：
 
-```sass
+```scss
 @keyframes NumberStop {
   0% {
     transform: translate3d(0, calc(var(--num) - 1.5em), 0);
@@ -301,7 +299,7 @@ const Tiger: FC = () => {
 
 我们用一个状态量来表示当前是正在播放"刷屏动画1"还是"定格动画2"，这个状态量通过`setTimeout`来简单地更新。终极代码：
 
-```typescript jsx
+```tsx
 const Tiger: FC<{ num: number; delaySec: number }> = ({ num, delaySec }) => {
   const [rolling, setRolling] = useState(true);
   useEffect(() => {
@@ -331,7 +329,7 @@ const Tiger: FC<{ num: number; delaySec: number }> = ({ num, delaySec }) => {
 };
 ```
 
-```sass
+```scss
 .Tiger {
   width: 1em;
   height: 1.5em;
