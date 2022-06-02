@@ -432,7 +432,7 @@ mysql> select * from student_class where class_name IS NOT NULL;
 
 最重要的就是MySQL的主从模型了吧，有了它之后可以推导到备份恢复、负载均衡、故障转移等内容。
 
-然后还有`grant`权限视角、密码与安全(TLS)、管理事件（定时任务）、日志监控等等比较冷门的知识。
+然后还有用户与权限(grant)、密码与安全(TLS)、管理事件（定时任务）、日志监控等等比较冷门的知识。
 
 另开一篇文章：[MySQL基本用法——运维篇](../2022/220520-mysql-ops.md)
 
