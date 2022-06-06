@@ -177,6 +177,83 @@ const Gallery: FC<{ urls: string[] }> = ({ urls }) => {
 
 这个只是一个简单的固定位置的组件，结合上面已经维护好的`current`状态，很好写，我就不展开讲了。
 
+### 6. 拖拽
+
+其实在前端领域，拖拽是一个很大的话题。这里先简单记录一下轮播图的拖拽实现。直接上代码吧：
+
+```tsx
+const Gallery: FC<{ urls: string[] }> = ({ urls }) => {
+  // ...之前的代码省略
+
+  // 鼠标起点X坐标 和 鼠标当前位置X坐标 ，用于计算当前拖拽的位置
+  const [startX, setStartX] = useState<number>(0);
+  const [currentX, setCurrentX] = useState<number>(0);
+  
+  // 开始拖拽，同时设置两个坐标值
+  const handleDown = useCallback((e: MouseEvent) => {
+    setStartX(e.clientX);
+    setCurrentX(e.clientX);
+  }, []);
+  
+  // 拖拽中移动，只设置一个值
+  const handleMove = (e: MouseEvent) => {
+    if (startX) setCurrentX(e.clientX);
+  };
+  
+  // 取消拖拽（放下），此时计算拖拽的偏移量，超过偏移量则翻页
+  const handleUp = (e: MouseEvent) => {
+    setStartX(0);
+    const dis = startX === 0 ? 0 : e.clientX - startX;
+    if (dis > 45) moveLeft();  // 向左翻
+    if (dis < -45) moveRight();  // 向右翻
+  };
+  
+  // 计算偏移量，限制最大位移（即最多拖动一页，90px）
+  const disX = startX === 0 ? 0 : currentX - startX;
+  const transX = disX > 0 ? Math.min(disX, 90) : Math.max(disX, -90);
+
+  return (
+    <div>
+      {/* 注意，四个事件里有三个是监听在外层，以获得更大的鼠标响应范围 */}
+      <div className={styles.Gallery} onMouseLeave={handleUp} onMouseMove={handleMove} onMouseUp={handleUp}>
+        <div className={styles.GalleryImages} onMouseDown={handleDown}>
+          {/* 图片的位移量，由 当前页数 和 当前鼠标拖拽位置 共同计算决定，以实现无缝动画衔接 */}
+          <img src={u1} key={u1} draggable={false} style={{ transform: `translate3d(${transX - 90}px, 0, 0)` }} />
+          <img src={u2} key={u2} draggable={false} style={{ transform: `translate3d(${transX}px, 0, 0)` }} />
+          <img src={u3} key={u3} draggable={false} style={{ transform: `translate3d(${transX + 90}px, 0, 0)` }} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+```
+
+```scss
+.Gallery {
+  padding: 20px 50px;
+  width: 90px;
+  background-color: lightgreen;
+
+  .GalleryImages {
+    width: 90px;
+    height: 120px;
+    position: relative;
+    overflow: hidden;
+    cursor: grabbing;
+
+    & > img {
+      width: 90px;
+      height: 120px;
+      transition: transform 0.5s;
+      position: absolute;
+    }
+  }
+}
+```
+
+这个拖拽翻页方案可以与按键翻页、定时翻页共存，只要共同操作一个`current`状态变量即可。在动画过程中可能会有一些互相干扰，有优化空间，但是实际体验上来说应该是符合日常习惯的。
+
 ## 老虎机
 
 本章内容参考了这篇文章：[产品经理：能不能让这串数字滚动起来？](https://juejin.cn/post/6986453616517185567)
