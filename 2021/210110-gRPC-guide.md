@@ -28,6 +28,7 @@ tags: ["中间件"]
 ```protobuf
 // hello.proto
 syntax = "proto3";
+option go_package = "./hello_go"; // 编译为go需要这个，会创建子目录
 
 service Chat {
   rpc Echo (Sentence) returns (Sentence);
@@ -42,6 +43,8 @@ message Sentence {
 ## Step1: Go的基础实现
 
 ### 准备工作
+
+先要准备一个命令行工具`protoc`，找到[教程](https://developers.google.com/protocol-buffers/docs/downloads) 中的下载页面，选择对应的平台（我是win64）。下载得到zip文件后，自己解压缩，然后把bin目录添加到系统环境变量中，确认在终端中可以使用`protoc`工具。
 
 按教程中get两个模块：
 
@@ -66,10 +69,10 @@ google.golang.org/protobuf v1.25.0
 然后我们使用编译工具将 .proto 转化为 Go 代码：
 
 ```shell
-protoc --go_out=hello_go --go-grpc_out=hello_go hello.proto
+protoc --go_out=. --go-grpc_out=. hello.proto
 ```
 
-在执行上述命令之前，要先手动建立一个文件夹叫`hello_go`。执行后，在那个文件夹中就会出现`hello.pb.go`和`hello_grpc.pb.go`的文件，这两个文件挺复杂的，人类不好阅读，建议直接根据proto文件去想象我们有哪些东西可以用，然后借助IDE的提示来完成后续代码。（不过，如果想象不到的时候，还是得去这俩文件里去找，找大写开头的结构和方法。）
+执行后，在`./hello_go`文件夹中就会出现`hello.pb.go`和`hello_grpc.pb.go`的文件，这两个文件挺复杂的，人类不好阅读，建议直接根据proto文件去想象我们有哪些东西可以用，然后借助IDE的提示来完成后续代码。（不过，如果想象不到的时候，还是得去这俩文件里去找，找大写开头的结构和方法。）
 
 然后我们在`hello_go`文件夹下面分别建立两个子文件夹，`hello_go/server`和`hello_go/client`用于存放服务端和客户端的main代码。
 

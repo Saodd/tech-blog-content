@@ -17,7 +17,7 @@ Protocol Buffer 是一个语言无关、平台无关的数据通信格式。
 
 假如你想定义一个搜索请求的消息格式，其中包含查询字符串、分页页码、分页大小三个内容，可以用protobuf定义如下：
 
-```
+```protobuf
 syntax = "proto3";
 
 message SearchRequest {
@@ -61,7 +61,7 @@ message SearchRequest {
 
 因此可以用保留字段。可以写序号，或者写字段名。
 
-```
+```protobuf
 message Foo {
   reserved 2, 15, 9 to 11;
   reserved "foo", "bar";
