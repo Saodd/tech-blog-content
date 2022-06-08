@@ -442,3 +442,73 @@ const Tiger: FC<{ num: number; delaySec: number }> = ({ num, delaySec }) => {
 其实这种方式实现的动画并不算完美，因为当我们切换`rolling`状态的时候，y轴偏移量是有一个突变的，只不过这里动画速度太快，人的肉眼看不出来罢了。
 
 如果要做完美的话，可能需要考虑从终结状态来推导初始状态；但这样可能也会有时间误差，如果要最精确的动画，终究还是需要js控制关键帧。
+
+### 5. 精确数字滚动
+
+需求场景是需要展示商品的实时销量，实时销量这个东西在短时间内是单调递增的，因此我想到，可以做一个动画，让数字向上滚动。
+
+重点在于，这次要实现精确滚动，即如果从5变为3的话，需要从3滚到0然后再滚到5 .
+
+大致总结一下思路：
+
+第一，需要清理掉前面的动画，这样才能实现"重新触发"的功能。因此需要`style.animation = 'none'`这种动作。但是这样做的话会造成一个突变，例如原来是3的、突然设为none那就会闪现为0了。所以我用一个阶段0的动画而不是none，这个`阶段0`的目标就是保持当前的位置：
+
+```scss
+@keyframes A0 {
+  0%,
+  100% {
+    transform: translate3d(0, var(--y), 0);
+  }
+}
+```
+
+接下来进入滚动的动画。
+
+第二，一种情况是，像 3->5 这种单调递增的过程，这种情况不需要 3->0->5 这样绕一圈，而是直接 345 就可以了。借助两个css变量，分别表示前后两个阶段的偏移量：
+
+```scss
+@keyframes A3 {
+  0% {
+    transform: translate3d(0, var(--x), 0);
+  }
+  100% {
+    transform: translate3d(0, var(--y), 0);
+  }
+}
+```
+
+第三，另一种情况是，像 5->3 这种进位的情况，视觉效果上需要体现为 5->0->3 ，因此动画也分成两段来写：
+
+```scss
+@keyframes A1 {
+  0% {
+    transform: translate3d(0, var(--x), 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes A2 {
+  0% {
+    transform: translate3d(0, -15em, 0);
+  }
+  100% {
+    transform: translate3d(0, var(--y), 0);
+  }
+}
+```
+
+两段动画可以写在一起，借助 animation-delay 属性来实现连续播放，写出来大概像这样：
+
+```scss
+.TigerNumbers {
+  animation: 
+    A1 1s 0s forwards ease-in,
+    A2 1s 1s forwards ease-out;
+}
+```
+
+然后借助一些js的能力来控制，包括`useEffect` `setTimeout` `useRef`等，最终效果：
+
+![精确滚动的数字](../pic/2022/220530-scroll-number.gif)

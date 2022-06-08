@@ -271,3 +271,7 @@ function addScript(url: string, resolve): HTMLScriptElement {
   return s;
 }
 ```
+
+但是在业务场景中，考虑到用户体验，我们可能不能等到error事件抛出来才做对策，更可能的需求是一个超时机制，超过一定时间就认为是失败。
+
+超时好办，用setTimeout很简单。但是现在这种直接添加一个script的实现，可能在超时之后它又活过来了，导致两个script重复加载，造成难以预知的后果。因此我们可以考虑将script内容下载在运行时变量里，等下载完毕后，注入一个script元素中去（类似XSS）。
