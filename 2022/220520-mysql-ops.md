@@ -188,7 +188,7 @@ ALTER USER 'lewin'@'%' REQUIRE SSL;
 
 ## 监控指标
 
-我以为会有比较成熟的组件，但是大概搜了一下，似乎只发现 [Prometheus + Granafa](https://segmentfault.com/a/1190000022336871) 的方案，看起来配置起来还是需要一点功夫的。
+这个需求可以说是太普遍了。可以参考我的文章：[后端监控：Prometheus + Grafana](../2022/220701-Prometheus.md)来搭建 。或者参考这篇 [Prometheus + Granafa](https://segmentfault.com/a/1190000022336871) 。
 
 ## 慢查询日志
 
