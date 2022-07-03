@@ -32,16 +32,20 @@ func SyncServer(c context.Context, blogs []*Blog) error {
 		return err
 	}
 	for _, blog := range toPut {
-		if err := PutBlog(blog); err != nil {
+		if err := PutBlog(c, blog); err != nil {
 			alog.CE(c, err)
 			return err
 		}
 	}
 	for _, blog := range toDel {
-		if err := DeleteBlog(blog); err != nil {
+		if err := DeleteBlog(c, blog); err != nil {
 			alog.CE(c, err)
 			return err
 		}
+	}
+	if err := FlushIndex(c); err != nil {
+		alog.CE(c, err)
+		return err
 	}
 	return nil
 }
@@ -83,28 +87,30 @@ func GetServerBlogs(c context.Context) ([]*Blog, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		err := errors.New("推送数据失败：" + resp.Status)
+		err := errors.New("获取Hash失败：" + resp.Status)
 		alog.CE(c, err)
 		return nil, err
 	}
 
-	var serverBlogs []*Blog
-	body, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		alog.CE(c, err)
 		return nil, err
 	}
-	if err := json.Unmarshal(body, &serverBlogs); err != nil {
-		alog.CE(c, err, alog.V{"resp": string(body)})
+	var body = struct {
+		Data []*Blog `json:"data"`
+	}{}
+	if err := json.Unmarshal(bodyBytes, &body); err != nil {
+		alog.CE(c, err, alog.V{"resp": string(bodyBytes)})
 		return nil, err
 	}
-	return serverBlogs, nil
+	return body.Data, nil
 }
 
-func PutBlog(blog *Blog) error {
+func PutBlog(c context.Context, blog *Blog) error {
 	u := ServerAddress + "/content"
 	reqBody, _ := json.Marshal(blog)
-	req, _ := http.NewRequest("PUT", u, bytes.NewReader(reqBody))
+	req, _ := http.NewRequestWithContext(c, "PUT", u, bytes.NewReader(reqBody))
 	req.Header.Set("X-STAFF-TOKEN", ServerToken)
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -119,9 +125,9 @@ func PutBlog(blog *Blog) error {
 	return nil
 }
 
-func DeleteBlog(blog *Blog) error {
+func DeleteBlog(c context.Context, blog *Blog) error {
 	u := ServerAddress + "/content/" + blog.Path
-	req, _ := http.NewRequest("DELETE", u, nil)
+	req, _ := http.NewRequestWithContext(c, "DELETE", u, nil)
 	req.Header.Set("X-STAFF-TOKEN", ServerToken)
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -133,6 +139,21 @@ func DeleteBlog(blog *Blog) error {
 	}
 	log.Println("删除博客：", blog.Path)
 
+	return nil
+}
+
+func FlushIndex(c context.Context) error {
+	u := ServerAddress + "/flush-index"
+	req, _ := http.NewRequestWithContext(c, "POST", u, nil)
+	req.Header.Set("X-STAFF-TOKEN", ServerToken)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return errors.New("刷新索引失败：" + resp.Status)
+	}
 	return nil
 }
 
