@@ -25,7 +25,7 @@ Prometheus中有了数据，我们接下来应该还需要一款可视化工具�
 
 ## 启动 Prometheus
 
-直接[docker](https://hub.docker.com/r/prom/prometheus)启动。值得一提的是，镜像只有85MB，本身就已经是alpine了。值得一提的是，不仅镜像体积小，运行占用内存也非常小。
+直接[docker](https://hub.docker.com/r/prom/prometheus)启动。值得一提的是，镜像只有85MB，本身就已经是alpine了。不仅镜像体积小，运行占用内存也非常小。
 
 ```shell
 docker pull prom/prometheus
