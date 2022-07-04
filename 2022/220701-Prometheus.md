@@ -34,9 +34,7 @@ docker run --name prometheus --restart always -p 9090:9090 -v /path/to/config:/e
 
 > 如果是线上环境，记得还要给数据卷做持久化，这个镜像的数据目录应该是`/prometheus`路径。
 
-此时访问9090端口，可以发现已经有一个web界面了，它是Prometheus自带的管理界面，可以做一些查询和配置。
-
-https://prometheus.io/docs/prometheus/latest/getting_started/#getting-started
+此时访问9090端口，可以发现已经有一个web界面了，它是Prometheus自带的管理界面，可以做一些查询和配置。[官方文档](https://prometheus.io/docs/prometheus/latest/getting_started/#getting-started)
 
 ## 启动 Grafana
 

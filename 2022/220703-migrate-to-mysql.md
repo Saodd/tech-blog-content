@@ -1,6 +1,6 @@
 ```yaml lw-blog-meta
 title: "从Mongo迁移到MySQL"
-date: "2022-07-03"
+date: "2022-07-04"
 brev: "钱难赚，屎难吃"
 tags: ["中间件"]
 ```

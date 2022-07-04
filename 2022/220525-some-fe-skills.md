@@ -1,5 +1,5 @@
 ```yaml lw-blog-meta
-title: "一些前端小技巧"
+title: "技术月刊：2022年5月"
 date: "2022-05-25"
 brev: "近期在项目中遇到的一些问题与应对方法"
 tags: ["前端"]
@@ -130,9 +130,9 @@ const MyButton: FC = () => {
 
 后来了解了一下这方面的技术，估计他们应该是使用的`obfuscator`这个库并且加上了少量的自定义逻辑。
 
-后来我把它使用到了业务项目中，使用上挺方便的，只要装一个webpack插件就行了（实际上是loader而不是plugin），参数的配置可以参考：[这篇文章](https://www.cnblogs.com/dragonir/p/14445767.html) 讲的还是比较通俗易懂的。
+后来我把它使用到了业务项目中，使用上挺方便的，只要装一个[webpack插件](https://www.npmjs.com/package/webpack-obfuscator)就行了（推荐用plugin而别用loader），参数的配置可以参考：[官方文档](https://obfuscator.io/)[这篇文章]
 
-但是我要提醒，不要使用`controlFlowFlattening: true`这个参数，它对代码的改动太大了，而且估计它实现上有些BUG，我在实际使用过程中，有一定概率会造成异常。
+但是我要提醒，如果使用了`controlFlowFlattening: true`这个参数，可能会不兼容一些诡异的js写法，尽管那些语法是符合语法规范的，但是可能是混淆处理代码不够完美吧，处理之后会产生bug。
 
 ## 7. Sentry配置
 
