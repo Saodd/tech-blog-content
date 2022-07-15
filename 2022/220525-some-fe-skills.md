@@ -112,7 +112,7 @@ const MyButton: FC = () => {
 
 其他应用场景的话，我认为这项技术比较适合微前端、插件注入等多源应用。
 
-至于自己的项目，我觉得也许有用，但是，因为`antd`里的Modal、Drawer等多个组件都是直接append在body上的，对这类元素无法应用shadow的隔离特性，所以不完全有用，还是放弃了。
+后来在自己带的项目上试用，体验良好，确实达到了预期效果。
 
 ## 5. createPortal
 
@@ -130,7 +130,7 @@ const MyButton: FC = () => {
 
 后来了解了一下这方面的技术，估计他们应该是使用的`obfuscator`这个库并且加上了少量的自定义逻辑。
 
-后来我把它使用到了业务项目中，使用上挺方便的，只要装一个[webpack插件](https://www.npmjs.com/package/webpack-obfuscator)就行了（推荐用plugin而别用loader），参数的配置可以参考：[官方文档](https://obfuscator.io/)[这篇文章]
+后来我把它使用到了业务项目中，使用上挺方便的，只要装一个[webpack插件](https://www.npmjs.com/package/webpack-obfuscator)就行了（推荐用plugin而别用loader），参数的配置可以参考：[官方文档](https://obfuscator.io/)
 
 但是我要提醒，如果使用了`controlFlowFlattening: true`这个参数，可能会不兼容一些诡异的js写法，尽管那些语法是符合语法规范的，但是可能是混淆处理代码不够完美吧，处理之后会产生bug。
 
