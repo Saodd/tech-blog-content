@@ -15,7 +15,7 @@ tags: ["中间件"]
 
 与它类似功能的另一个选择是`Zabbix`，这个东西似乎在Java的世界中更常用？一眼看过去有一股陈旧的味道，那种味道一般来自于apache、Java、php等这类上古技术环境。我选择`Prometheus`而不是`Zabbix`的原因很简单，前者是Go语言实现并且是CNCF的典型成员，而后者是个php的实现，显然两者没得比，是吧。
 
-Prometheus的采集器，需要强调一下，它是主动“拉取”，而不是被动接收。如果采集目标同样也是主动推送的，那么需要的是`pushgateway`来做一个中转。
+Prometheus的采集器，需要强调一下，它是主动“拉取”，而不是被动接收。如果采集目标同样也是主动推送的，那么需要的是`pushgateway`来做一个中转（就像是插头的公/母区别一样）。
 
 由于采集目标可以是任意东西，例如MySQL、statsd、HTTP、甚至单片机都可以纳入监控，因此需要一个适配器来将各种数据源转化为Prometheus的指标。这个适配器在这里术语叫做`exporter`。当然，你自己通过代码来实现格式转化也没问题。
 
@@ -198,7 +198,23 @@ func main() {
 }
 ```
 
-如果我们捕获这个中间件发出的udp消息，可以观察到它的消息是这样的（这就是`statsd`协议格式）：
+如果我们随便写几行代码捕获这个中间件发出的udp消息，
+
+```go
+func main() {
+	addr, _ := net.ResolveUDPAddr("udp", "0.0.0.0:9125")
+	conn, _ := net.ListenUDP("udp", addr)
+	defer conn.Close()
+
+	var buffer = make([]byte, 1024)
+	for {
+		n, addr, _ := conn.ReadFromUDP(buffer)
+		fmt.Println(string(buffer[:n]))
+	}
+}
+```
+
+可以观察到它的消息是这样的（这就是`statsd`协议格式）：
 
 ```text
 status_code.200:1|c
