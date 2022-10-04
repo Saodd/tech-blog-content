@@ -3,6 +3,8 @@ title: "Android入门：把一个静态网站搬进手机app里"
 date: "2022-09-23"
 brev: "我连续好几个月没有生气的记录终于在今天打破了"
 tags: ["安卓"]
+description: "本文描述了作者开发一个原生安卓应用来展示静态网站的过程"
+keywords: "安卓,Android,静态网站,Kotlin,NanoHttpd"
 ```
 
 ## 背景
@@ -35,9 +37,11 @@ ok，现在内容有了，要怎么方便自己阅读呢？
 
 ## 初识Kotlin
 
+> 注：本节内容是一个初学者的随意吐槽，不是严谨的学术讨论，仅供娱乐。
+
 在上面的步骤中，需要写少量的`Kotlin`代码，（因为教程里提供的是`Java`代码），因此我也是第一次体验了一下Kotlin，让我感觉比较奇怪的点有这些：
 
-- 屏蔽lint，居然是用装饰函数（在Java的世界里应该叫“注解”？），而不是在代码注释中写
+- 屏蔽lint的方法，居然是用装饰函数（在Java的世界里应该叫“注解”？），而不是在代码注释中写
 - Java里用了大量的`getXXX()`, `setXXX()`，在Kotlin里不建议使用，建议直接操作：`obj.a.b = true`
 - 创建对象居然不用`new A()`了，而是直接`A()`，这个我感觉会很危险啊……
 - 对类型的校验非常严格，带`?`的类型必须要判断非空才能用，否则编译都不通过。
@@ -58,6 +62,8 @@ webView.setOnKeyListener(new View.OnKeyListener() {
 });
 ```
 
+上面Java的代码，我这个从未写过Java的人（有JS、Python、Go、C#、C++等经验）来看，虽然感觉略显罗嗦、有一些魔法，但至少我一眼还是能够看出大概什么意思的，它还是很符合面向对象式的思想以及一般语法的。
+
 ```kotlin
 // kotlin版本
 webView.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
@@ -69,15 +75,11 @@ webView.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
 })
 ```
 
-上面Java的代码，我这个从未写过Java的人（有JS、Python、Go、C#、C++等经验）来看，虽然感觉略显罗嗦、有一些魔法，但至少我一眼还是能够看出大概什么意思的，它还是很符合面向对象式的思想以及一般语法的。
-
 可是下面这段[Kotlin代码](https://stackoverflow.com/questions/47298935/handling-enter-key-on-edittext-kotlin-android)是个什么鬼啊，正常人能看懂吗？？对象实例化不用`new`也就算了，连括号也省了？后面再跟一个大括号又是什么语法糖？？匿名函数参数列表不打个括号吗？？还有在`return`后面跟一个`@xxx`又是怎样的脑洞？？
 
 我麻了。
 
 还好IDEA稍微能够提供一些帮助，拷贝进`Java`代码过来，它可以帮忙转化为`Kotlin`，让我的痛苦减轻了一些。
-
-我下次一定正经写写Java！我觉得跟Kotlin一比，Java都是一坨很香的屎了。
 
 ## 在安卓手机上进行调试
 

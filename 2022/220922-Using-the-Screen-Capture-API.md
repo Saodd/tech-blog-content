@@ -1,7 +1,7 @@
 ```yaml lw-blog-meta
-title: "[译]使用屏幕捕获API"
+title: "[译]Using the Screen Capture API"
 date: "2022-09-22"
-brev: "简单玩一下"
+brev: "简单玩一下，webRTC能力之一"
 tags: ["前端"]
 ```
 

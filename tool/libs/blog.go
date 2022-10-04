@@ -21,13 +21,15 @@ const blogMarkdownCloud = `](/blog/page/20`
 var blogPattern, _ = regexp.Compile(blogInputExpr)
 
 type Blog struct {
-	Title string   `yaml:"title" json:"title"`
-	Date  string   `yaml:"date" json:"date"`
-	Brev  string   `yaml:"brev" json:"brev"`
-	Tags  []string `yaml:"tags" json:"tags"`
-	Path  string   `json:"path"`
-	Body  string   `json:"body"`
-	Hash  string   `json:"hash"`
+	Title       string   `yaml:"title" json:"title"`
+	Date        string   `yaml:"date" json:"date"`
+	Brev        string   `yaml:"brev" json:"brev"`
+	Tags        []string `yaml:"tags" json:"tags"`
+	Description string   `yaml:"description" json:"description"`
+	Keywords    string   `yaml:"keywords" json:"keywords"`
+	Path        string   `json:"path"`
+	Body        string   `json:"body"`
+	Hash        string   `json:"hash"`
 }
 
 func ParseBlogFiles(filePaths []string) (blogs []*Blog, err error) {
