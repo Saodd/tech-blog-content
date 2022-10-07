@@ -2,7 +2,7 @@
 title: "技术月刊：2022年8月"
 date: "2022-08-15"
 brev: "又是搞前端的一个月"
-tags: ["前端"]
+tags: ["技术月刊"]
 ```
 
 ## ShadowDOM与FontFace
