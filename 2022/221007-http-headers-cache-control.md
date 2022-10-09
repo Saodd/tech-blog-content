@@ -1,6 +1,6 @@
 ```yaml lw-blog-meta
 title: "HTTP缓存控制: Cache-Control"
-date: "2022-09-23"
+date: "2022-10-07"
 brev: "一文弄明白HTTP的缓存机制"
 tags: ["前端"]
 description: "本文彻底讲解了HTTP的缓存机制，包括 Cache-Control, Clear-Site-Data, Conditional Request, ETag 等概念和常规使用方式。"
@@ -110,7 +110,9 @@ Cache-Control: max-age=604800, stale-if-error=86400
 
 ### 请求头中的Cache-Control
 
-上面所说的，都是在响应体中的`Cache-Control`。（这个头一般只对Proxy、CDN等中间服务器有效，源服务器可以忽略。）
+上面所说的，都是在响应头中的`Cache-Control`。
+
+而请求头中的`Cache-Control`则有另外的效果。不过一般只对Proxy、CDN等中间服务器有效，源服务器可以忽略。
 
 只讲两个常见的：
 
@@ -128,7 +130,7 @@ Cache-Control: max-age=604800, stale-if-error=86400
 
 > 这个场景，我还真的遇到过，必须点名批评 cdn.baomitu.com ，它会把上游资源的异常以200的形式返回给客户端，然后客户端一直缓存着错误的响应体内容。这个BUG曾经困扰了我们很长一段时间，因为难以本地复现，导致我们处理客户咨询的时候一直找不到问题的原因。
 
-现代浏览器提供了一点点帮助，`Clear-Site-Data`可以从服务端发出指令，让客户端清除缓存。
+现代浏览器提供了一点点帮助，`Clear-Site-Data`可以从服务端发出指令，让客户端清除缓存。但是[兼容性](https://caniuse.com/?search=Clear-Site-Data)可能有点问题。
 
 ## conditional request
 

@@ -227,7 +227,7 @@ export const loader = new LazyLoader();
 
 当然，使用了require的同时不要忘记了要把这个库写进`external`配置项中。
 
-我第一行写的`import { marked } from 'marked';`这个语句，仅仅是为typescript服务的，我希望后续对于`marked`这个库的使用都能有正确的类型提示；而经过编译之后，由于我并没有在js中使用这个对象（而仅在ts中使用了），因此它会被tree-shaking处理掉，不会在运行时生效。
+我第一行写的`import { marked } from 'marked';`这个语句，仅仅是为typescript服务的，我希望后续对于`marked`这个库的使用都能有正确的类型提示；后续编译时会被external处理掉，不会引入。
 
 最后看一下在调用方是如何使用的：
 
