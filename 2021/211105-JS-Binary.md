@@ -57,7 +57,9 @@ func main() {
 
 如果在某些场景下，前端就是拿到了一段大端序的二进制数据，那么在"JS字节序取决于硬件"的这样一个不确定的情况下，如何稳定地以大端序解析二进制数据？
 
-首先我们需要一个判断，判断起来也很简单，就看看int32的数据会长什么样子：
+JS是有默认的处理工具的，参考本文后续章节介绍的`DataView`类。
+
+作为学习目的，我们也可以试试如何手动处理字节序。首先我们需要一个判断，判断当前系统是大端还是小端序，判断起来也很简单，就看看int32的数据有没有放在左边：
 
 ```ts
 // 判断当前运行环境的JS是不是大端序
@@ -71,7 +73,7 @@ function osIsBigEndian():boolean {
 
 大多数情况下，得到的判断结果都会是`false`，即当前运行环境一般是小端序。
 
-在小端序的运行环境下，我们需要借助`DataView`来操作`ArrayBuffer`中的数据进行反转，代码如下：
+在小端序的运行环境下，我们可以用`TypedArray`来操作`ArrayBuffer`中的数据进行反转，代码如下：
 
 ```ts
 // 传入的view是长度为4的大端序数据
@@ -79,6 +81,18 @@ const parseUint32 = (view: Uint8Array): number => {
     if (!isBigEndian) view.reverse();
     return new Uint32Array(view.buffer)[0];
 };
+```
+
+另外，参考[flv.js](https://github.com/bilibili/flv.js/blob/master/src/demux/flv-demuxer.js#L38)也是相似的实现：
+
+```js
+// 这里array拿到的是flv的头部数据的一部分，是大端序的二进制数据。（但是注意它不是UInt32）
+function ReadBig32(array, index) {
+    return ((array[index] << 24)     |
+            (array[index + 1] << 16) |
+            (array[index + 2] << 8)  |
+            (array[index + 3]));
+}
 ```
 
 顺带一提，在Golang中，标准库`encoding/binary`是可以显式指定字节序的，不需要用户自己操心如何判断和转换。

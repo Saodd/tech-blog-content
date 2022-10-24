@@ -92,7 +92,7 @@ const v = yyy_WEBPACK_IMPORTED_MODULE_8__.xxx.view;
 
 这个概念我一直是很清楚的，但是有一天在写代码的时候，莫名其妙就给我警告："A component is changing a controlled input to be uncontrolled. "
 
-我看了半天，确认我一直用的是受控用法，为啥还会给我警告？？ 
+我看了半天，确认我一直用的是受控用法，为啥还会给我警告？？
 
 后来经过仔细排查，发现传入的value的值在某些情况下会是`undefined`，这个值会让React猜测它变成了『非受控组件』，因此提出警告。（当然，会传入`undefined`也确实是我代码有不严谨的地方。）
 
@@ -150,7 +150,7 @@ module.exports = __webpack_require__.p + "0123456789abcdef0000.html";
 参考答案：[Can js code in chrome extension detect that it's executed as content script?](https://stackoverflow.com/questions/16267668/can-js-code-in-chrome-extension-detect-that-its-executed-as-content-script)
 
 ```js
-// 不可以用：if (chrome.extension) 
+// 不可以用：if (chrome.extension)
 if (location.protocol == 'chrome-extension:') {
     if (chrome.extension.getBackgroundPage() === window) {
         // 在 background 环境
@@ -173,23 +173,23 @@ if (location.protocol == 'chrome-extension:') {
 我做了一个简单的实验：随意选取我的电脑中的不同种类的文件每种一个，使用Golang内置的`"compress/gzip"`包进行压缩，压缩等级`9`即最大压缩，得到结果：
 
 | filename | Raw-Size | Gzipped-Size | Compression Rate |
-|---------:|---------:|-------------:|-----------------:|
-|  1.woff2 |    27964 |        27997 |           -0.12% |
-|   1.webp |   182568 |       182651 |           -0.05% |
-|    1.jpg |   217231 |       216765 |            0.21% |
-|    1.gif |   679144 |       676537 |            0.38% |
-|    1.png |   407788 |       404865 |            0.72% |
-|   1.woff |   522388 |       516978 |            1.04% |
-|    1.mov |  3047334 |      2952818 |            3.10% |
-|    1.mp4 |  3273341 |      3122262 |            4.62% |
-|    1.otf |  8390148 |      7409385 |           11.69% |
-|    1.ttf | 36144992 |     20539387 |           43.18% |
-|   1.html |     1221 |          646 |           47.09% |
-|    1.ico |   226234 |        89531 |           60.43% |
-|    1.svg |     7486 |         2469 |           67.02% |
-|    1.css |     2768 |          907 |           67.23% |
-|     1.js |    19133 |         5658 |           70.43% |
-|   1.json |    17878 |         2174 |           87.84% |
+|----------|---------:|-------------:|-----------------:|
+| .woff2   |    27964 |        27997 |           -0.12% |
+| .webp    |   182568 |       182651 |           -0.05% |
+| .jpg     |   217231 |       216765 |            0.21% |
+| .gif     |   679144 |       676537 |            0.38% |
+| .png     |   407788 |       404865 |            0.72% |
+| .woff    |   522388 |       516978 |            1.04% |
+| .mov     |  3047334 |      2952818 |            3.10% |
+| .mp4     |  3273341 |      3122262 |            4.62% |
+| .otf     |  8390148 |      7409385 |           11.69% |
+| .ttf     | 36144992 |     20539387 |           43.18% |
+| .html    |     1221 |          646 |           47.09% |
+| .ico     |   226234 |        89531 |           60.43% |
+| .svg     |     7486 |         2469 |           67.02% |
+| .css     |     2768 |          907 |           67.23% |
+| .js      |    19133 |         5658 |           70.43% |
+| .json    |    17878 |         2174 |           87.84% |
 
 从上表可以看出，gzip能够有效压缩的，大体上分为两类。
 
