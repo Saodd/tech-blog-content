@@ -127,7 +127,7 @@ console.log(String(new Int8Array(buffer)), String(new Int8Array(buffer2)))
 
 ArrayBuffer不能直接操作，`DataView`就是专门用来操作的，一个比较底层比较原始的工具。
 
-它的最大特性是可以指定大端序还是小端序，并且保证不同平台上的一致性。
+它的最大特性是可以指定大端序还是小端序，并且保证不同平台上的一致性，即不需要你自己关心运行时平台到底是大还是小。
 
 ```javascript
 const buffer = new ArrayBuffer(4);
@@ -178,6 +178,18 @@ console.log(String(a32), String(a8));  // 270544960,0  0,0   复制后创建了�
 
 `Buffer`是`Node.js`的实现（也就是说它不属于`Javascript`）；它是`Uint8Array`的子类，也就是说它是一种TypedArray，是一种很高层的API类。
 
+## 切片而不要复制
+
+在进行密集的二进制数据处理的时候，可能经常会需要对二进制数据进行切片处理。
+
+作为参考，在Go语言中，`[]byte`这个数据类型都是切片，做`[:]`切出来的都是对应同一片内存空间的切片指针，而不会有二进制数据内存拷贝的消耗。
+
+在JS中，也有一些API是可以实现类似的切片能力的，例如 [Uint8Array.subarray()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/subarray) 、[new Uint8Array(buf)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/Uint8Array)、或者 [new DataView(buf)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView) 。值得一提的是，`ArrayBuffer`, `TypedArray`, `Dataview`三者之间是可以相互转化的，但是在转化的时候要记得处理好`offset`和`length`。
+
+相反地，如果使用[Uint8Array.slice()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/slice)这类能力，则会开辟一片新的内存空间，然后旧的数据拷贝过去，代价比较大。
+
+二者需要根据实际业务情况进行选择。不管使用哪种方式，写代码的时候都要紧绷神经，不能随意把两者混用，否则可能导致很难排查的BUG。
+
 ## ArrayBuffer v.s. Blob
 
 > 参考 [stackoverflow](https://stackoverflow.com/questions/11821096/what-is-the-difference-between-an-arraybuffer-and-a-blob/39951543)
@@ -205,7 +217,7 @@ console.log(String(a32), String(a8));  // 270544960,0  0,0   复制后创建了�
 
 Blob是个比较底层的东西，它的API也总共只有6个而已。我们直接来看一下用法。
 
-从JS中手动创建Blob意义不大，我这里借助`xhr`下载一张图片来看看：
+从JS中手动创建Blob一般只在配合`createObjectURL`时使用。我这里用`xhr`下载一张图片来作为例子：
 
 ```javascript
 async function main() {
@@ -256,6 +268,8 @@ async function main() {
   document.body.appendChild(img);
 }
 ```
+
+在从`ArrayBuffer`创建`Blob`的时候，要注意语法，要把buf放进一个数组里再传给Blob, 而且不能使用`TypedArray`等经过封装的对象。关于这点，`typescript`的支持似乎有缺陷的，需要靠我们自己清醒。
 
 ### File
 
