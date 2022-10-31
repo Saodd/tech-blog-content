@@ -212,8 +212,8 @@ const MyVideo: React.FC = () => {
 
 在js环境中，在底层对音频进行直接操作也是可行的。如果你想自己实现一个解码器（codecs）的话这就有用处了。
 
+> 译者注：解码过程，可以考虑使用[Offscreen Canvas](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/transferControlToOffscreen) 和 [WebCodecs](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API)
+
 ## 参考阅读
 
-教程（略）
-
-参考（略）
+（略）
