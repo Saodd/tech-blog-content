@@ -63,7 +63,7 @@ https://img1.doubanio.com/view/photo/l/public/p287412xxxx.webp
 
 ## 浏览器中判断支持情况
 
-通过js是有能力判断当前浏览器是否支持`webp`的，参考阅读：[https://stackoverflow.com/questions/5573096/detecting-webp-support](https://stackoverflow.com/questions/5573096/detecting-webp-support)
+通过js是有能力判断当前浏览器是否支持`webp`的，参考阅读：[Detecting WebP support](https://stackoverflow.com/questions/5573096/detecting-webp-support)
 
 主要有两种思路：一种是利用`canvas`来导出webp格式的图片，优势是可以同步执行，缺陷是“能否导出”与“能否显示”是并不完全一致的，会导致判断错误。第二种思路是直接加载一个webp格式图片然后观察这个图片是否加载成功，优势是可靠，缺陷是加载图片是个异步的过程，会给程序设计造成一些麻烦。
 

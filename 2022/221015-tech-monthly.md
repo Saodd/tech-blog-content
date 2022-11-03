@@ -19,7 +19,7 @@ keywords: "技术月刊"
 
 『[可选链操作符](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/Optional_chaining)』，即`?.`操作符。
 
-我当前的`webpack`配置：
+在这样的`webpack`配置下：
 
 ```js
 {

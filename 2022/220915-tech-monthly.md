@@ -11,7 +11,7 @@ tags: ["技术月刊"]
 
 新的方式是使用 [Clipboard](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard)，兼容性[还不错](https://caniuse.com/?search=navigator.clipboard)
 
-但是要特别注意，这个API仅限在HTTPS（或者localhost）环境下使用，因此可以考虑[写一个wrapper](https://stackoverflow.com/a/65996386/12159549)来兼容开发与线上环境。
+但是要特别注意，这个新的API仅限在安全环境（Secure contexts）下使用，因此可以考虑[写一个wrapper](https://stackoverflow.com/a/65996386/12159549)来兼容开发与线上环境。
 
 ## React Suspense
 

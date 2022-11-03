@@ -83,7 +83,7 @@ keywords: "Digital,audio,concept,音频,理论"
 - 96000 Hz: 高解析音质
 - 192000 Hz: 超高分辨率音频。目前尚未大规模使用，但这可能会随着技术的发展而改变。
 
-44.1kHz 也被称为"最低的高保真采样频率"，它有背后的理论支持。首先根据[采样定理](https://zh.wikipedia.org/wiki/%E9%87%87%E6%A0%B7%E5%AE%9A%E7%90%86)，数字信号的频率至少是模拟信号的两倍才能准确地再现模拟信号，考虑到人类能听到的频率是 20~20000Hz ，计算得到最低高保真频率应该是 40kHz 。但是为了给[低通滤波器}(https://zh.wikipedia.org/wiki/%E4%BD%8E%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8)提供额外的空间，以避免由[混叠](https://zh.wikipedia.org/wiki/%E6%B7%B7%E7%96%8A)引起的失真，于是增加了2.05 kHz 的[过渡带](https://en.wikipedia.org/wiki/Transition_band)，最终计算得到 44.1kHz.
+44.1kHz 也被称为"最低的高保真采样频率"，它有背后的理论支持。首先根据[采样定理](https://zh.wikipedia.org/wiki/%E9%87%87%E6%A0%B7%E5%AE%9A%E7%90%86)，数字信号的频率至少是模拟信号的两倍才能准确地再现模拟信号，考虑到人类能听到的频率是 20~20000Hz ，计算得到最低高保真频率应该是 40kHz 。但是为了给[低通滤波器](https://zh.wikipedia.org/wiki/%E4%BD%8E%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8)提供额外的空间，以避免由[混叠](https://zh.wikipedia.org/wiki/%E6%B7%B7%E7%96%8A)引起的失真，于是增加了2.05 kHz 的[过渡带](https://en.wikipedia.org/wiki/Transition_band)，最终计算得到 44.1kHz.
 
 ## Audio compression basics
 
