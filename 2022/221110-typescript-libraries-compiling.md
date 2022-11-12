@@ -22,7 +22,7 @@ keywords: "typescript,library,complie,bundle,cjs,esm,umd"
 ## 三种输出
 
 1. 使用`tsc`编译输出的源码 + `*.d.ts`类型声明文件 + sourcemap文件。模块语法将使用`CommonJS`以便于支持大部分的打包工具。（即`cjs`）
-2. 与1相同，但是使用`ES6`的模块语法。（即`esm`）
+2. 与1相同，但是使用`ES6`的模块语法。（即`esm`）（目的是支持tree-shaking）
 3. 一份`umd`的输出。即编译为标准ES5语法，可以直接在浏览器中工作并且在全局变量(window)上挂载自己。
 
 通常来说`umd`版本的输出并不需要类型定义文件，因为类型定义文件(.ts)并不符合`umd`的定义。但是为了调试方便，我们依然打算输出类型定义文件。
@@ -69,7 +69,7 @@ npm init -w packages/video
 
 例如，创建`packages/video/src/index.ts`文件，并在其中写一个类、一个方法，记得要标注类型哦。
 
-## 配置tsc
+## 用tsc输出cjs和ems
 
 既然要用到`tsc`，那就少不了`tsconfig.json`这个配置文件。
 
@@ -78,7 +78,7 @@ npm init -w packages/video
 ```json
 {
   "compilerOptions": {
-    "module": "es6",
+    "module": "es6",  // esnext, es2020
     "target": "es5",
     "lib": ["esnext", "dom"],
     "outDir": "dist/esm",
@@ -110,6 +110,14 @@ dist
     ├── index.js
     └── index.js.map
 ```
+
+### 用webpack输出esm
+
+参考阅读：[Outputting Library as ES6 module with webpack?](https://stackoverflow.com/questions/65781464/outputting-library-as-es6-module-with-webpack)
+
+目前（2022），webpack5中提供了实验性的功能，可以输出esm，但是我简单尝试了一下，配置得不是很顺利，因此暂时放弃，再观望一下吧。
+
+根据帖子里的回答，可以考虑使用`Rollup`工具
 
 ## 被其他包引用
 
@@ -215,3 +223,13 @@ video.min.js.map
 ```
 
 随后我们就能在`window`上找到`MyVideoPackage`这个对象，能够调用它的方法，并且devtool也能正确地加载sourcemap便于我们调试。
+
+## WebWorker 打包的处理
+
+可以使用[webworkify-webpack](https://github.com/borisirota/webworkify-webpack) 这个包，使用方式简单明了，兼容性也最好。具体实现上，也挺有意思的，挖个坑，以后有时间了再仔细研究一下。
+
+但是上述方法，似乎在sourcemap的配置上会有很大的坑，目前看来devtool似乎还不能支持这种方式输出的代码。
+
+另一种更加"原生"的方式，依赖 webpack5 自带的对 WebWorker 的支持能力来做，也就是`new Worker(new URL(..., import.meta.url))`的语法。这个语法在`--module=esnext`（或`es2020`或更高）的配置下可以被`tsc`原样编译，进而被调用方的webpack识别并正确处理。
+
+使用webpack的方式可以达到最好的效果，但是代价就是它仅支持`esm`模式（不支持`cjs`），并且输出的内容还隐含了对webpack的依赖。它可以很好地支持`umd`模式，Worker所需的js文件会被单独打包出来，并且正确使用相对路径进行加载。因此如果能够接受这样的利弊取舍的话，这个方案还是很优秀的。
