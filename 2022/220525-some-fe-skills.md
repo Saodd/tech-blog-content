@@ -134,46 +134,91 @@ const MyButton: FC = () => {
 
 但是我要提醒，如果使用了`controlFlowFlattening: true`这个参数，可能会不兼容一些诡异的js写法，尽管那些语法是符合语法规范的，但是可能是混淆处理代码不够完美吧，处理之后会产生bug。
 
-## 7. Sentry配置
+## 7. Sentry上传sourcemap
 
-emm，对于`Sentry`这个东西呢，可以说见仁见智吧。
+关于Sentry的源码和运行机制，参考我的另外两篇文章 [《sentry-javascript 源码速读》](../2022/220811-sentry-js.md) 和 [《Sentry入门》](../2021/210124-sentry-guide.md)
 
-我一直觉得：它太重了。
+在前端，我们希望保护我们的源代码，即不希望`.map`文件被公开访问；但是在定位bug的时候，devtool / Sentry 它们又需要`.map`才能定位到源码。这个矛盾的解决方案之一，是在编译时把sourcemap文件单独上传到Sentry上去。
 
-### Sentry代码内配置
+根据这篇文章 [Uploading Source Maps - Webpack](https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/webpack/) 的指引：
 
-我在后端是一直使用着它的，不过我是自己定制了处理逻辑，而不是用的它官方的包。
+1. 用Sentry账号生成一个`token`
+2. 前端工程安装依赖`@sentry/webpack-plugin`
+3. 创建配置文件`.sentryclirc`，至少需要写入`defaults.org` `defaults.project` `auth.token` 三个选项 [参考文档](https://docs.sentry.io/product/cli/configuration/)，或者[写入webpack文件中](https://docs.sentry.io/platforms/javascript/sourcemaps/generating/)。
+4. 创建配置文件之后，可以运行`sentry-cli info`来确认当前配置是否正确。 
 
-而在前端，我抗拒了好久，最后还是觉得，“哎、别想太多了”，最后就用它最基础的配置。
+然后我们在代码中进行配置。有两个部分，首先编译时 sentry-plugin 的配置要指定`release`：
 
-其实如果只想开箱即用的话，在前端真的超级简单，只要简单地调用一下它的`init()`函数，它会帮你处理好一切。
+```js
+// wepack配置文件
+const SentryPlugin = require("@sentry/webpack-plugin");
 
-### Sentry运维配置（失败）
+module.exports = {
+  mode: 'production',
+  devtool: 'hidden-source-map',
+  // ... 其他配置项省略 ...
+  plugins: [
+    new SentryPlugin({
+      release: process.env.RELEASE,
+      include: "./dist",
+      configFile: '.sentryclirc',
+    }),
+  ],
+};
+```
 
-稍微有点麻烦的是`sourcemap`的处理，因为异常上报上来的是经过webpack简化的、不适合人类阅读的代码，如果需要快速定位业务位置，还是需要结合`sourcemap`来一起处理。
+> 关于 sentry-plugin 的更多配置参考[文档](https://github.com/getsentry/sentry-webpack-plugin)
 
-为此我又再次犯难，虽然说“前端没有秘密”，但是考虑到混淆与破解的难度的话，其实秘密还是有那么一些的。而如果上传了`sourcemap`，那么就真的是把内裤都脱光光了。虽然我的前端项目并没有什么影响世界和平的秘密，可我依然希望保持一定的隐蔽性。
+运行时传入的`init({release: 'xxx'})`必须跟编译时的`release`保持一致：
 
-> 此时我有些后悔，前阵子续费腾讯云服务器的时候，2c2g实例超级便宜，我当时怎么就没多买一个来专门运行自建Sentry呢……
+```js
+// js运行时，即react运行时
+Sentry.init({
+  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+  release: process.env.RELEASE,  // 必须一致
+});
+```
 
-最后还是再度躺平，装上webpack插件，直接把sourcemap传上去吧，没啥大不了的……
+> 关于怎么优雅地让两个`release`保持一致，可以使用webpack的变量注入的能力。
 
-结果让我大吃一惊，事情远远比我想象得复杂：
+运行`webpack`之后，插件会自动将`./dist`目录下相关资源上传到Sentry后端去，我们可以在Sentry的Web端的release详情页面找到相关的资源文件(artifacts)，目前看到有5个文件：
 
-1. 首先装一个`@sentry/webpack-plugin`插件，没问题。
-2. 然后要在构建时配置：`devtool: source-map`，这个有点诡异了；不过加一句`find . -name "*.map" -type f -delete`可以解决。
-3. 需要登录。在项目中创建一个`.sentryclirc`文件，至少需要写入`defaults.org` `defaults.project` `auth.token` 三个选项 [参考](https://docs.sentry.io/product/cli/configuration/)；或者写入webpack文件中，[参考](https://docs.sentry.io/platforms/javascript/sourcemaps/generating/)
-4. 构建，很慢，上传卡住了几分钟。
-5. 部署
+```text
+Archive 1.0.0
 
-完事了，简单测试一下。人为制造一个异常，去Sentry上一看，好家伙：
+~/index.ae5c1692fcbe3cd0031c.js
+~/index.ae5c1692fcbe3cd0031c.js.map
+~/index.e4a3428935021b08e398.css.map
+~/vendors.90c3802282261fd1eeca.js
+~/vendors.90c3802282261fd1eeca.js.map
+```
 
-- 异常代码位置给我定位到`vendor.js`里去了，而我明明是写在业务代码里的，也去dist确认过了
-- 就`vendor.js`这个文件，它提示"Remote file took too long to load"
+这样，即使我们并没有在我们的Web服务器上提供`.map`文件，Sentry依然可以通过它内部保存的文件及其关联关系，把上报的异常与源码关联在一起展示，便于我们定位分析BUG。
 
-好家伙，出了异常你现在分析代码还要临时去我服务器上下载js文件？请问你插件上传sourcemap都传了些啥？
+在Sentry插件上传文件之后，我们可以再（自己写一个）执行一个简单的插件来删除掉所有的`.map`文件，确保这些文件不会出现在web服务器上对外公开。
 
-目前看来问题还是很大的，远不足以在实际项目中开箱即用。先回滚了，以后有精神再折腾吧。
+> 最简单的方式是`rm ./dist/*.map`，但是这种方式在Windows上兼容性不太好，所以最好还是在webpack插件中实现比较靠谱。
+
+> Chrome extension 也是支持加载sourcemap的，参考[Do source maps work for Chrome extensions? - stackoverflow](https://stackoverflow.com/a/20499914/12159549)
+
+关于如何搭配`javascript-obfuscator`使用，根据它的[文档](https://www.npmjs.com/package/javascript-obfuscator/v/0.8.6)，可以看到有四个`SourceMap`相关的配置，核心要点如下：
+
+```js
+// wepack配置文件
+module.exports = merge(common, {
+    mode: 'production',
+    devtool: 'hidden-source-map',
+    plugins: [
+        new WebpackObfuscator({
+            sourceMap: true,
+            sourceMapMode: 'separate',
+        }),
+        new SentryPlugin(/** ... **/),
+        new DeleteSourceMapWebpackPlugin(),
+    ],
+});
+
+```
 
 ## 8. 懒加载js资源
 
