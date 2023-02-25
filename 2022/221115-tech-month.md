@@ -40,7 +40,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
 
 参考：[Secure contexts](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts)
 
-有许多先进的 Web API 可能都会要求 『Secure contexts』（直译为：安全上下文）。
+有许多先进的 Web API 可能都会要求 『Secure contexts』（直译为：安全上下文）环境下才可以使用。
 
 什么是安全上下文：
 
@@ -48,10 +48,12 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
 - 本地资源，例如：
   + `http://127.0.0.1`
   + `http://localhost`
-  + `http://*.localhost` （这个可以用于测试环境）
+  + `http://*.localhost`
   + `file://`
 
-在JS中进行判断：
+> 值得一提的是，localhost 结尾的域名会被强制解析到`127.0.0.1`地址上去，这个过程不受浏览器代理插件（如SwitchyOmega）的影响，因此它的实际意义并不大。
+
+如何判断当前是否正处于安全上下文环境，在JS中可以这样写：
 
 ```js
 if (window.isSecureContext) {
@@ -60,6 +62,10 @@ if (window.isSecureContext) {
 ```
 
 当然，也可以直接检测你所需的API是否存在，例如`SubtleCrypto`, `Clipboard`, `VideoDecoder`等，（这种方式还顺便把兼容性也一起考虑了）。
+
+这个东西的存在，说是说“保护用户设备安全”，但我目前个人认为它并没有什么实际价值，反而只是给我们开发人员捣乱。
+
+在web开发、测试阶段，如果没有https的本地支持而又想要满足安全上下文的要求，最可行的解决办法是[强制浏览器对特定域名开启安全上下文](https://stackoverflow.com/questions/34878749/in-androids-google-chrome-how-to-set-unsafely-treat-insecure-origin-as-secure)。即，在`about://flags`设置页面中指定开启`unsafely-treat-insecure-origin-as-secure`。
 
 ## Generator
 
@@ -107,7 +113,9 @@ class A {
 
 如果需要在`.next(value)`中传入值，那么要注意了，生成器第一次"生成"的时候，是还没有这个传入值的。
 
-因此需要抛弃第一次循环，也就是所谓的"预激"。具体到代码上，就是创建了生成器之后要立即额外`.next(null)`一次。这里的逻辑怎么理解呢，就是在创建生成器的时候，生成器函数内部并没有被执行，而是从第一次`.next()`的时候才会开始执行；第一次执行到`yield`的时候才会交出控制权并等待输入，等第二次`.next()`开始才是预想中的循环。建议你自己写个demo测试一下便于理解。参考：[Generator.prototype.next()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
+因此需要抛弃第一次循环，也就是所谓的"预激"。具体到代码上，就是创建了生成器之后要立即额外`.next(null)`一次。这里的逻辑怎么理解呢，就是在创建生成器的时候，生成器函数内部并没有被执行，而是从第一次`.next()`的时候才会开始执行；第一次执行到`yield`的时候才会交出控制权并等待输入，等第二次`.next()`开始才是预想中的循环。建议你自己写个demo测试一下便于理解。
+
+参考：[Generator.prototype.next()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
 
 > "预激"这个术语我是从Python世界中了解到的（估计是硬造出来的术语，参考：[预激协程](https://jarvisma.gitbook.io/pythonlearn/4.3-sheng-cheng-qi/chapter4.3.4)），我目前暂时没有在JS的世界里找到相关的术语，如果你知道的话，欢迎写信告诉我
 
@@ -122,7 +130,7 @@ class A {
 
 `MediaSource`是更传统的媒体操作方法，是经典的`URL.createObjectURL()`+`append buffer`组合拳的一部分。更灵活、兼容性更好，相关资料也更丰富。
 
-`MediaStream`则是最近有点热度的`webRTC`体系下的东西，只能用`webRTC`相关API去操作。它相对更底层，效率更高，但是如上文所说它可能夹带了很多Google的私货。很多最新的音视频API都跟这个家族相关。
+`MediaStream`则是最近有点热度的`webRTC`体系下的东西，只能用`webRTC`相关API去操作。它相对更底层，效率更高，但是如上面的参考文章所说它可能夹带了很多Google的私货。很多最新的音视频API都跟这个家族相关。
 
 ## npm public
 
@@ -169,7 +177,7 @@ const b = [...arr]  // spread
 
 甚至，为了实现`iterator`这个通用协议，这种浅拷贝的代价可能还比想象中更大。参考V8引擎团队关于这个问题的优化分析：[Speeding up spread elements](https://v8.dev/blog/spread-elements)
 
-## sentry-plugin注入多余的内容
+## sentry-plugin注入了多余的内容
 
 我之前在[《技术月刊：2022年5月》 - 7.sentry上传sourcemap](/2022/220525-some-fe-skills.md#7-sentry上传sourcemap) 中提到过sentry上传sourcemap的操作方式。
 
