@@ -2,7 +2,7 @@
 title: "Android入门：把一个静态网站搬进手机app里"
 date: "2022-09-23"
 brev: "我连续好几个月没有生气的记录终于在今天打破了"
-tags: ["安卓"]
+tags: ["新方向探索"]
 description: "本文描述了作者开发一个原生安卓应用来展示静态网站的过程"
 keywords: "安卓,Android,静态网站,Kotlin,NanoHttpd"
 ```
