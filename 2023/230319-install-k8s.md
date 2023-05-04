@@ -24,6 +24,31 @@ k8s有三大核心组件：
 
 `kubectl`：用来与集群通信的命令行工具。（在任何你需要调用API的地方都可以安装，它只是一个简单的命令行工具而已，就像`curl`一样）
 
+## 翻墙
+
+（翻墙程序启动命令省略，自己想办法）
+
+安装过程中有许多资源都是由google提供的，虽然国内有镜像（例如清华源），但是毕竟不是按官方教程的方式来走，会遇到很多坑；我最后还是用梯子来解决问题。
+
+设置`apt-get`使用代理的方法：
+
+```shell
+sudo vi /etc/apt/apt.conf.d/proxy.conf
+```
+
+```text
+Acquire {
+  HTTP::proxy "http://127.0.0.1:10086";
+  HTTPS::proxy "http://127.0.0.1:10086";
+}
+```
+
+设置`curl`使用代理的方法：
+
+```shell
+curl -x "http://127.0.0.1:10086" xxx.com
+```
+
 ## 安装
 
 其实“用来初始化集群的指令”工具一共有三种，分别是：
@@ -87,6 +112,8 @@ sudo apt-mark hold kubelet kubeadm kubectl
 
 执行到这一步的时候，其实已经把 kubelet kubeadm kubectl 三个东西全部安装好了，当前最新版本号是`1.26.3-00`
 
+（5月，在另一台设备上更新k8s时我发现最新版本已经到1.27.1了，但是这个最新版本会提示一个警告说找不到匹配的 etcd 镜像版本，所以我还是先降级到1.26.4继续安装了。）
+
 ### 关于kubectl
 
 在前面的步骤中已经统一通过`apt`安装好了kubectl。
@@ -117,18 +144,10 @@ sudo apt-mark hold kubelet kubeadm kubectl
 
 ## 创建集群
 
-为了避免拉取镜像时可能遇到的网速问题，首先配置一下从代理拉取镜像：
+为了避免拉取镜像时可能遇到的网速问题，在初始化时一定要指定镜像：
 
 ```shell
-kubeadm config images pull --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers
-```
-
-（其他的方法，例如设置`http_proxy`环境变量、设置`/etc/systemd/system/docker.service.d/http-proxy.conf`等方式都不好用，就用上面的命令最简单有效）
-
-然后执行一条简单的命令正式创建集群：
-
-```shell
-kubeadm init
+kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers
 ```
 
 ### 创建集群报错-1
@@ -163,6 +182,30 @@ service connection: CRI v1 runtime API is not implemented for endpoint \"unix://
 然后升级containerd的时候还遇到版本不兼容的问题，参考[这个帖子](https://unix.stackexchange.com/questions/724518/the-following-packages-have-unmet-dependencies-containerd-io)，把docker整个重装一遍最新版本。
 
 安装完成之后再看kubelet，此时它不断提示错误『cni plugin not initialized』，这个状态就可以（先`kubeadm reset`然后再）继续重新运行`kubeadm init`了。
+
+### 创建集群报错-3
+
+还可能报错，从`journalctl -u kubelet`可以看到很多内容在说6443端口无法访问，大概像这样：
+
+```text
+dial tcp 10.0.12.17:6443: connect: connection refused
+```
+
+但是，实际上最核心的问题被淹没在无关紧要的日志当中了，核心问题是这个：
+
+```text
+RunPodSandbox from runtime service failed" err="rpc error: code = Unknown desc = failed to get sandbox image "registry.k8s.io/pause:3.6": failed to pull image "registry.k8s.io/pause:3.6": failed to pull and unpack image "registry.k8s.io/pause:3.6": failed to resolve reference "registry.k8s.io/pause:3.6": failed to do request: Head
+```
+
+参考解答：[#2851](https://github.com/kubernetes/kubeadm/issues/2851)
+
+可我们之前明明已经指定了`--image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers`，但是`containerd`依然可能会一句它自己的配置文件，也就是`/etc/containerd/config.toml`，因此我们要把这个文件中的配置也改为：
+
+```toml
+sandbox_image = "registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.9"
+```
+
+会遇到这个问题，是因为我这次鬼使神差地按教程，把 containerd 生成的“标准”配置文件放进了配置目录中（而不是之前用的安装docker的时候自动生成的配置），而这个默认生成的文件中附带了许多我之前没有设置过的项目，包括`sandbox_image`这一项。
 
 ### 配置CNI
 
