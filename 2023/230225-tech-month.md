@@ -98,6 +98,8 @@ http://127.0.0.1/xxx_src_xxx-worker_entry_ts.undefined.js
 
 参考开源项目源码，`flv.js`这个库借助了[webworkify-webpack](https://www.npmjs.com/package/webworkify-webpack)来进行封装，理由也可以理解，毕竟开源项目有兼容性上的考虑，不能像我们内部项目一样“面向webpack”开发。
 
+> 2023-08-17 更新：今天更新了 webpack 相关依赖，现在已经不会出现这个问题了，devServer 可以正确处理 WebWorker 的文件名，不需要额外处理。（webpack: 5.49.0->5.88.2，webpack-dev-server: 4.2.0->4.15.1，webpack-cli: 4.10.0->5.1.4）
+
 ## 闲谈：作为负责人
 
 有两个问题我思考了很久：
