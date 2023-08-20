@@ -1,7 +1,7 @@
 ```yaml lw-blog-meta
 title: "技术月刊：2023年8月"
 date: "2023-08-20"
-brev: "人才不是培养出来的"
+brev: "yarn link，抖店app小程序，人才不是培养出来的，很久不见"
 tags: ["技术月刊"]
 ```
 
