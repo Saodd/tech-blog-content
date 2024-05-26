@@ -85,3 +85,32 @@ gpg --armor --output public.pgp --export xxxx
 - 通过 对称加密算法+人肉记忆密码+传后即删 的思路来拷贝。（简单可行）
 - ssh，不过在现实中会有网络连通性问题。（现实中有网络连通性问题）
 - 不拷贝，每个机器使用独立的密钥。（那么密钥数量会翻几倍）
+
+## 过期之后：续期
+
+找到当时存有 gpg私钥(secret key) 的电脑设备，运行下列命令查看：
+
+```shell
+gpg --list-secret-keys --keyid-format=long  # 查看私钥
+gpg --list-keys # 查看公钥
+```
+
+注意，我们在本地电脑上用来给git签名时使用的是私钥，而公钥是用来上传到GitHub等平台上用于验证签名有效的。
+
+然后参考[这篇文章](https://superuser.com/questions/813421/can-you-extend-the-expiration-date-of-an-already-expired-gpg-key)的步骤来给密钥续期。（别忘了私钥也要续期）
+
+（我用命令行工具续期完了之后才发现，gpg是有GUI程序的，叫做`Kleopatra`，相比于命令行会更好操作一些）
+
+### 报错
+
+续期之后，依然无法签名。一直提示以下报错信息：
+
+```text
+PS > git commit -S -m "YOUR_COMMIT_MESSAGE"
+gpg: skipped "xxxxxxx": Unusable secret key
+gpg: signing failed: Unusable secret key
+error: gpg failed to sign the data
+fatal: failed to write commit object
+```
+
+在这个过程中我非常奇怪的是，我命名已经删掉了全局和本地git配置中的`user.signingkey`参数，为什么webstorm一直却能够从某个神秘的地方识别出我之前用的 gpg key，太诡异了。让我暴躁了一个多小时一直配不好，最后终于用[这篇帖子](https://stackoverflow.com/questions/36810467/git-commit-signing-failed-secret-key-not-available)的方法解决了。
