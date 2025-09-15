@@ -32,8 +32,10 @@ func RecurListMds(c context.Context, folder string) (mds []string, err error) {
 	files, _ := ioutil.ReadDir(folder)
 	for _, file := range files {
 		if file.IsDir() {
-			// 仅允许文件夹名为数字（年份）
-			if _, err := strconv.Atoi(file.Name()); err != nil {
+			// 仅允许文件夹名为数字（年份），且排除2019年
+			if year, err := strconv.Atoi(file.Name()); err != nil {
+				continue
+			} else if year < 2020 {
 				continue
 			}
 			subFolder := filepath.Join(folder, file.Name())

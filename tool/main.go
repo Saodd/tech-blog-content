@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/saodd/alog"
 	"os"
 	"tech-blog-content/tool/libs"
 	"time"
+
+	"github.com/saodd/alog"
 )
 
 func main() {
@@ -19,7 +20,12 @@ func run() (err error) {
 	defer cancel()
 	ctx, cancel := alog.WithTracker(c)
 	defer cancel()
-	defer alog.CERecoverError(ctx, &err)
+	defer func() {
+		if r := recover(); r != nil {
+			alog.CEI(ctx, r)
+			err = r.(error)
+		}
+	}()
 
 	if err := libs.CheckWorkDir(ctx); err != nil {
 		alog.CE(ctx, err)

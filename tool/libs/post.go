@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/saodd/alog"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/saodd/alog"
 )
 
 var (
@@ -32,7 +33,7 @@ func SyncServer(c context.Context, blogs []*Blog) error {
 		return err
 	}
 	for _, blog := range toPut {
-		if err := PutBlog(c, blog); err != nil {
+		if err := UpsertBlog(c, blog); err != nil {
 			alog.CE(c, err)
 			return err
 		}
@@ -42,10 +43,6 @@ func SyncServer(c context.Context, blogs []*Blog) error {
 			alog.CE(c, err)
 			return err
 		}
-	}
-	if err := FlushIndex(c); err != nil {
-		alog.CE(c, err)
-		return err
 	}
 	return nil
 }
@@ -77,7 +74,7 @@ func CheckServerBlogs(c context.Context, blogs []*Blog) (toPut, toDel []*Blog, e
 }
 
 func GetServerBlogs(c context.Context) ([]*Blog, error) {
-	u := ServerAddress + "/all-hash"
+	u := ServerAddress + "/list_hash"
 	req, _ := http.NewRequestWithContext(c, "GET", u, nil)
 	req.Header.Set("X-STAFF-TOKEN", ServerToken)
 	resp, err := httpClient.Do(req)
@@ -92,7 +89,7 @@ func GetServerBlogs(c context.Context) ([]*Blog, error) {
 		return nil, err
 	}
 
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		alog.CE(c, err)
 		return nil, err
@@ -107,10 +104,10 @@ func GetServerBlogs(c context.Context) ([]*Blog, error) {
 	return body.Data, nil
 }
 
-func PutBlog(c context.Context, blog *Blog) error {
-	u := ServerAddress + "/content"
+func UpsertBlog(c context.Context, blog *Blog) error {
+	u := ServerAddress + "/upsert_article"
 	reqBody, _ := json.Marshal(blog)
-	req, _ := http.NewRequestWithContext(c, "PUT", u, bytes.NewReader(reqBody))
+	req, _ := http.NewRequestWithContext(c, "POST", u, bytes.NewReader(reqBody))
 	req.Header.Set("X-STAFF-TOKEN", ServerToken)
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -118,7 +115,7 @@ func PutBlog(c context.Context, blog *Blog) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return errors.New("PUT推送数据失败：" + resp.Status)
+		return errors.New("POST推送数据失败：" + resp.Status)
 	}
 	log.Println("推送博客：", blog.Path)
 
@@ -126,8 +123,9 @@ func PutBlog(c context.Context, blog *Blog) error {
 }
 
 func DeleteBlog(c context.Context, blog *Blog) error {
-	u := ServerAddress + "/content/" + blog.Path
-	req, _ := http.NewRequestWithContext(c, "DELETE", u, nil)
+	u := ServerAddress + "/delete_article"
+	reqBody, _ := json.Marshal(map[string]string{"path": blog.Path})
+	req, _ := http.NewRequestWithContext(c, "POST", u, bytes.NewReader(reqBody))
 	req.Header.Set("X-STAFF-TOKEN", ServerToken)
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -135,33 +133,18 @@ func DeleteBlog(c context.Context, blog *Blog) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return errors.New("DELETE推送数据失败：" + resp.Status)
+		return errors.New("POST推送数据失败：" + resp.Status)
 	}
 	log.Println("删除博客：", blog.Path)
 
 	return nil
 }
 
-func FlushIndex(c context.Context) error {
-	u := ServerAddress + "/flush-index"
-	req, _ := http.NewRequestWithContext(c, "POST", u, nil)
-	req.Header.Set("X-STAFF-TOKEN", ServerToken)
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return errors.New("刷新索引失败：" + resp.Status)
-	}
-	return nil
-}
-
 func init() {
 	if mode := os.Getenv("RUN_MODE"); mode == "gh-actions" {
-		ServerAddress = "https://api.lewinblog.com/blog"
+		ServerAddress = "https://api.lewinblog.com/blog/staff"
 	} else {
-		ServerAddress = "http://localhost:7777/blog"
+		ServerAddress = "http://localhost:20001/blog/staff"
 	}
 	ServerToken = os.Getenv("JULIET_POST_TOKEN")
 }
