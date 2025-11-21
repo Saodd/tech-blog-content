@@ -142,7 +142,7 @@ func DeleteBlog(c context.Context, blog *Blog) error {
 
 func init() {
 	if mode := os.Getenv("RUN_MODE"); mode == "gh-actions" {
-		ServerAddress = "https://api.lewinblog.com/blog/staff"
+		ServerAddress = "https://lewinblog.com/api/blog/staff"
 	} else {
 		ServerAddress = "http://localhost:20001/blog/staff"
 	}
