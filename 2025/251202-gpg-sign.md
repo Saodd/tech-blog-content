@@ -1,7 +1,7 @@
 ```yaml lw-blog-meta
-title: "Git GPG sign 用法"
+title: "GPG密钥的配置"
 date: "2025-12-02"
-brev: "每个人自主可控、也得到业界广泛支持的证书签名机制"
+brev: "每个人自主可控、也得到业界广泛支持的签名机制"
 tags: ["安全"]
 ```
 
