@@ -1,17 +1,15 @@
 package libs
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
-	"io"
+	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/saodd/alog"
+	"resty.dev/v3"
 )
 
 var (
@@ -19,11 +17,13 @@ var (
 	ServerToken   string
 )
 
-var httpClient = &http.Client{
-	Transport: &http.Transport{
-		MaxIdleConnsPerHost: 10,
-	},
-	Timeout: time.Second * 10,
+var restyClient = resty.New().
+	SetTimeout(time.Second * 10)
+
+type Response struct {
+	Code int   `json:"code"`
+	Time int64 `json:"ts"`
+	Data any   `json:"data"`
 }
 
 func SyncServer(c context.Context, blogs []*Blog) error {
@@ -60,6 +60,11 @@ func CheckServerBlogs(c context.Context, blogs []*Blog) (toPut, toDel []*Blog, e
 
 	for _, b := range blogs {
 		serverBlog, ok := serverBlogMap[b.Path]
+		if ok {
+			fmt.Printf("Hash： %s | %s ，文件： %s\n", b.Hash, serverBlog.Hash, b.Path)
+		} else {
+			fmt.Printf("Hash： %s | _ ，文件： %s\n", b.Hash, b.Path)
+		}
 		if !ok || serverBlog.Hash != b.Hash {
 			toPut = append(toPut, b)
 		}
@@ -75,47 +80,54 @@ func CheckServerBlogs(c context.Context, blogs []*Blog) (toPut, toDel []*Blog, e
 
 func GetServerBlogs(c context.Context) ([]*Blog, error) {
 	u := ServerAddress + "/list_hash"
-	req, _ := http.NewRequestWithContext(c, "GET", u, nil)
-	req.Header.Set("X-STAFF-TOKEN", ServerToken)
-	resp, err := httpClient.Do(req)
+
+	var data []*Blog
+	var result Response
+	result.Data = &data
+
+	resp, err := restyClient.R().
+		SetContext(c).
+		SetHeader("X-STAFF-TOKEN", ServerToken).
+		SetResult(&result).
+		Get(u)
+
 	if err != nil {
 		alog.CE(c, err, alog.V{"u": u})
 		return nil, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		err := errors.New("获取Hash失败：" + resp.Status)
+	if resp.StatusCode() != 200 {
+		err := errors.New("获取Hash失败：" + resp.Status())
 		alog.CE(c, err)
+		return nil, err
+	}
+	if result.Code != 0 {
+		err := fmt.Errorf("resp code：%d", result.Code)
+		alog.CE(c, err, alog.V{"result": result})
 		return nil, err
 	}
 
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		alog.CE(c, err)
-		return nil, err
-	}
-	var body = struct {
-		Data []*Blog `json:"data"`
-	}{}
-	if err := json.Unmarshal(bodyBytes, &body); err != nil {
-		alog.CE(c, err, alog.V{"resp": string(bodyBytes)})
-		return nil, err
-	}
-	return body.Data, nil
+	return data, nil
 }
 
 func UpsertBlog(c context.Context, blog *Blog) error {
 	u := ServerAddress + "/upsert_article"
-	reqBody, _ := json.Marshal(blog)
-	req, _ := http.NewRequestWithContext(c, "POST", u, bytes.NewReader(reqBody))
-	req.Header.Set("X-STAFF-TOKEN", ServerToken)
-	resp, err := httpClient.Do(req)
+
+	var result Response
+	resp, err := restyClient.R().
+		SetContext(c).
+		SetHeader("X-STAFF-TOKEN", ServerToken).
+		SetBody(blog).
+		SetResult(&result).
+		Post(u)
+
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return errors.New("POST推送数据失败：" + resp.Status)
+	if resp.StatusCode() != 200 {
+		return errors.New("POST推送数据失败：" + resp.Status())
+	}
+	if result.Code != 0 {
+		return fmt.Errorf("resp code：%d", result.Code)
 	}
 	log.Println("推送博客：", blog.Path)
 
@@ -124,18 +136,24 @@ func UpsertBlog(c context.Context, blog *Blog) error {
 
 func DeleteBlog(c context.Context, blog *Blog) error {
 	u := ServerAddress + "/delete_article"
-	reqBody, _ := json.Marshal(map[string]string{"path": blog.Path})
-	req, _ := http.NewRequestWithContext(c, "POST", u, bytes.NewReader(reqBody))
-	req.Header.Set("X-STAFF-TOKEN", ServerToken)
-	resp, err := httpClient.Do(req)
+
+	var result Response
+	resp, err := restyClient.R().
+		SetContext(c).
+		SetHeader("X-STAFF-TOKEN", ServerToken).
+		SetBody(map[string]string{"path": blog.Path}).
+		SetResult(&result).
+		Post(u)
+
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return errors.New("POST推送数据失败：" + resp.Status)
+	if resp.StatusCode() != 200 {
+		return errors.New("POST推送数据失败：" + resp.Status())
 	}
-	log.Println("删除博客：", blog.Path)
+	if result.Code != 0 {
+		return fmt.Errorf("resp code：%d", result.Code)
+	}
 
 	return nil
 }
@@ -147,4 +165,7 @@ func init() {
 		ServerAddress = "http://localhost:20001/blog/staff"
 	}
 	ServerToken = os.Getenv("JULIET_POST_TOKEN")
+	if ServerToken == "" {
+		log.Fatalln("未设置环境变量 JULIET_POST_TOKEN")
+	}
 }

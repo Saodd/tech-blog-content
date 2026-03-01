@@ -16,16 +16,10 @@ func main() {
 }
 
 func run() (err error) {
-	c, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	c, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 	defer cancel()
 	ctx, cancel := alog.WithTracker(c)
 	defer cancel()
-	defer func() {
-		if r := recover(); r != nil {
-			alog.CEI(ctx, r)
-			err = r.(error)
-		}
-	}()
 
 	if err := libs.CheckWorkDir(ctx); err != nil {
 		alog.CE(ctx, err)
