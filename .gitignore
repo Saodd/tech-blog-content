@@ -28,3 +28,6 @@ dist
 .astro
 *.log
 *.err
+
+# blog content
+content/todo/
