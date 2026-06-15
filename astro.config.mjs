@@ -9,6 +9,10 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
 	site: 'https://lewinblog.com',
 	base: '/blog/page/',
+	build: {
+		format: 'file',
+	},
+	trailingSlash: 'never',
 	integrations: [
 		react(),
 		sitemap({
